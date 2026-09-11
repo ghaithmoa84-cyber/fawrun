@@ -16,8 +16,9 @@ export interface AuditLogParams {
 export class AuditService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async log(params: AuditLogParams): Promise<void> {
-    await this.prisma.auditLog.create({
+  async log(params: AuditLogParams, tx?: Prisma.TransactionClient): Promise<void> {
+    const client = tx ?? this.prisma;
+    await client.auditLog.create({
       data: {
         orderId: params.orderId,
         actorId: params.actorId,

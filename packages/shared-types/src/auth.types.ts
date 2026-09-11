@@ -1,8 +1,13 @@
 import { z } from 'zod';
 
+const passwordSchema = z.string().min(8).max(72).refine(
+  (val) => Buffer.byteLength(val, 'utf8') <= 72,
+  'Password must not exceed 72 bytes'
+);
+
 export const AddressSchema = z.object({
-  lat: z.number(),
-  lng: z.number(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
   description: z.string(),
 });
 
@@ -10,7 +15,7 @@ export const RegisterSchema = z.object({
   name: z.string().min(2),
   whatsapp: z.string(),
   altPhone: z.string().nullable(),
-  password: z.string().min(8),
+  password: passwordSchema,
   address: AddressSchema,
 });
 
@@ -18,7 +23,7 @@ export type RegisterRequest = z.infer<typeof RegisterSchema>;
 
 export const LoginSchema = z.object({
   whatsapp: z.string(),
-  password: z.string(),
+  password: passwordSchema,
 });
 
 export type LoginRequest = z.infer<typeof LoginSchema>;

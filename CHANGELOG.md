@@ -62,7 +62,7 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 - pnpm-workspace.yaml, turbo.json, tsconfig.json, .gitignore
 - packages/shared-constants: ORDER_STATUSES, PRICING+calculateFee, CONFIG
 - packages/shared-types: Auth/Order/Runner/Settlement DTOs + Zod schemas + WebSocket event types
-- apps/api: NestJS 12 app with ESM, TS strict, full Prisma schema (17 models, 7 enums)
+- apps/api: NestJS 12 app with ESM, TS strict, full Prisma schema (15 models, 7 enums)
 - First migration applied to PostgreSQL
 - Auth: register (201, PENDING_VERIFICATION, bcrypt 12 rounds, transaction)
 - Auth: login (JWT RS256 2h, 64-byte refresh token bcrypt-hashed in DB)

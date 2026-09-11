@@ -99,7 +99,8 @@ model RefreshToken {
   id         String   @id @default(cuid())
   userId     String
   user       User     @relation(fields: [userId], references: [id])
-  tokenHash  String   @unique  // bcrypt hash of the token
+  selector   String   @unique  // indexed public selector for token lookup
+  tokenHash  String   // bcrypt hash of the token
   deviceInfo String?           // معلومات الجهاز اختيارية
   isRevoked  Boolean  @default(false)
   createdAt  DateTime @default(now())
@@ -145,10 +146,10 @@ model Runner {
   userId       String       @unique
   user         User         @relation(fields: [userId], references: [id])
   status       RunnerStatus @default(UNAVAILABLE)
-  isVisible    Boolean      @default(true)  // false = مخفي من قوائم العملاء
+  isVisible    Boolean      @default(true)
   avgRating    Float?
   totalRatings Int          @default(0)
-  notes        String?                      // ملاحظات داخلية للإدارة
+  notes        String?
   createdAt    DateTime     @default(now())
   updatedAt    DateTime     @updatedAt
 
@@ -156,6 +157,7 @@ model Runner {
   preferredInOrders Order[]      @relation("PreferredRunner")
   ratings          Rating[]
   settlements      Settlement[]
+  ledgerEntries    LedgerEntry[]
 
   @@index([status, isVisible])
 }
@@ -169,6 +171,7 @@ model Admin {
   userId    String   @unique
   user      User     @relation(fields: [userId], references: [id])
   createdAt DateTime @default(now())
+  settlements Settlement[]
 }
 
 // ─────────────────────────────────────────
@@ -182,7 +185,7 @@ model Order {
   // مثال: seqNumber=1 → orderNumber="FW-000001"
   // يُولَّد في الكود مباشرة بعد إنشاء السجل باستخدام seqNumber
   // لا يُولَّد قبل الحفظ لضمان التفرد في حالات التزامن
-  orderNumber String      @unique
+  orderNumber String      @unique @default("")
 
   customerId  String
   customer    Customer    @relation(fields: [customerId], references: [id])
@@ -347,6 +350,7 @@ model LedgerEntry {
   orderId     String?
   order       Order?          @relation(fields: [orderId], references: [id])
   runnerId    String?
+  runner      Runner?         @relation(fields: [runnerId], references: [id])
   type        LedgerEntryType
   amount      Int             // بالليرة السورية
   description String
@@ -354,6 +358,7 @@ model LedgerEntry {
 
   createdAt   DateTime @default(now())
   // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only لا يُعدّل
+  // Database-level append-only protection via @@index and triggers (handled in migration)
 
   @@index([orderId])
   @@index([runnerId, type])
@@ -377,6 +382,7 @@ model Settlement {
   notes           String?
   closedAt        DateTime?
   closedByAdminId String?
+  closedByAdmin   Admin?           @relation(fields: [closedByAdminId], references: [id])
 
   items     SettlementItem[]
   createdAt DateTime         @default(now())
@@ -414,6 +420,7 @@ model AuditLog {
 
   createdAt  DateTime @default(now())
   // ⚠️ لا يوجد updatedAt — هذا الجدول لا يُعدّل أبداً
+  // Database-level append-only protection via @@index and triggers (handled in migration)
 
   @@index([orderId, createdAt])
   @@index([event, createdAt])

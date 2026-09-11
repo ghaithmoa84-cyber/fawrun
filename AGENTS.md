@@ -52,8 +52,8 @@ FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 7. Merge to main
 
 ### Git Rules
-- Semantic commits: eat:, ix:, efactor:, etc.
-- Branch per Sprint: eature/sprint-N-<description>
+- Semantic commits: feat:, fix:, refactor:, etc.
+- Branch per Sprint: feature/sprint-N-<description>
 - No direct push to main
 - Use /pr command to ensure full workflow
 - Wait for CodeRabbit review before merge

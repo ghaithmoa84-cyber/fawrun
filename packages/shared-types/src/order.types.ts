@@ -1,20 +1,22 @@
 import { z } from 'zod';
 
+const nonEmptyString = z.string().min(1, 'Field cannot be empty or whitespace');
+
 export const CreateOrderItemSchema = z.object({
-  itemName: z.string(),
-  quantity: z.string(),
+  itemName: nonEmptyString,
+  quantity: nonEmptyString,
   customStoreName: z.string().nullable(),
   anyStore: z.boolean(),
 });
 
 export const DeliveryAddressSchema = z.object({
-  lat: z.number(),
-  lng: z.number(),
+  lat: z.number().min(-90).max(90),
+  lng: z.number().min(-180).max(180),
   description: z.string(),
 });
 
 export const CreateOrderSchema = z.object({
-  items: z.array(CreateOrderItemSchema),
+  items: z.array(CreateOrderItemSchema).min(1, 'At least one item is required'),
   notes: z.string().nullable(),
   preferredRunnerId: z.string().nullable(),
   waitForPreferred: z.boolean(),
@@ -51,10 +53,11 @@ export const PaginatedMetaSchema = z.object({
 
 export type PaginatedMeta = z.infer<typeof PaginatedMetaSchema>;
 
-export const PaginatedResponseSchema = z.object({
-  data: z.array(z.any()),
-  meta: PaginatedMetaSchema,
-});
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+  z.object({
+    data: z.array(itemSchema),
+    meta: PaginatedMetaSchema,
+  });
 
 export type PaginatedResponse<T> = {
   data: T[];

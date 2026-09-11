@@ -3,25 +3,34 @@ const bcrypt = require('bcrypt');
 
 async function main() {
   const prisma = new PrismaClient();
-  const hash = await bcrypt.hash('adminpass123', 12);
   
-  // Create admin user
-  await prisma.user.create({
-    data: {
-      id: 'admin-test-id',
-      whatsapp: '96300000001',
-      passwordHash: hash,
-      name: 'Admin User',
-      role: 'ADMIN',
-      status: 'VERIFIED',
-    },
-  });
+  const adminPassword = process.env.ADMIN_PASSWORD;
+  if (!adminPassword || adminPassword.trim() === '') {
+    console.error('ERROR: ADMIN_PASSWORD environment variable is required and must be non-empty');
+    process.exit(1);
+  }
+  
+  const hash = await bcrypt.hash(adminPassword, 12);
+  
+  // Create admin user and admin profile atomically
+  await prisma.$transaction(async (tx) => {
+    const user = await tx.user.create({
+      data: {
+        id: 'admin-test-id',
+        whatsapp: '96300000001',
+        passwordHash: hash,
+        name: 'Admin User',
+        role: 'ADMIN',
+        status: 'VERIFIED',
+      },
+    });
 
-  await prisma.admin.create({
-    data: {
-      id: 'admin-record-id',
-      userId: 'admin-test-id',
-    },
+    await tx.admin.create({
+      data: {
+        id: 'admin-record-id',
+        userId: user.id,
+      },
+    });
   });
 
   console.log('Admin user created successfully');

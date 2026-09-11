@@ -55,7 +55,7 @@ export class RunnersService {
     whatsapp: string;
     password: string;
     altPhone?: string;
-  }) {
+  }, actorId: string) {
     const existing = await this.prisma.user.findUnique({
       where: { whatsapp: body.whatsapp },
     });
@@ -85,10 +85,11 @@ export class RunnersService {
       });
 
       await this.auditService.log({
+        actorId,
         actorRole: 'ADMIN',
         event: 'RUNNER_CREATED',
         meta: { userId: user.id, runnerWhatsapp: body.whatsapp },
-      });
+      }, tx);
     });
 
     return {
@@ -103,7 +104,7 @@ export class RunnersService {
     altPhone?: string;
     notes?: string;
     password?: string;
-  }) {
+  }, actorId: string) {
     const runner = await this.prisma.runner.findUnique({
       where: { id: body.id },
       include: { user: true },
@@ -137,10 +138,11 @@ export class RunnersService {
       });
 
       await this.auditService.log({
+        actorId,
         actorRole: 'ADMIN',
         event: 'RUNNER_UPDATED',
         meta: { runnerId: body.id },
-      });
+      }, tx);
     });
 
     return {
@@ -149,7 +151,7 @@ export class RunnersService {
     };
   }
 
-  async updateVisibility(body: { id: string; isVisible: boolean }) {
+  async updateVisibility(body: { id: string; isVisible: boolean }, actorId: string) {
     const runner = await this.prisma.runner.findUnique({
       where: { id: body.id },
     });
@@ -158,15 +160,18 @@ export class RunnersService {
       throw new NotFoundException('Runner not found');
     }
 
-    await this.prisma.runner.update({
-      where: { id: body.id },
-      data: { isVisible: body.isVisible },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.runner.update({
+        where: { id: body.id },
+        data: { isVisible: body.isVisible },
+      });
 
-    await this.auditService.log({
-      actorRole: 'ADMIN',
-      event: 'RUNNER_VISIBILITY_CHANGED',
-      meta: { runnerId: body.id, isVisible: body.isVisible },
+      await this.auditService.log({
+        actorId,
+        actorRole: 'ADMIN',
+        event: 'RUNNER_VISIBILITY_CHANGED',
+        meta: { runnerId: body.id, isVisible: body.isVisible },
+      }, tx);
     });
 
     return {

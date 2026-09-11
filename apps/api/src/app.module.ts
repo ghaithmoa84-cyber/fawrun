@@ -45,9 +45,16 @@ import { jwtConfig } from './config/jwt.config.js';
       inject: [ConfigService],
       useFactory: (configService: ConfigService) => {
         const jwtSettings = configService.get('jwt');
+        const privateKey = jwtSettings?.privateKey || '';
+        const publicKey = jwtSettings?.publicKey || '';
+        
+        if (!privateKey || !publicKey) {
+          throw new Error('JWT RS256 keys are required: both privateKey and publicKey must be configured');
+        }
+        
         return {
-          privateKey: jwtSettings?.privateKey || '',
-          publicKey: jwtSettings?.publicKey || '',
+          privateKey,
+          publicKey,
           signOptions: { algorithm: 'RS256' as const, expiresIn: '2h' },
           verifyOptions: { algorithms: ['RS256' as const] },
         };

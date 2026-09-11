@@ -17,6 +17,10 @@ export function calculateFee(params: {
   runnerShare: number;
   platformShare: number;
 } {
+  if (!Number.isInteger(params.purchasedStoreCount) || params.purchasedStoreCount < 0) {
+    throw new Error('purchasedStoreCount must be a non-negative integer');
+  }
+
   const baseFee = PRICING.BASE_FEE;
   const peripheralFee = params.isPeripheral ? PRICING.PERIPHERAL_FEE : 0;
   const extraStoresFee =

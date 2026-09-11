@@ -3,6 +3,7 @@ import { UsersService } from './users.service.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { CONFIG } from '@fawrun/shared-constants';
 
 @Controller('admin/users')
@@ -30,17 +31,26 @@ export class UsersController {
   }
 
   @Put(':id/verify')
-  async verify(@Param('id') id: string) {
-    return this.usersService.verify(id);
+  async verify(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; role: string; status: string },
+  ) {
+    return this.usersService.verify(id, user.id);
   }
 
   @Put(':id/reject')
-  async reject(@Param('id') id: string) {
-    return this.usersService.reject(id);
+  async reject(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; role: string; status: string },
+  ) {
+    return this.usersService.reject(id, user.id);
   }
 
   @Put(':id/suspend')
-  async suspend(@Param('id') id: string) {
-    return this.usersService.suspend(id);
+  async suspend(
+    @Param('id') id: string,
+    @CurrentUser() user: { id: string; role: string; status: string },
+  ) {
+    return this.usersService.suspend(id, user.id);
   }
 }

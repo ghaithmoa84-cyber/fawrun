@@ -31,7 +31,6 @@ reviews:
     - "!**/*.min.css"
     - "!**/*.map"
     - "!**/*.lock"
-    - "!apps/api/prisma/migrations/"
     - "!**/*.png"
     - "!**/*.jpg"
     - "!**/*.jpeg"

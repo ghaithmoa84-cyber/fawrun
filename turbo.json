@@ -12,6 +12,8 @@
     "test": {},
     "typecheck": {},
     "db:generate": {},
-    "db:push": {}
+    "db:push": {
+      "cache": false
+    }
   }
 }

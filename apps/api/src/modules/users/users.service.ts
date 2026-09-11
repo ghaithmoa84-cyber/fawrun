@@ -89,9 +89,9 @@ export class UsersService {
     };
   }
 
-  async verify(id: string) {
+  async verify(id: string, actorId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false, role: 'CUSTOMER' },
     });
 
     if (!user) {
@@ -104,18 +104,20 @@ export class UsersService {
       );
     }
 
-    await this.prisma.user.update({
-      where: { id },
-      data: { status: 'VERIFIED' },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { status: 'VERIFIED' },
+      });
 
-    await this.auditService.log({
-      actorId: undefined,
-      actorRole: 'ADMIN',
-      event: 'USER_VERIFIED',
-      fromStatus: 'PENDING_VERIFICATION',
-      toStatus: 'VERIFIED',
-      meta: { userId: id },
+      await this.auditService.log({
+        actorId,
+        actorRole: 'ADMIN',
+        event: 'USER_VERIFIED',
+        fromStatus: 'PENDING_VERIFICATION',
+        toStatus: 'VERIFIED',
+        meta: { userId: id },
+      }, tx);
     });
 
     try {
@@ -132,9 +134,9 @@ export class UsersService {
     };
   }
 
-  async reject(id: string) {
+  async reject(id: string, actorId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false, role: 'CUSTOMER' },
     });
 
     if (!user) {
@@ -147,18 +149,20 @@ export class UsersService {
       );
     }
 
-    await this.prisma.user.update({
-      where: { id },
-      data: { status: 'REJECTED' },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.user.update({
+        where: { id },
+        data: { status: 'REJECTED' },
+      });
 
-    await this.auditService.log({
-      actorId: undefined,
-      actorRole: 'ADMIN',
-      event: 'USER_REJECTED',
-      fromStatus: 'PENDING_VERIFICATION',
-      toStatus: 'REJECTED',
-      meta: { userId: id },
+      await this.auditService.log({
+        actorId,
+        actorRole: 'ADMIN',
+        event: 'USER_REJECTED',
+        fromStatus: 'PENDING_VERIFICATION',
+        toStatus: 'REJECTED',
+        meta: { userId: id },
+      }, tx);
     });
 
     return {
@@ -167,9 +171,9 @@ export class UsersService {
     };
   }
 
-  async suspend(id: string) {
+  async suspend(id: string, actorId: string) {
     const user = await this.prisma.user.findUnique({
-      where: { id, isDeleted: false },
+      where: { id, isDeleted: false, role: 'CUSTOMER' },
       include: { refreshTokens: true },
     });
 
@@ -189,13 +193,13 @@ export class UsersService {
       });
 
       await this.auditService.log({
-        actorId: undefined,
+        actorId,
         actorRole: 'ADMIN',
         event: 'USER_SUSPENDED',
         fromStatus: user.status,
         toStatus: 'SUSPENDED',
         meta: { userId: id },
-      });
+      }, tx);
     });
 
     return {

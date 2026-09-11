@@ -12,7 +12,7 @@ import { SOCKET_SERVERS } from './socket-registry.js';
 @WebSocketGateway({
   namespace: '/orders',
   cors: {
-    origin: process.env.CORS_ORIGINS?.split(',') || '*',
+    origin: process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()) || [],
     credentials: true,
   },
 })

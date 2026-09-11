@@ -15,6 +15,10 @@ import type { LoginDto } from './dto/login.dto.js';
 import type { RefreshDto } from './dto/refresh.dto.js';
 import type { LogoutDto } from './dto/logout.dto.js';
 
+function generateSelector(): string {
+  return randomBytes(16).toString('hex');
+}
+
 @Injectable()
 export class AuthService {
   constructor(
@@ -91,6 +95,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
+    if (user.status !== 'VERIFIED') {
+      throw new UnauthorizedException('Account is not verified');
+    }
+
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordValid) {
@@ -106,11 +114,13 @@ export class AuthService {
     );
 
     const refreshToken = randomBytes(32).toString('hex');
+    const selector = generateSelector();
     const tokenHash = await bcrypt.hash(refreshToken, CONFIG.BCRYPT_ROUNDS);
 
     await this.prisma.refreshToken.create({
       data: {
         userId: user.id,
+        selector,
         tokenHash,
         deviceInfo,
         isRevoked: false,
@@ -137,26 +147,32 @@ export class AuthService {
   }
 
   async refresh(dto: RefreshDto) {
-    const tokens = await this.prisma.refreshToken.findMany({
-      where: { isRevoked: false },
+    // Extract selector from the refresh token (first 32 chars = 16 bytes hex)
+    // Format: selector:secret
+    const [selector, secret] = dto.refreshToken.split(':');
+    if (!selector || !secret) {
+      throw new UnauthorizedException('Invalid refresh token format');
+    }
+
+    const token = await this.prisma.refreshToken.findUnique({
+      where: { selector, isRevoked: false },
       include: { user: true },
     });
 
-    let matchedToken: (typeof tokens)[number] | null = null;
-
-    for (const token of tokens) {
-      const isValid = await bcrypt.compare(dto.refreshToken, token.tokenHash);
-      if (isValid) {
-        matchedToken = token;
-        break;
-      }
-    }
-
-    if (!matchedToken) {
+    if (!token) {
       throw new UnauthorizedException('Invalid or expired refresh token');
     }
 
-    const user = matchedToken.user;
+    const isValid = await bcrypt.compare(secret, token.tokenHash);
+    if (!isValid) {
+      throw new UnauthorizedException('Invalid or expired refresh token');
+    }
+
+    const user = token.user;
+
+    if (user.isDeleted || user.status !== 'VERIFIED') {
+      throw new UnauthorizedException('Account is not active');
+    }
 
     const accessToken = this.jwtService.sign(
       { sub: user.id, role: user.role, status: user.status },
@@ -179,18 +195,25 @@ export class AuthService {
   }
 
   async logout(dto: LogoutDto) {
-    const tokens = await this.prisma.refreshToken.findMany({
-      where: { isRevoked: false },
+    const [selector, secret] = dto.refreshToken.split(':');
+    if (!selector || !secret) {
+      return {
+        statusCode: 200,
+        message: 'Logged out successfully',
+      };
+    }
+
+    const token = await this.prisma.refreshToken.findUnique({
+      where: { selector, isRevoked: false },
     });
 
-    for (const token of tokens) {
-      const isValid = await bcrypt.compare(dto.refreshToken, token.tokenHash);
+    if (token) {
+      const isValid = await bcrypt.compare(secret, token.tokenHash);
       if (isValid) {
         await this.prisma.refreshToken.update({
           where: { id: token.id },
           data: { isRevoked: true, revokedAt: new Date() },
         });
-        break;
       }
     }
 

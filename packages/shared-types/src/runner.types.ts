@@ -42,11 +42,15 @@ export type PurchaseResponse = {
   customerNotified: boolean;
 };
 
-export type ApproveOrderRequest = {
-  isPeripheral: boolean;
-  notes: string | null;
-};
+export const ApproveOrderSchema = z.object({
+  isPeripheral: z.boolean(),
+  notes: z.string().nullable(),
+});
 
-export type AssignRunnerRequest = {
-  runnerId: string;
-};
+export type ApproveOrderRequest = z.infer<typeof ApproveOrderSchema>;
+
+export const AssignRunnerSchema = z.object({
+  runnerId: z.string(),
+});
+
+export type AssignRunnerRequest = z.infer<typeof AssignRunnerSchema>;

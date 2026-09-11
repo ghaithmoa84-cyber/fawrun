@@ -12,7 +12,7 @@ import { SOCKET_SERVERS } from './socket-registry.js';
 @WebSocketGateway({
   namespace: '/admin',
   cors: {
-    origin: process.env.CORS_ORIGINS?.split(',') || '*',
+    origin: process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()) || [],
     credentials: true,
   },
 })
@@ -49,12 +49,15 @@ export class AdminGateway
         algorithms: ['RS256'],
       });
 
+      if (payload.role !== 'ADMIN') {
+        client.disconnect(true);
+        return;
+      }
+
       client.data.userId = payload.sub;
       client.data.role = payload.role;
 
-      if (payload.role === 'ADMIN') {
-        client.join('admin:all');
-      }
+      client.join('admin:all');
     } catch {
       client.disconnect(true);
     }
