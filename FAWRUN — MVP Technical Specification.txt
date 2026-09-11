@@ -1,0 +1,1692 @@
+FAWRUN — MVP Technical Specification
+الإصدار: 1.1
+الحالة: مسودة معتمدة للتطوير
+يبنى على: وثيقة FAWRUN v1.0 + تقرير القرارات النهائي (52 قسم) + مراجعة الأخطاء
+________________________________________
+1. نظرة عامة
+FAWRUN منصة شراء حاجيات بالنيابة عن العميل وتوصيلها. المندوب يشتري، يوصّل، يستلم الدفع نقداً. FAWRUN تأخذ 25% من رسم الخدمة.
+نطاق الـ MVP بدقة: شراء حاجيات من متجر واحد أو أكثر + التوصيل. لا كتالوج، لا دفع إلكتروني، لا تكامل مع متاجر. المتاجر تُكتب يدوياً من العميل كنص حر — لا يوجد قائمة متاجر مسبقة.
+________________________________________
+2. البنية المعمارية
+•	نمط البنية: Modular Monolith داخل Monorepo
+•	الفصل: Backend / Frontend منفصلين تماماً
+•	التواصل: REST API (/api/v1) + WebSocket (Socket.IO)
+•	مصدر الحقيقة: الخادم دائماً وأبداً
+لماذا Modular Monolith وليس Microservices؟
+في هذه المرحلة Microservices تعقيد غير مبرر. Modular Monolith يعطيك فصلاً منطقياً نظيفاً داخل تطبيق واحد قابل للتحويل لاحقاً إلى Microservices إذا نما الحجم.
+________________________________________
+3. هيكل Monorepo
+fawrun/
+├── apps/
+│   ├── api/                        ← NestJS Backend
+│   │   ├── src/
+│   │   │   ├── modules/
+│   │   │   │   ├── auth/
+│   │   │   │   ├── users/
+│   │   │   │   ├── customers/
+│   │   │   │   ├── runners/
+│   │   │   │   ├── orders/
+│   │   │   │   ├── order-items/
+│   │   │   │   ├── order-stores/
+│   │   │   │   ├── pricing/
+│   │   │   │   ├── settlements/
+│   │   │   │   ├── ledger/
+│   │   │   │   ├── ratings/
+│   │   │   │   ├── receipts/
+│   │   │   │   ├── notifications/
+│   │   │   │   └── audit/
+│   │   │   ├── websocket/
+│   │   │   │   └── gateways/
+│   │   │   ├── state-machine/
+│   │   │   ├── common/
+│   │   │   │   ├── guards/
+│   │   │   │   ├── decorators/
+│   │   │   │   ├── filters/
+│   │   │   │   └── interceptors/
+│   │   │   ├── database/
+│   │   │   │   └── prisma.service.ts
+│   │   │   └── config/
+│   │   ├── prisma/
+│   │   │   ├── schema.prisma
+│   │   │   └── migrations/
+│   │   └── test/
+│   │
+│   ├── admin-web/                  ← Next.js (App Router)
+│   │   └── src/
+│   │       ├── app/
+│   │       ├── components/
+│   │       └── lib/
+│   │
+│   ├── runner-pwa/                 ← React + Vite (PWA)
+│   │   └── src/
+│   │       ├── pages/
+│   │       ├── components/
+│   │       └── hooks/
+│   │
+│   └── android/                    ← Kotlin (Native Android)
+│       └── app/
+│           └── src/main/
+│               ├── ui/
+│               ├── data/
+│               └── domain/
+│
+├── packages/
+│   ├── shared-types/               ← DTOs + Zod Schemas مشتركة
+│   │   └── src/
+│   │       ├── auth.types.ts
+│   │       ├── order.types.ts
+│   │       ├── runner.types.ts
+│   │       ├── settlement.types.ts
+│   │       └── websocket.events.ts
+│   └── shared-constants/           ← ثوابت مشتركة
+│       └── src/
+│           ├── order-status.ts
+│           ├── pricing.ts
+│           └── config.ts
+│
+└── docs/
+    ├── api-spec.yaml               ← OpenAPI 3.0
+    └── decisions/
+________________________________________
+4. Stack التقني النهائي
+الطبقة	التقنية	السبب
+Backend Framework	NestJS + TypeScript	بنية Modules/Services/Controllers، WebSocket مدمج
+قاعدة البيانات	PostgreSQL	علاقات معقدة، transactions، Append-only Ledger
+ORM	Prisma	Type-safety كاملة، migrations نظيفة
+Realtime	Socket.IO (عبر @nestjs/websockets)	WebSocket حقيقي بدل Polling
+Validation	Zod	مشترك بين Backend والـ Frontends
+Password Hashing	bcrypt (12 rounds)	معيار صناعي
+Auth	JWT (Access Token قصير + Refresh Token دائم)	تجديد تلقائي صامت — المستخدم لا يُطرد أبداً مع إمكانية الإلغاء الفوري
+Admin Dashboard	Next.js 14 (App Router)	ويب فقط
+Runner Interface	React 18 + Vite + PWA	أسرع بالتطوير، يفتح من المتصفح
+Customer App	Kotlin (Native Android)	تجربة احترافية حقيقية
+الخرائط	OpenStreetMap + Leaflet	مجاني بالكامل، بدون بطاقة ائتمان، بدون حدود استخدام
+تحديد الموقع	Browser Geolocation API (PWA) + Android Location API	مدمج في المنصة، مجاني
+File Storage	Cloudflare R2	مجاني حتى 10GB، متوافق مع S3 API
+الاستضافة - Backend	Railway	Node.js دائم + PostgreSQL مدمج + WebSocket
+الاستضافة - Admin + Runner PWA	Vercel	Next.js وReact بدون تعقيد
+Error Tracking	Sentry (Free Tier)	مراقبة الأخطاء في الإنتاج
+Package Manager	pnpm + Turborepo	سرعة + إدارة Monorepo
+ملاحظة الخرائط: OpenStreetMap + Leaflet يوفران عرض الخريطة واختيار الموقع بالسحب والإفلات. تحديد الموقع التلقائي عبر GPS يعمل عبر Browser Geolocation API في PWA وAndroid Location API في التطبيق — كلاهما مجاني ومدمج.
+________________________________________
+5. نموذج البيانات (Prisma Schema)
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  RUNNER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION  // بانتظار تأكيد WhatsApp
+  VERIFIED              // موثق وفعال
+  REJECTED              // مرفوض من الإدارة
+  SUSPENDED             // موقوف مؤقتاً
+}
+
+enum RunnerStatus {
+  AVAILABLE             // مستعد لاستقبال طلبات
+  ON_MISSION            // لديه طلب نشط
+  UNAVAILABLE           // غير متاح
+}
+
+enum OrderStatus {
+  DRAFT                       // قيد الإنشاء من العميل
+  PENDING_REVIEW              // أُرسل، بانتظار مراجعة الإدارة
+  UNDER_REVIEW                // الإدارة تراجعه الآن
+  AWAITING_RUNNER             // معتمد، يبحث عن مندوب
+  AWAITING_PREFERRED_RUNNER   // العميل ينتظر مندوبه المفضل
+  ASSIGNED                    // مندوب معين، لم يبدأ بعد
+  IN_PROGRESS                 // بدأ التنفيذ (مرحلة الشراء)
+  OUT_FOR_DELIVERY            // انتهى الشراء، في الطريق للتوصيل
+  DELIVERED                   // تم التسليم
+  CANCELLED                   // ملغى
+}
+
+enum OrderStoreStatus {
+  PENDING    // لم يزر المتجر بعد
+  PURCHASED  // تم الشراء (runner ضغط "تم الشراء")
+  SKIPPED    // لم يتم الشراء (متجر مغلق أو مادة غير متوفرة)
+}
+
+enum LedgerEntryType {
+  ORDER_FEE_TOTAL     // إجمالي رسم الخدمة المحصّل
+  RUNNER_SHARE        // حصة المندوب (75%)
+  PLATFORM_SHARE      // حصة FAWRUN (25%)
+  SETTLEMENT_PAID     // المندوب سدّد حصة FAWRUN
+  ADMIN_ADJUSTMENT    // تعديل يدوي من الإدارة
+}
+
+enum SettlementStatus {
+  PENDING   // لم تُغلق بعد
+  SETTLED   // مغلقة ومسواة
+}
+
+// ─────────────────────────────────────────
+// USER (Base for all roles)
+// ─────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  whatsapp     String     @unique  // رقم WhatsApp إلزامي
+  altPhone     String?             // رقم اتصال اختياري
+  passwordHash String
+  name         String
+  role         UserRole
+  status       UserStatus @default(PENDING_VERIFICATION)
+  isDeleted    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  customer      Customer?
+  runner        Runner?
+  admin         Admin?
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  // الطلبات التي ألغاها هذا المستخدم
+  cancelledOrders Order[] @relation("CancelledByUser")
+
+  @@index([whatsapp])
+  @@index([role, status])
+}
+
+// ─────────────────────────────────────────
+// AUTH TOKENS
+// ─────────────────────────────────────────
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  tokenHash  String   @unique  // bcrypt hash of the token
+  deviceInfo String?           // معلومات الجهاز اختيارية
+  isRevoked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId, isRevoked])
+}
+
+// ─────────────────────────────────────────
+// CUSTOMER
+// ─────────────────────────────────────────
+
+model Customer {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  completedOrders Int       @default(0)
+  totalFeesPaid   Int       @default(0)  // بالليرة السورية، كعدد صحيح
+  createdAt       DateTime  @default(now())
+
+  address  CustomerAddress?
+  orders   Order[]
+  ratings  Rating[]
+}
+
+model CustomerAddress {
+  id          String   @id @default(cuid())
+  customerId  String   @unique
+  customer    Customer @relation(fields: [customerId], references: [id])
+  lat         Float
+  lng         Float
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────
+// RUNNER
+// ─────────────────────────────────────────
+
+model Runner {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id])
+  status       RunnerStatus @default(UNAVAILABLE)
+  isVisible    Boolean      @default(true)  // false = مخفي من قوائم العملاء
+  avgRating    Float?
+  totalRatings Int          @default(0)
+  notes        String?                      // ملاحظات داخلية للإدارة
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  orders           Order[]
+  preferredInOrders Order[]      @relation("PreferredRunner")
+  ratings          Rating[]
+  settlements      Settlement[]
+
+  @@index([status, isVisible])
+}
+
+// ─────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// ORDER
+// ─────────────────────────────────────────
+
+model Order {
+  id          String      @id @default(cuid())
+  seqNumber   Int         @unique @default(autoincrement())
+  // رقم الطلب المولَّد: FW + seqNumber مُعبَّأ بأصفار حتى 6 خانات
+  // مثال: seqNumber=1 → orderNumber="FW-000001"
+  // يُولَّد في الكود مباشرة بعد إنشاء السجل باستخدام seqNumber
+  // لا يُولَّد قبل الحفظ لضمان التفرد في حالات التزامن
+  orderNumber String      @unique
+
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+
+  runnerId    String?
+  runner      Runner?     @relation(fields: [runnerId], references: [id])
+
+  status      OrderStatus @default(DRAFT)
+
+  // Snapshot عنوان التسليم (ثابت لا يتأثر بتعديلات العميل اللاحقة)
+  deliveryLat  Float
+  deliveryLng  Float
+  deliveryDesc String
+
+  // التسعير (بالليرة السورية، كأعداد صحيحة)
+  isPeripheral        Boolean @default(false)
+  baseFee             Int     @default(60)
+  peripheralFee       Int     @default(0)
+  extraStoresFee      Int     @default(0)
+  totalFee            Int     @default(60)
+
+  // المندوب المفضل — ربط رسمي بجدول Runner
+  preferredRunnerId   String?
+  preferredRunner     Runner? @relation("PreferredRunner", fields: [preferredRunnerId], references: [id])
+  waitForPreferred    Boolean @default(false)
+
+  notes             String?
+  cancelReason      String?
+
+  // من ألغى الطلب — ربط رسمي بجدول User
+  cancelledByUserId String?
+  cancelledByUser   User?   @relation("CancelledByUser", fields: [cancelledByUserId], references: [id])
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  reviewedAt   DateTime?
+  assignedAt   DateTime?
+  startedAt    DateTime?
+  deliveredAt  DateTime?
+  cancelledAt  DateTime?
+
+  items          OrderItem[]
+  orderStores    OrderStore[]
+  ratings        Rating[]
+  auditLogs      AuditLog[]
+  ledgerEntries  LedgerEntry[]
+  settlementItem SettlementItem?
+
+  @@index([customerId, status])
+  @@index([runnerId, status])
+  @@index([status, createdAt])
+}
+
+// ─────────────────────────────────────────
+// ORDER ITEM
+// ─────────────────────────────────────────
+
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id])
+
+  itemName String  // اسم المادة (نص حر)
+  quantity String  // الكمية أو الوصف (نص حر: "2 كغ"، "3 حبات"...)
+
+  // مصدر المتجر — نص حر يكتبه العميل أو المندوب
+  // إذا كان anyStore=true فالمندوب يختار المتجر المناسب
+  customStoreName  String?  // اسم المتجر الذي كتبه العميل يدوياً
+  anyStore         Boolean  @default(true)
+
+  // يُربط بـ OrderStore عند تعيين المندوب له
+  orderStoreId String?
+  orderStore   OrderStore? @relation(fields: [orderStoreId], references: [id])
+
+  isCancelled  Boolean  @default(false)
+  cancelNote   String?
+  createdAt    DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────
+// ORDER STORE
+// (تجميع المواد حسب المتجر — مفهوم داخلي)
+// ─────────────────────────────────────────
+
+model OrderStore {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  // اسم المتجر دائماً نص حر (يكتبه العميل أو المندوب)
+  storeName   String           // الاسم الذي كتبه العميل أو المندوب
+  isAnyStore  Boolean @default(false)  // bucket مؤقت لمواد "أي متجر"
+
+  status   OrderStoreStatus @default(PENDING)
+  isExtra  Boolean          @default(false)  // متجر إضافي يُحسب +20
+  addedBy  String?          // "CUSTOMER" أو "RUNNER"
+
+  purchasedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items    OrderItem[]
+  receipts Receipt[]
+
+  @@index([orderId, status])
+}
+
+// ─────────────────────────────────────────
+// RECEIPT (صور الإيصالات)
+// ─────────────────────────────────────────
+
+model Receipt {
+  id           String     @id @default(cuid())
+  orderStoreId String
+  orderStore   OrderStore @relation(fields: [orderStoreId], references: [id])
+  imageUrl     String     // Cloudflare R2 URL
+  r2Key        String     // المفتاح في R2 (للحذف لاحقاً إذا لزم)
+
+  // Soft delete: الصورة تبقى في R2 لكن تُوضع علامة محذوفة هنا
+  isDeleted    Boolean  @default(false)
+  deletedAt    DateTime?
+
+  uploadedAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// RATING
+// ─────────────────────────────────────────
+
+model Rating {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  // تقييم للمندوب فقط — المتاجر نص حر ولا تُقيَّم بشكل منفصل في MVP
+  runnerId String?
+  runner   Runner? @relation(fields: [runnerId], references: [id])
+
+  // تقييم متجر بالاسم النصي (اختياري)
+  storeNameRated String?
+
+  stars     Int      // 1 إلى 5
+  note      String?  // خاص — للإدارة فقط
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime // createdAt + 24 ساعة
+  isFinal   Boolean  @default(false)
+
+  @@unique([orderId, runnerId])
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────
+// FINANCIAL LEDGER (Append-Only)
+// ─────────────────────────────────────────
+
+model LedgerEntry {
+  id          String          @id @default(cuid())
+  orderId     String?
+  order       Order?          @relation(fields: [orderId], references: [id])
+  runnerId    String?
+  type        LedgerEntryType
+  amount      Int             // بالليرة السورية
+  description String
+  meta        Json?
+
+  createdAt   DateTime @default(now())
+  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only لا يُعدّل
+
+  @@index([orderId])
+  @@index([runnerId, type])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────
+// SETTLEMENT (التسوية اليومية)
+// ─────────────────────────────────────────
+
+model Settlement {
+  id              String           @id @default(cuid())
+  runnerId        String
+  runner          Runner           @relation(fields: [runnerId], references: [id])
+  operationalDate String           // YYYY-MM-DD (اليوم التشغيلي بتوقيت دمشق)
+  status          SettlementStatus @default(PENDING)
+  totalOrders     Int
+  totalFees       Int
+  runnerShare     Int
+  platformShare   Int
+  notes           String?
+  closedAt        DateTime?
+  closedByAdminId String?
+
+  items     SettlementItem[]
+  createdAt DateTime         @default(now())
+
+  @@unique([runnerId, operationalDate])
+  @@index([status, operationalDate])
+}
+
+model SettlementItem {
+  id           String     @id @default(cuid())
+  settlementId String
+  settlement   Settlement @relation(fields: [settlementId], references: [id])
+  orderId      String     @unique
+  order        Order      @relation(fields: [orderId], references: [id])
+  orderFee     Int
+  runnerShare  Int
+  platformShare Int
+}
+
+// ─────────────────────────────────────────
+// AUDIT LOG (سجل الأحداث — Append-Only)
+// ─────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  orderId    String?
+  order      Order?   @relation(fields: [orderId], references: [id])
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actorRole  String?  // CUSTOMER / RUNNER / ADMIN / SYSTEM
+  event      String
+  fromStatus String?
+  toStatus   String?
+  meta       Json?
+
+  createdAt  DateTime @default(now())
+  // ⚠️ لا يوجد updatedAt — هذا الجدول لا يُعدّل أبداً
+
+  @@index([orderId, createdAt])
+  @@index([event, createdAt])
+}
+________________________________________
+6. State Machines
+6.1 Order State Machine
+DRAFT
+  └─[العميل يرسل الطلب]──────────────────────→ PENDING_REVIEW
+                                                      │
+                                   ┌──────────────────┤
+                                   ↓                  ↓
+                             [العميل يلغي]    [Admin يفتح للمراجعة]
+                             CANCELLED              UNDER_REVIEW
+                                                      │
+                          ┌───────────────────────────┼────────────────────┐
+                          ↓                           ↓                    ↓
+                   [Admin يرفض]         [Admin يعتمد +        [Admin يعتمد +
+                   CANCELLED             أي مندوب]             مندوب مفضل غير متاح]
+                                      AWAITING_RUNNER      AWAITING_PREFERRED_RUNNER
+                                             │                       │
+                                  [Admin يعين]          [يتوفر / العميل يغير رأيه]
+                                      ↓                       ↓
+                                   ASSIGNED ←─────────────────┘
+                                      │
+                          ┌───────────┤
+                          ↓           ↓
+                   [العميل يلغي]  [Runner يضغط "بدأت"]
+                   CANCELLED         IN_PROGRESS
+                                      │
+                          ┌───────────┤
+                          ↓           ↓
+                   [Admin يلغي]   [Runner يضغط "انتقل للتوصيل"]
+                   CANCELLED       OUT_FOR_DELIVERY
+                                      │
+                          ┌───────────┤
+                          ↓           ↓
+                   [Admin يلغي]   [Runner يضغط "تم التسليم"]
+                   CANCELLED          DELIVERED ✓
+قواعد صارمة:
+•	العميل يستطيع الإلغاء فقط حتى حالة ASSIGNED
+•	بعد IN_PROGRESS الإلغاء عبر الإدارة حصراً
+•	DELIVERED نهائية — لا تراجع عنها في التطبيق
+•	كل انتقال يُسجَّل في AuditLog مع الجهة والوقت
+•	عملية "تم التسليم" إذا أُرسلت مرتين تُنفَّذ مرة واحدة فقط (Idempotent)
+6.2 OrderStore State Machine
+PENDING
+  ├─[Runner يضغط "تم الشراء"]──→ PURCHASED ✓
+  └─[Runner يضغط "لم يتم الشراء"]─→ SKIPPED ✓
+•	قبل PURCHASED يمكن حذف المتجر إذا أُضيف بالخطأ
+•	بعد PURCHASED لا تراجع — أي تصحيح عبر الإدارة
+6.3 Runner Status Machine
+UNAVAILABLE
+  └─[Runner يضغط "متاح"]──→ AVAILABLE
+                                │
+                    [Admin يعين Runner لطلب]
+                                ↓
+                           ON_MISSION
+                                │
+                    [الطلب يصل DELIVERED أو CANCELLED]
+                                ↓
+                           AVAILABLE (آلياً)
+________________________________________
+7. نظام المصادقة والصلاحيات
+7.1 المصادقة
+التسجيل (العميل):
+•	يُدخل: الاسم، WhatsApp، كلمة المرور، العنوان
+•	النظام ينشئ حساباً بحالة PENDING_VERIFICATION
+•	العميل يرسل رسالة من رقمه لـ WhatsApp الإدارة (خارج التطبيق)
+•	Admin يتحقق ويضغط "تفعيل الحساب" من لوحة الإدارة
+•	الحالة تصبح VERIFIED
+•	العميل يستلم إشعاراً (WebSocket) بالتفعيل
+إنشاء حساب Runner: الإدارة فقط، من لوحة التحكم
+JWT Strategy — تجربة "مسجّل دائماً" مع أمان كامل:
+عند تسجيل الدخول الناجح:
+  - Access Token  (JWT، صالح ساعتين)
+  - Refresh Token (random 64-byte string، بلا انتهاء صلاحية)
+  - يُحفظ hash(RefreshToken) في جدول RefreshToken
+
+عند انتهاء Access Token (كل ساعتين — يحدث في الخلفية بصمت):
+  - التطبيق يُرسل Refresh Token تلقائياً
+  - الخادم يتحقق من DB (موجود + غير ملغى)
+  - يُولَّد Access Token جديد
+  - المستخدم لا يشعر بشيء — التطبيق يبدو "مسجّل دائماً"
+
+عند تسجيل الخروج اليدوي:
+  - يُوضَّع isRevoked = true على Refresh Token
+
+إلغاء طارئ من الإدارة (هاتف مسروق مثلاً):
+  - يُلغى كل Refresh Tokens للمستخدم دفعة واحدة
+  - في أقصى تقدير ساعتين والجلسة تنتهي وحدها
+لماذا ساعتان وليس 30 يوماً؟
+الـ Refresh Token هو من يبقي المستخدم مسجلاً للأبد — وهو محمي في قاعدة البيانات ويمكن إلغاؤه فوراً. Access Token القصير يضمن أنه لو سُرق لن يعمل أكثر من ساعتين.
+7.2 الصلاحيات
+تطبق على الخادم دائماً — ليس على الـ Frontend فقط
+العملية	CUSTOMER	RUNNER	ADMIN
+إنشاء طلب	✅ (حسابه فقط)	❌	✅
+رؤية تفاصيل طلب	✅ (طلباته فقط)	✅ (طلباته فقط)	✅ (الكل)
+تغيير حالة الطلب	محدود	محدود	✅
+إلغاء طلب	✅ (قبل IN_PROGRESS)	❌	✅
+تفعيل حساب عميل	❌	❌	✅
+إنشاء حساب Runner	❌	❌	✅
+رؤية الـ Ledger	❌	محدود (حصته)	✅
+إغلاق التسوية	❌	❌	✅
+رؤية نصوص تقييمات العملاء	❌	❌	✅
+________________________________________
+8. منطق التسعير (Pricing Engine)
+// packages/shared-constants/src/pricing.ts
+
+export const PRICING = {
+  BASE_FEE: 60,           // الرسم الأساسي
+  PERIPHERAL_FEE: 40,     // رسم المنطقة الطرفية
+  EXTRA_STORE_FEE: 20,    // رسم كل متجر إضافي بعد الأول
+  RUNNER_SHARE: 0.75,     // 75% للمندوب
+  PLATFORM_SHARE: 0.25,   // 25% لـ FAWRUN
+} as const;
+
+export function calculateFee(params: {
+  isPeripheral: boolean;
+  purchasedStoreCount: number;  // عدد OrderStores بحالة PURCHASED فقط
+}): {
+  baseFee: number;
+  peripheralFee: number;
+  extraStoresFee: number;
+  totalFee: number;
+  runnerShare: number;
+  platformShare: number;
+} {
+  const baseFee = PRICING.BASE_FEE;
+  const peripheralFee = params.isPeripheral ? PRICING.PERIPHERAL_FEE : 0;
+  const extraStoresFee =
+    Math.max(0, params.purchasedStoreCount - 1) * PRICING.EXTRA_STORE_FEE;
+  const totalFee = baseFee + peripheralFee + extraStoresFee;
+
+  return {
+    baseFee,
+    peripheralFee,
+    extraStoresFee,
+    totalFee,
+    runnerShare: Math.floor(totalFee * PRICING.RUNNER_SHARE),
+    platformShare: Math.ceil(totalFee * PRICING.PLATFORM_SHARE),
+  };
+}
+متى يُعاد حساب الرسم:
+•	عند إنشاء الطلب — تقدير أولي (بدون peripheral)
+•	عند اعتماد Admin مع تحديد isPeripheral — الرسم قد يتغير
+•	عند كل OrderStore يصبح PURCHASED — إضافة +20 إذا كان متجراً إضافياً
+•	عند التسليم — الرسم النهائي مؤكد ومقفل
+تنبيه العميل: WebSocket event عند كل تغيير في الرسم
+________________________________________
+9. مواصفات API
+Base URL: /api/v1
+Format: JSON
+Auth: Authorization: Bearer <accessToken> (ما عدا /auth/*)
+
+9.0 Error Responses (شكل موحد للخطأ)
+كل خطأ يُرجعه الخادم يكون بهذا الشكل:
+{
+  "statusCode": 400,
+  "error": "VALIDATION_ERROR",
+  "message": "وصف مختصر للخطأ"
+}
+
+أكواد الحالة المستخدمة:
+- 400: VALIDATION_ERROR — بيانات الطلب غير صالحة
+- 401: UNAUTHORIZED — انتهاء الجلسة أو غياب التوكن
+- 403: FORBIDDEN — عدم الصلاحية للعملية
+- 404: NOT_FOUND — المورد غير موجود
+- 409: CONFLICT — تعارض (مثل إرسال "تم التسليم" مرتين)
+- 422: BUSINESS_RULE_VIOLATION — انتهاك قاعدة عمل (مثل إلغاء طلب بعد IN_PROGRESS)
+- 500: INTERNAL_SERVER_ERROR — أخطاء الخادم الداخلية
+
+9.0.1 Pagination (التقسيم على صفحات)
+كل endpoint يُرجع قائمة يدعم المعاملات التالية:
+- page: رقم الصفحة (يبدأ من 1، الافتراضي 1)
+- limit: عدد السجلات في الصفحة (الافتراضي 20، الحد الأقصى 100)
+
+الـ Response يتضمن دائماً:
+{
+  "data": [],
+  "meta": {
+    "total": 150,
+    "page": 1,
+    "limit": 20,
+    "totalPages": 8
+  }
+}
+
+تنطبق على: GET /admin/orders، GET /customer/orders، GET /runner/settlements، GET /admin/settlements، GET /admin/users، GET /admin/runners، GET /admin/ledger.
+9.1 Auth
+Method	Path	Description	Auth
+POST	/auth/register	تسجيل عميل جديد	❌
+POST	/auth/login	تسجيل دخول	❌
+POST	/auth/logout	تسجيل خروج	✅
+POST	/auth/refresh	تجديد Access Token (يحدث تلقائياً في الخلفية)	❌ (Refresh Token في الـ body)
+POST /auth/register — Request:
+{
+  "name": "string",
+  "whatsapp": "string",
+  "altPhone": "string | null",
+  "password": "string (min 8)",
+  "address": {
+    "lat": "number",
+    "lng": "number",
+    "description": "string"
+  }
+}
+POST /auth/login — Response:
+{
+  "accessToken": "string (JWT، صالح ساعتين)",
+  "refreshToken": "string (دائم حتى الإلغاء)",
+  "user": {
+    "id": "string",
+    "name": "string",
+    "role": "CUSTOMER | RUNNER | ADMIN",
+    "status": "PENDING_VERIFICATION | VERIFIED ..."
+  }
+}
+9.2 Customer Endpoints
+Method	Path	Description
+GET	/customer/me	بيانات الحساب + الإحصائيات
+PUT	/customer/me	تعديل الاسم / altPhone / كلمة المرور
+GET	/customer/me/address	العنوان المحفوظ
+PUT	/customer/me/address	تعديل العنوان
+GET	/customer/runners	قائمة المندوبين المتاحين (للاختيار)
+GET	/customer/orders	سجل الطلبات
+GET	/customer/orders/:id	تفاصيل طلب
+POST	/customer/orders	إنشاء طلب جديد
+DELETE	/customer/orders/:id	إلغاء طلب (قبل IN_PROGRESS)
+POST	/customer/orders/:id/ratings	إرسال تقييم
+PUT	/customer/orders/:id/ratings	تعديل تقييم (خلال 24 ساعة)
+POST /customer/orders — Request:
+{
+  "items": [
+    {
+      "itemName": "حليب",
+      "quantity": "2 لتر",
+      "customStoreName": "دكان أبو علي | null",
+      "anyStore": true
+    }
+  ],
+  "notes": "string | null",
+  "preferredRunnerId": "string | null",
+  "waitForPreferred": false,
+  "deliveryAddress": {
+    "lat": 35.123,
+    "lng": 35.456,
+    "description": "بجانب المدرسة"
+  }
+}
+POST /customer/orders — Response:
+{
+  "id": "string",
+  "orderNumber": "FW-000001",
+  "status": "PENDING_REVIEW",
+  "estimatedFee": {
+    "baseFee": 60,
+    "peripheralFee": 0,
+    "extraStoresFee": 0,
+    "totalFee": 60,
+    "note": "الرسم النهائي يُحدد بعد المراجعة وبعد تأكيد المتاجر الفعلية"
+  }
+}
+9.3 Runner Endpoints
+Method	Path	Description
+GET	/runner/me	بيانات الملف + الإحصائيات
+PUT	/runner/me/status	تغيير الحالة (AVAILABLE / UNAVAILABLE)
+GET	/runner/orders/active	الطلب النشط الحالي
+PUT	/runner/orders/:id/start	بدأت تنفيذ الطلب
+GET	/runner/orders/:id/stores	قائمة متاجر الطلب
+POST	/runner/orders/:id/stores	إضافة متجر جديد
+DELETE	/runner/orders/:id/stores/:storeId	حذف متجر (قبل Purchase)
+PUT	/runner/orders/:id/stores/:storeId/purchase	تأكيد الشراء من متجر
+PUT	/runner/orders/:id/stores/:storeId/skip	تخطي متجر
+POST	/runner/orders/:id/stores/:storeId/receipts	رفع صورة إيصال
+DELETE	/runner/orders/:id/stores/:storeId/receipts/:receiptId	حذف صورة (قبل Purchase)
+POST	/runner/orders/:id/items	إضافة مادة لمتجر موجود
+PUT	/runner/orders/:id/proceed-to-delivery	الانتقال إلى التوصيل
+PUT	/runner/orders/:id/deliver	تم التسليم
+GET	/runner/settlements	سجل التسويات
+GET	/runner/settlements/current	تسوية اليوم الحالي
+PUT /runner/orders/:id/stores/:storeId/purchase — Response:
+{
+  "orderStore": { "id": "...", "status": "PURCHASED" },
+  "updatedFee": {
+    "extraStoresFee": 20,
+    "totalFee": 80
+  },
+  "customerNotified": true
+}
+
+9.3.1 تجربة استقبال الطلب على الـ Runner PWA
+الـ Runner يبقى على شاشة "أنا متاح" وهي مفتوحة في المتصفح (PWA).
+عند تعيينه لطلب:
+- يصله حدث order:assigned عبر WebSocket مع صوت تنبيه (new_order)
+- تنتقل الشاشة تلقائياً لتفاصيل الطلب بدون أي إجراء منه
+- لا يوجد push notification في MVP — الـ PWA يجب أن يكون مفتوحاً في المتصفح ليستقبل الإشعار
+- إذا كان التطبيق مغلقاً أو في الخلفية، لن يصل الإشعار (يحل هذا في ما بعد MVP عبر Service Worker / FCM)
+9.4 Admin Endpoints
+Method	Path	Description
+GET	/admin/dashboard	إحصائيات عامة
+GET	/admin/users	قائمة العملاء
+GET	/admin/users/:id	تفاصيل عميل
+PUT	/admin/users/:id/verify	تفعيل حساب
+PUT	/admin/users/:id/reject	رفض حساب
+PUT	/admin/users/:id/suspend	تعليق حساب
+GET	/admin/runners	قائمة المندوبين + حالاتهم
+POST	/admin/runners	إنشاء حساب مندوب
+PUT	/admin/runners/:id	تعديل بيانات مندوب
+PUT	/admin/runners/:id/visibility	إخفاء / إظهار مندوب
+GET	/admin/orders	قائمة الطلبات (مع فلاتر)
+GET	/admin/orders/:id	تفاصيل طلب كاملة
+GET	/admin/orders/:id/audit	سجل أحداث الطلب
+PUT	/admin/orders/:id/approve	اعتماد + تحديد peripheral
+PUT	/admin/orders/:id/reject	رفض الطلب
+PUT	/admin/orders/:id/assign-runner	تعيين مندوب
+PUT	/admin/orders/:id/cancel	إلغاء (بأي مرحلة)
+GET	/admin/settlements	قائمة التسويات
+GET	/admin/settlements/pending	التسويات غير المغلقة
+POST	/admin/settlements/close-day	إغلاق يوم التسوية
+PUT	/admin/settlements/:id/mark-settled	تأكيد تسوية مع مندوب
+GET	/admin/ledger	السجل المالي
+PUT /admin/orders/:id/approve — Request:
+{
+  "isPeripheral": false,
+  "notes": "string | null"
+}
+PUT /admin/orders/:id/assign-runner — Request:
+{
+  "runnerId": "string"
+}
+POST /admin/settlements/close-day — Request:
+{
+  "operationalDate": "2025-09-10",
+  "notes": "string | null"
+}
+________________________________________
+10. WebSocket Events (Socket.IO)
+المصادقة: عند الاتصال: { token: accessToken } في auth header
+Namespaces:
+•	/orders — أحداث الطلبات (العميل + Runner + Admin)
+•	/admin — أحداث خاصة بالإدارة فقط
+10.1 أحداث يُرسلها الخادم للعميل
+// العميل يُنضم لـ room باسم: `customer:{customerId}`
+
+'order:status_changed'   → { orderId, orderNumber, newStatus, oldStatus }
+'order:runner_assigned'  → { orderId, runnerName }
+'order:fee_updated'      → { orderId, oldFee, newFee, reason }
+'order:store_purchased'  → { orderId, storeName }
+'order:out_for_delivery' → { orderId }
+'order:delivered'        → { orderId, deliveredAt }
+'order:cancelled'        → { orderId, reason, cancelledBy }
+'account:verified'       → { message: "تم تفعيل حسابك" }
+10.2 أحداث يُرسلها الخادم للـ Runner
+// Runner يُنضم لـ room باسم: `runner:{runnerId}`
+
+'order:assigned'             → { orderId, orderNumber, customerName,
+                                  deliveryAddress, items, estimatedFee }
+'order:reassigned'           → { orderId }
+'order:assignment_cancelled' → { orderId, reason }
+10.3 أحداث يُرسلها الخادم للإدارة
+// Admin يُنضم لـ room باسم: `admin:all`
+
+'order:new'            → { orderId, orderNumber, customerName, itemCount }
+'order:status_changed' → { orderId, orderNumber, newStatus }
+'order:needs_attention'→ { orderId, reason }
+'user:new_registration'→ { userId, userName, whatsapp }
+'settlement:reminder'  → { date, pendingRunnerCount }
+10.4 أصوات الإشعار
+type SoundType =
+  | 'new_order'     // للـ Runner والإدارة
+  | 'status_update' // للعميل
+  | 'urgent'        // حالات تحتاج تدخلاً
+  | 'success'       // تسليم ناجح
+الـ Frontend يُشغّل الصوت المناسب محلياً عند وصول الإشعار.
+________________________________________
+11. Audit Log Events
+enum AuditEvent {
+  // دورة حياة الطلب
+  ORDER_CREATED              = 'ORDER_CREATED',
+  ORDER_SUBMITTED            = 'ORDER_SUBMITTED',
+  ORDER_REVIEW_STARTED       = 'ORDER_REVIEW_STARTED',
+  ORDER_APPROVED             = 'ORDER_APPROVED',
+  ORDER_REJECTED             = 'ORDER_REJECTED',
+  ORDER_PERIPHERAL_SET       = 'ORDER_PERIPHERAL_SET',
+  ORDER_FEE_UPDATED          = 'ORDER_FEE_UPDATED',
+  RUNNER_ASSIGNED            = 'RUNNER_ASSIGNED',
+  RUNNER_REASSIGNED          = 'RUNNER_REASSIGNED',
+  ORDER_STARTED              = 'ORDER_STARTED',
+  ORDER_CANCELLED            = 'ORDER_CANCELLED',
+  ORDER_DELIVERED            = 'ORDER_DELIVERED',
+
+  // متاجر ومشتريات
+  STORE_ADDED                = 'STORE_ADDED',
+  STORE_REMOVED              = 'STORE_REMOVED',
+  STORE_PURCHASED            = 'STORE_PURCHASED',
+  STORE_SKIPPED              = 'STORE_SKIPPED',
+  ITEM_CANCELLED             = 'ITEM_CANCELLED',
+  RECEIPT_UPLOADED           = 'RECEIPT_UPLOADED',
+  RECEIPT_DELETED            = 'RECEIPT_DELETED',
+  PROCEEDED_TO_DELIVERY      = 'PROCEEDED_TO_DELIVERY',
+
+  // مالي
+  LEDGER_ENTRY_CREATED       = 'LEDGER_ENTRY_CREATED',
+  SETTLEMENT_CLOSED          = 'SETTLEMENT_CLOSED',
+  SETTLEMENT_MARKED_SETTLED  = 'SETTLEMENT_MARKED_SETTLED',
+
+  // حسابات
+  USER_VERIFIED              = 'USER_VERIFIED',
+  USER_REJECTED              = 'USER_REJECTED',
+  USER_SUSPENDED             = 'USER_SUSPENDED',
+  TOKEN_REVOKED              = 'TOKEN_REVOKED',
+}
+________________________________________
+12. Cloudflare R2 (صور الإيصالات)
+البنية:
+Bucket: fawrun-receipts
+Key format: receipts/{orderId}/{orderStoreId}/{timestamp}_{random}.jpg
+
+قيود الملفات:
+- الحد الأقصى لحجم الصورة الواحدة: 5 MB
+- أنواع الملفات المقبولة: jpg و png فقط
+- الحد الأقصى لعدد الصور لكل متجر واحد: 5 صور
+- يتحقق الخادم من النوع والحجم قبل إصدار الـ Presigned URL
+
+رفع الصور:
+•	الـ Frontend يطلب Presigned URL من API
+•	يرفع مباشرة لـ R2 (لا يمر عبر الخادم)
+•	بعد الرفع يُبلّغ الخادم بالـ key
+•	الخادم يُنشئ سجل Receipt في DB
+API Endpoint:
+POST /api/v1/runner/orders/:id/stores/:storeId/receipts/presigned-url
+Response: { presignedUrl, r2Key, expiresIn: 300 }
+الحذف:
+•	قبل Purchase: Runner يطلب حذف → الخادم يحذف من R2 ويضع isDeleted=true في DB
+•	بعد Purchase: isDeleted=true و deletedAt=now() في DB، الملف يبقى في R2 للمراجعة
+________________________________________
+13. التسوية المالية
+منطق توليد رقم الطلب (orderNumber):
+// يحدث داخل transaction بعد إنشاء السجل مباشرة
+// seqNumber يُولَّد تلقائياً بواسطة PostgreSQL (autoincrement)
+// لا تزامن مطلوب — PostgreSQL يضمن التفرد
+
+const orderNumber = `FW-${String(order.seqNumber).padStart(6, '0')}`;
+// مثال: seqNumber=1 → "FW-000001"
+//        seqNumber=1234 → "FW-001234"
+منطق إغلاق يوم التسوية:
+async closeSettlementDay(date: string, adminId: string) {
+  // 1. جلب كل الطلبات المكتملة في هذا اليوم لكل مندوب
+  // 2. تجميعها حسب المندوب
+  // 3. لكل مندوب:
+  //    - إنشاء Settlement record
+  //    - حساب: totalFees, runnerShare (75%), platformShare (25%)
+  //    - إنشاء SettlementItem لكل طلب
+  //    - إضافة LedgerEntry من نوع RUNNER_SHARE و PLATFORM_SHARE
+  // 4. تسجيل AuditLog
+  // 5. WebSocket إشعار للإدارة بالإغلاق
+  // ⚠️ Idempotent: إذا وُجد Settlement لنفس المندوب ونفس اليوم → تخطّى
+}
+Cron Job للتذكير:
+// يعمل كل يوم في 23:00 توقيت دمشق
+@Cron('0 23 * * *', { timeZone: 'Asia/Damascus' })
+async settlementReminder() {
+  const today = getOperationalDate();
+  const hasOpenSettlement = await this.checkPendingOrders(today);
+  if (hasOpenSettlement) {
+    this.wsGateway.emitToAdmin('settlement:reminder', {
+      date: today,
+      message: 'لديك تسوية معلقة لم تُغلق بعد',
+    });
+  }
+}
+
+قاعدة operationalDate (اليوم التشغيلي):
+- اليوم التشغيلي يُحدَّد بوقت بداية الطلب (createdAt) لا وقت تسليمه
+- طلب أُنشئ قبل منتصف الليل بتوقيت دمشق ينتمي لذلك اليوم حتى لو سُلِّم بعد منتصف الليل
+- جميع التواريخ تُخزَّن بـ UTC في DB، لكن operationalDate في Settlement تُحسب بتوقيت Damascus (Asia/Damascus)
+- مثال: طلب أُنشئ 2025-09-10 23:45 Damascus، سُلِّم 2025-09-11 00:15 → operationalDate = "2025-09-10"
+________________________________________
+14. Security
+1.	Helmet.js — HTTP security headers
+2.	Rate Limiting: 
+o	/auth/login: 10 محاولات / 15 دقيقة لكل IP
+o	/auth/register: 3 محاولات / ساعة لكل IP
+o	باقي الـ endpoints: 100 طلب / دقيقة
+3.	Input Validation: Zod على كل request body
+4.	SQL Injection: محمي بالكامل عبر Prisma
+5.	Passwords: bcrypt (12 rounds)
+6.	JWT: RS256 (مفتاح خاص/عام) — Access Token صالح ساعتين فقط
+7.	R2 URLs: Presigned URLs قصيرة الصلاحية (5 دقائق)
+8.	HTTPS إلزامي في الإنتاج
+9.	Environment Variables: لا أسرار في الكود مطلقاً
+10.	CORS: محدود بـ Origins المعتمدة فقط
+11.	Database Connection Pooling: إعداد connection_limit في DATABASE_URL لتحمّل الضغط على Railway
+________________________________________
+15. النشر والاستضافة
+Backend (NestJS + PostgreSQL): Railway
+•	Service 1: Node.js App (NestJS)
+•	Service 2: PostgreSQL Plugin المدمج مع connection_limit=10 في DATABASE_URL
+•	Environment: Production secrets في Railway Variables
+•	Port: 3000 داخلياً، Railway يوفر HTTPS تلقائياً
+Admin Dashboard (Next.js): Vercel
+•	يتصل بـ Backend API عبر HTTPS
+•	يتصل بـ WebSocket عبر WSS
+Runner PWA (React + Vite): Vercel
+•	يتصل بـ Backend API عبر HTTPS
+•	يتصل بـ WebSocket عبر WSS
+Receipts Storage: Cloudflare R2
+•	Bucket: fawrun-receipts
+•	Access: عبر API Token خاص
+Error Tracking: Sentry
+•	Backend DSN: في env variables
+•	Frontend DSN: في env variables
+Environment Variables المطلوبة:
+# Backend
+DATABASE_URL=          # يتضمن connection_limit=10
+JWT_PRIVATE_KEY=
+JWT_PUBLIC_KEY=
+R2_ACCOUNT_ID=
+R2_ACCESS_KEY_ID=
+R2_SECRET_ACCESS_KEY=
+R2_BUCKET_NAME=
+SENTRY_DSN=
+
+# Admin + Runner PWA
+NEXT_PUBLIC_API_URL=
+NEXT_PUBLIC_WS_URL=
+________________________________________
+16. خطة التطوير (Sprints)
+Sprint 1 — Foundation (أسبوعان)
+•	إعداد Monorepo (pnpm + Turborepo)
+•	NestJS skeleton + Prisma schema + أول Migration
+•	Auth module: Register, Login, Refresh (تلقائي)، Logout
+•	آلية التحقق اليدوي من WhatsApp
+•	WebSocket Gateway أساسي
+•	Admin: إدارة المستخدمين + تفعيل الحسابات
+Sprint 2 — Order Core (أسبوعان)
+•	Order State Machine كاملة
+•	Customer: إنشاء طلب + كتابة أسماء المتاجر يدوياً + تحديد الموقع
+•	Admin: مراجعة + اعتماد + تحديد peripheral + تعيين مندوب
+•	Pricing Engine
+•	Audit Log
+•	OpenStreetMap + Leaflet integration
+Sprint 3 — Execution Flow (أسبوعان)
+•	Runner: استقبال المهام + بدء التنفيذ
+•	Runner: إدارة OrderStores (شراء، تخطي، إضافة)
+•	Runner: رفع الإيصالات (Cloudflare R2)
+•	Runner: الانتقال للتوصيل + تأكيد التسليم
+•	WebSocket Events كاملة + أصوات الإشعار
+•	LedgerEntry عند كل طلب مكتمل
+Sprint 4 — Financial + Ratings (أسبوع)
+•	Settlement module كامل
+•	Cron Job للتذكير
+•	نظام التقييم (مندوب فقط)
+•	Customer: سجل الطلبات + التفاصيل
+•	Runner: تقرير التسوية اليومية
+Sprint 5 — Frontends (ثلاثة أسابيع)
+• Admin Dashboard (Next.js) — أسبوع
+• Runner PWA (React + Vite) — أسبوع
+• Android App (Kotlin) — أسبوع ونصف مع مراجعة
+  الشاشات المطلوبة (MVP):
+  - تسجيل الدخول (WhatsApp + كلمة مرور)
+  - شاشة رئيسية: إنشاء طلب جديد (إضافة مواد نص حر، تحديد موقع بالسحب على الخريطة، ملاحظات، مندوب مفضل)
+  - قائمة الطلبات مع الفلترة حسب الحالة
+  - تفاصيل الطلب: تتبع الحالة، متاجر، مواد، المندوب
+  - التقييم: إرسال/تعديل تقييم المندوب (نجوم + ملاحظة)
+  - الحساب: الملف الشخصي، تغيير كلمة المرور، العنوان
+  الـ API المستخدمة: نفس endpoints /customer/* المذكورة في القسم 9.2
+  لا توجد دفع إلكتروني، لا كتالوج متاجر — المتاجر نص حر
+Sprint 6 — QA + Launch (أسبوع)
+•	Integration Tests للـ State Machine والـ Pricing
+•	Security review
+•	Performance baseline
+•	Deployment نهائي على Railway + Vercel
+•	اختبار ميداني أولي مع عميل واحد أو اثنين
+________________________________________
+17. قواعد Claude Code
+•	الخادم هو مصدر الحقيقة — لا تحسب رسوماً أو تغير حالات على الـ Frontend فقط
+•	كل انتقال حالة عبر State Machine — لا تغيّر status مباشرة في الـ service بدون المرور بالـ Machine
+•	كل عملية مالية = LedgerEntry — لا توجد عملية مالية بدون سجل في Ledger
+•	Transactions للعمليات المركبة — تعيين مندوب + تحديث حالته + AuditLog = transaction واحدة
+•	Idempotency — عملية "تم التسليم" إذا أُرسلت مرتين تُنفَّذ مرة واحدة فقط
+•	لا حذف للتاريخ — Soft delete فقط. AuditLog و LedgerEntry: لا حذف أبداً
+•	orderNumber يُولَّد من seqNumber — دائماً داخل transaction بعد الحفظ مباشرة
+•	Refresh Token تلقائي — الـ Frontend يجدد Access Token صامتاً قبل انتهائه بـ 10 دقائق
+•	لا متاجر في قاعدة البيانات — أسماء المتاجر نص حر دائماً في OrderStore.storeName
+•	shared-types أولاً — أي DTO جديد يُكتب في packages/shared-types ويُستخدم في الخادم والـ Frontends
+•	API Versioning محترم — كل endpoint تحت /api/v1/ بدون استثناء
+•	Zod على كل input — لا ثقة بأي بيانات واردة مهما كان مصدرها
+•	Environment Variables فقط للأسرار — لا مفاتيح في الكود أو في Git
+________________________________________
+نهاية وثيقة MVP Technical Specification — الإصدار 1.1
+هذه الوثيقة الأساس الذي يُبنى عليه التطوير. أي قرار تقني لم يُذكر هنا يُرجَع فيه لمبدأ "الأبسط الذي يحقق المتطلب أولاً".________________________________________
+18. Android App Technical Specification
+________________________________________
+الجمهور المستهدف: عملاء عرب — الـ UI يدعم RTL بالكامل.
+التطبيق: تطبيق أندرويد أصلي مكتوب بالكوتlyn، يُستخدم من قبل العميل ل الشراء وتوصيل Neediyyات.
+
+18.1 Stack التقني
+الطبقة	التقنة	السبب
+اللغة	Kotlin (1.9+)	أداء عالي، أمان، دعم official للـ Android
+النظام	Android 8+ (API 26)	يغطي 95% من السوق العربية
+Build	Gradle (Kotlin DSL)	معيار صناعي
+UICompose	Compose 1.5+	declarative UI، دعم RTL أبسط بـ LayoutDirection
+Navigation	Compose Navigation 2.7+	مدمج مع Compose، دعم RTL تلقائي
+Hilt	Dagger Hilt 2.48+	Dependency Injection مدمج مع Android، قاعدة one-liner per module
+Network	Retrofit 2.9+	أبسط عميل HTTP، مع Converters مدمجة
+Serialization	Moshi	convert JSON <-> Kotlin data classes
+WebSocket	OKHttp WebSocket (مدمج مع Retrofit)	استخدام نفس مكتبة HTTP
+Local Storage	Room 2.6+	ORM مدمج مع Android، Query Builder قوي
+DataStore (Jetpack)	Preferences DataStore	خزن settings بسيط (token، preferences)
+WorkManager	Jetpack Workmanager	مزامنة دورية للـ offline queue
+Crashlytics	Sentry Android SDK	paranja error tracking
+Maps	Google Maps SDK	دعم الخرائط الاحترافي (بلا رخصة)
+Location	Android Location API	تحديد الموقع التلقائي
+Image Loading	Glide	عرض صور الإيصالات
+Coroutines	Kotlinx Coroutines 1.7+ asynchronous programming بسيط وقوية
+lifecycle-viewmodel-compose	ViewModel + lifecycle-aware	الاحتفاظ بالحالة عند تدوير الشاشة
+________________________________________
+18. Android App Technical Specification
+________________________________________
+الجمهور المستهدف: عملاء عرب — الـ UI يدعم RTL بالكامل.
+التطبيق: تطبيق أندرويد أصلي مكتوب بالكوتlyn، يُستخدم من قبل العميل ل الشراء وتوصيل Neediyyات.
+
+18.1 Stack التقني
+الطبقة	التقنة	السبب
+اللغة	Kotlin (1.9+)	أداء عالي، أمان، دعم official للـ Android
+النظام	Android 8+ (API 26)	يغطي 95% من السوق العربية
+Build	Gradle (Kotlin DSL)	معيار صناعي
+UICompose	Compose 1.5+	declarative UI، دعم RTL أبسط بـ LayoutDirection
+Navigation	Compose Navigation 2.7+	مدمج مع Compose، دعم RTL تلقائي
+Hilt	Dagger Hilt 2.48+	Dependency Injection مدمج مع Android، قاعدة one-liner per module
+Network	Retrofit 2.9+	أبسط عميل HTTP، مع Converters مدمجة
+Serialization	Moshi	convert JSON <-> Kotlin data classes
+WebSocket	OKHttp WebSocket (مدمج مع Retrofit)	استخدام نفس مكتبة HTTP
+Local Storage	Room 2.6+	ORM مدمج مع Android، Query Builder قوي
+DataStore (Jetpack)	Preferences DataStore	خزن settings بسيط (token، preferences)
+WorkManager	Jetpack Workmanager	مزامنة دورية للـ offline queue
+Crashlytics	Sentry Android SDK	paranja error tracking
+Maps	Google Maps SDK	دعم الخرائط الاحترافي (بلا رخصة)
+Location	Android Location API	تحديد الموقع التلقائي
+Image Loading	Glide	عرض صور الإيصالات
+Coroutines	Kotlinx Coroutines 1.7+ asynchronous programming بسيط وقوية
+lifecycle-viewmodel-compose	ViewModel + lifecycle-aware	الاحتفاظ بالحالة عند تدوير الشاشة
+18.2 Architecture — MVVM
+النمط المعتمد: MVVM (Model-View-ViewModel)
+السبب:
+• MVVM يفصل الـ View (Compose Screens) عن الـ ViewModel (المنطق) عن الـ Model (Data Layer).
+• مع Jetpack Compose، MVVM يتناسب تماماً مع الـ declarative UI.
+• الـ ViewModel يحتفظ بالحالة (UiState) عند تدوير الشاشة أو تغيير الاتصال.
+• يُمكّن من اختبار Unit Tests بسهولة (ViewModel + Use Cases).
+
+الهندسة:
+┌─────────────┐
+│  Compose UI │  ← View (State + Effects)
+└──────┬──────┘
+       │ State Up + Event Down
+┌──────▼──────┐
+│  ViewModel  │  ← UiState, Intent, SideEffects
+└──────┬──────┘
+       │ Flow / StateFlow
+┌──────▼──────┐
+│ Use Cases   │  ← One Use Case per business rule
+└──────┬──────┘
+       │
+┌──────▼──────┐
+│  Repository │  ← Data Source (Remote + Local)
+└──────┬──────┘
+       │
+┌──────▼──────┐
+│  Data Layer │  ← Retrofit (Network) + Room (Local)
+└─────────────┘
+
+UiState Pattern (مثلاً):
+```kotlin
+data class OrderCreateUiState(
+    val items: List<OrderItemUi> = emptyList(),
+    val isLoading: Boolean = false,
+    val error: String? = null,
+    val orderNumber: String? = null
+)
+```
+
+Intent Pattern (مثلاً):
+```kotlin
+sealed interface OrderCreateIntent {
+    data class AddItem(val itemName: String, val quantity: String, val storeName: String?) : OrderCreateIntent
+    data class RemoveItem(val index: Int) : OrderCreateIntent
+    data object Submit : OrderCreateIntent
+}
+```
+
+18.3 Navigation
+المكتبة: Compose Navigation 2.7+
+السبب:
+• مدمج مع Jetpack Compose، دعم RTL تلقائي عبر LayoutDirection.
+• NavGraph واحد يغطي كل الشاشات.
+• Back stack management تلقائي.
+• Deep linking مدمج (لأغراض future).
+
+الNavGraph الرئيسي:
+```kotlin
+@Composable
+fun FawrunNavGraph(navController: NavHostController) {
+    NavHost(navController, startDestination = "login") {
+        composable("login") { LoginScreen(...) }
+        composable("home") { HomeScreen(...) }
+        composable("create_order") { CreateOrderScreen(...) }
+        composable("orders") { OrdersListScreen(...) }
+        composable("order_detail/{orderId}") { OrderDetailScreen(...) }
+        composable("rating/{orderId}") { RatingScreen(...) }
+        composable("account") { AccountScreen(...) }
+    }
+}
+```
+
+ال/screens الرئيسية:
+1. LoginScreen — تسجيل الدخول (WhatsApp + كلمة مرور)
+2. HomeScreen — شاشة رئيسية: إنشاء طلب جديد (shortcut)
+3. CreateOrderScreen — إضافة مواد نص حر، تحديد موقع بالقرص على الخريطة، ملاحظات، مندوب مفضل
+4. OrdersListScreen — قائمةifrOrders مع فلتر الحالة
+5. OrderDetailScreen — تتبع الحالة، متجر، مواد، المندوب
+6. RatingScreen — إرسال/تعديل تقييم المندوب (نجوم + ملاحظة)
+7. AccountScreen — الملف الشخصي، تغيير كلمة المرور، العنوان
+
+الانتقالات:
+• Login → Home: بعد تسجيل الدخول الناجح (NavOptions popUpTo(login) inclusive)
+• Home → CreateOrder: action
+• OrdersList → OrderDetail: action مع argument orderId
+• OrderDetail → Rating: action (فقط بعد DELIVERED)
+• أي شاشة → Account: action
+
+18.4 Dependency Injection — Hilt
+المكتبة: Dagger Hilt 2.48+
+السبب:
+• مدمج مع Android، قاعدة one-liner per module.
+• ي Manage lifecycle تلقائياً (Singleton, ActivityRetained, ViewModelScoped).
+• يُختبر بسهولة (TestInstall).
+
+Modules (ال-basic):
+```kotlin
+@Module
+@InstallIn(SingletonComponent::class)
+object NetworkModule {
+    @Provides
+    @Singleton
+    fun provideOkHttpClient(): OkHttpClient = OkHttpClient.Builder()
+        .addInterceptor(AuthInterceptor()) // ي��ع Access Token
+        .addInterceptor(HttpLoggingInterceptor())
+        .build()
+
+    @Provides
+    @Singleton
+    fun provideRetrofit(okHttpClient: OkHttpClient): Retrofit =
+        Retrofit.Builder()
+            .baseUrl("https://api.fawrun.com/api/v1/")
+            .client(okHttpClient)
+            .addConverters(MoshiConverter)
+            .build()
+
+    @Provides
+    @Singleton
+    fun provideApiService(retrofit: Retrofit): FawrunApiService =
+        retrofit.create(FawrunApiService::class.java)
+}
+
+@Module
+@InstallIn(SingletonComponent::class)
+object DatabaseModule {
+    @Provides
+    @Singleton
+    fun provideDatabase(context: Application): FawrunDatabase =
+        Room.databaseBuilder(context, FawrunDatabase::class.java, "fawrun.db").build()
+
+    @Provides
+    @Singleton
+    fun provideOrderDao(db: FawrunDatabase): OrderDao = db.orderDao()
+}
+
+@Module
+@InstallIn(ViewModelComponent::class)
+object ViewModelModule {
+    @Binds
+    @ViewModelKey(OrderViewModel::class)
+    abstract fun bindOrderViewModel(vm: OrderViewModel): ViewModel
+}
+```
+
+AuthInterceptor (Handles JWT):
+```kotlin
+class AuthInterceptor(private val tokenManager: TokenManager) : Interceptor {
+    @Throws(IOException::class)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val original = chain.request()
+        val token = tokenManager.getAccessToken()
+        val requestBuilder = original.newBuilder()
+        token?.let { requestBuilder.header("Authorization", "Bearer $it") }
+        return chain.proceed(requestBuilder.build())
+    }
+}
+```
+
+18.5 Network Layer
+المكتبة: Retrofit 2.9+ + Moshi + OKHttp WebSocket
+السبب:
+• Retrofit ي Manage كل HTTP calls بـ interface definition.
+• Moshi يحوّل JSON <-> Kotlin data classes بسهولة.
+• WebSocket يُستخدم عبر OKHttp (مدمج مع Retrofit).
+
+FawrunApiService Interface (example):
+```kotlin
+interface FawrunApiService {
+    @POST("auth/login")
+    suspend fun login(@Body request: LoginRequest): NetworkResult<LoginResponse>
+
+    @POST("auth/refresh")
+    suspend fun refresh(@Body request: RefreshRequest): NetworkResult<LoginResponse>
+
+    @POST("customer/orders")
+    suspend fun createOrder(@Body request: CreateOrderRequest): NetworkResult<OrderResponse>
+
+    @GET("customer/orders")
+    suspend fun getOrders(
+        @Query("page") page: Int,
+        @Query("limit") limit: Int,
+        @Query("status") status: String?
+    ): NetworkResult<OrdersListResponse>
+
+    @GET("customer/orders/{id}")
+    suspend fun getOrder(@Path("id") id: String): NetworkResult<OrderDetailResponse>
+
+    @POST("customer/orders/{id}/ratings")
+    suspend fun submitRating(@Path("id") id: String, @Body request: RatingRequest): NetworkResult<RatingResponse>
+
+    @PUT("customer/me")
+    suspend fun updateProfile(@Body request: UpdateProfileRequest): NetworkResult<ProfileResponse>
+
+    @PUT("customer/me/address")
+    suspend fun updateAddress(@Body request: AddressRequest): NetworkResult<AddressResponse>
+}
+```
+
+JWT Refresh التلقائي:
+الحل: Interceptor مخصص يُ Status 401 ويعيد المحاولة.
+```kotlin
+class RefreshTokenInterceptor(
+    private val tokenManager: TokenManager,
+    private val api: FawrunApiService
+) : Interceptor {
+    @Throws(IOException::class)
+    override fun intercept(chain: Interceptor.Chain): Response {
+        val response = chain.proceed(chain.request())
+        if (response.code == 401) {
+            response.close()
+            val newToken = runBlocking { tokenManager.refresh() }
+            if (newToken != null) {
+                val newRequest = chain.request().newBuilder()
+                    .header("Authorization", "Bearer $newToken")
+                    .build()
+                return chain.proceed(newRequest)
+            }
+        }
+        return response
+    }
+}
+```
+
+WebSocket:
+• Connection: OKHttp WebSocket
+• Connection trigger: ConnectionService (Foreground Service)
+• Events handling: Repository pattern
+• Events listened:
+  - order:status_changed
+  - order:runner_assigned
+  - order:fee_updated
+  - order:store_purchased
+  - order:out_for_delivery
+  - order:delivered
+  - order:cancelled
+  - account:verified
+  - settlement:reminder (Admin only — not in MVP)
+• Reconnection: exponential backoff (1s, 2s, 4s, 8s, 16s)
+
+18.6 Local Storage
+مكتبة: Room 2.6+ + Preferences DataStore
+
+Room Database (Tables):
+```kotlin
+@Entity(tableName = "orders")
+data class OrderEntity(
+    @PrimaryKey val id: String,
+    val orderNumber: String,
+    val status: String,
+    val customerId: String,
+    val runnerId: String?,
+    val deliveryLat: Double,
+    val deliveryLng: Double,
+    val deliveryDesc: String,
+    val totalFee: Int,
+    val baseFee: Int,
+    val peripheralFee: Int,
+    val extraStoresFee: Int,
+    val isPeripheral: Boolean,
+    val createdAt: Long,
+    val updatedAt: Long,
+    val deliveredAt: Long?
+)
+
+@Entity(tableName = "order_stores")
+data class OrderStoreEntity(
+    @PrimaryKey val id: String,
+    val orderId: String,
+    val storeName: String,
+    val status: String,
+    val isExtra: Boolean,
+    val purchasedAt: Long?
+)
+
+@Entity(tableName = "order_items")
+data class OrderItemEntity(
+    @PrimaryKey val id: String,
+    val orderId: String,
+    val itemName: String,
+    val quantity: String,
+    val customStoreName: String?,
+    val anyStore: Boolean,
+    val orderStoreId: String?,
+    val isCancelled: Boolean
+)
+
+@Entity(tableName = "receipts")
+data class ReceiptEntity(
+    @PrimaryKey val id: String,
+    val orderStoreId: String,
+    val imageUrl: String,
+    val r2Key: String,
+    val isDeleted: Boolean,
+    val uploadedAt: Long
+)
+
+@Entity(tableName = "ratings")
+data class RatingEntity(
+    @PrimaryKey val id: String,
+    val orderId: String,
+    val customerId: String,
+    val runnerId: String?,
+    val storeNameRated: String?,
+    val stars: Int,
+    val note: String?,
+    val createdAt: Long,
+    val expiresAt: Long,
+    val isFinal: Boolean
+)
+
+@Entity(tableName = "customers")
+data class CustomerEntity(
+    @PrimaryKey val id: String,
+    val userId: String,
+    val name: String,
+    val whatsapp: String,
+    val altPhone: String?,
+    val completedOrders: Int,
+    val totalFeesPaid: Int
+)
+
+@Entity(tableName = "runners")
+data class RunnerEntity(
+    @PrimaryKey val id: String,
+    val userId: String,
+    val name: String,
+    val whatsapp: String,
+    val status: String,
+    val isVisible: Boolean,
+    val avgRating: Float?,
+    val totalRatings: Int
+)
+
+@Entity(tableName = "ledger_entries")
+data class LedgerEntryEntity(
+    @PrimaryKey val id: String,
+    val orderId: String?,
+    val runnerId: String?,
+    val type: String,
+    val amount: Int,
+    val description: String,
+    val createdAt: Long
+)
+
+@Entity(tableName = "settlements")
+data class SettlementEntity(
+    @PrimaryKey val id: String,
+    val runnerId: String,
+    val operationalDate: String,
+    val status: String,
+    val totalOrders: Int,
+    val totalFees: Int,
+    val runnerShare: Int,
+    val platformShare: Int,
+    val closedAt: Long?
+)
+```
+
+DataStore (Preferences):
+```kotlin
+class TokenManager(private val dataStore: DataStore<Preferences>) {
+    companion object {
+        val ACCESS_TOKEN = preferencesKey<String>("access_token")
+        val REFRESH_TOKEN = preferencesKey<String>("refresh_token")
+        val USER_ID = preferencesKey<String>("user_id")
+        val USER_ROLE = preferencesKey<String>("user_role")
+    }
+
+    suspend fun saveTokens(accessToken: String, refreshToken: String) {
+        dataStore.edit { prefs ->
+            prefs[ACCESS_TOKEN] = accessToken
+            prefs[REFRESH_TOKEN] = refreshToken
+        }
+    }
+
+    fun getAccessToken(): String? = runBlocking { // or coroutine
+        dataStore.data.first()[ACCESS_TOKEN]
+    }
+
+    suspend fun clearTokens() {
+        dataStore.edit { it.clear() }
+    }
+}
+```
+
+Sync Strategy:
+• Orders sync: when network available, refresh from server.
+• Offline queue: if network fails, store in Room, retry with WorkManager.
+• Data retention: 7 days offline cache.
+
+18.7 Screens List (MVP)
+ال/screens المطلوبة (كما ورد في Sprint 5):
+
+| # | Screen | الـ API المستخدم | الوظيفة |
+|---|--------|-----------------|---------|
+| 1 | LoginScreen | POST /auth/login | تسجيل الدخول (WhatsApp + كلمة مرور) |
+| 2 | HomeScreen | GET /customer/me | شاشة جديدة: إنشاء طلب جديد ( shortcut) + رؤيةطلبات نشطة |
+| 3 | CreateOrderScreen | POST /customer/orders | إضافة مواد نص حر، تحديد موقع بالقرص على الخريطة، ملاحظات، مندوب مفضل |
+| 4 | OrdersListScreen | GET /customer/orders | قائمةifrOrders مع فلتر الحالة (DRAFT, PENDING_REVIEW, ASSIGNED, IN_PROGRESS, OUT_FOR_DELIVERY, DELIVERED, CANCELLED) |
+| 5 | OrderDetailScreen | GET /customer/orders/:id | تتبع الحالة، متجر، مواد، المندوب، الرسم |
+| 6 | RatingScreen | POST /customer/orders/:id/ratings | إرسال/تعديل تقييم المندوب (نجوم 1-5 + ملاحظة) — فقط بعد DELIVERed |
+| 7 | AccountScreen | GET /customer/me, PUT /customer/me, PUT /customer/me/address | الملف الشخصي، تغيير كلمة المرور، العنوان |
+
+ملاحظات:
+• لا توجد شاشة Register في MVP — التسجيل يتم عبر WhatsAppcoin.
+• لا شاشة Admin — Admin Dashboard هو Next.js.
+• لا شاشة Runner — Runner PWA هو React.
+
+18.8 Folder Structure (apps/android/)
+apps/android/
+├── app/
+│   ├── build.gradle.kts
+│   └── src/
+│       ├── main/
+│       │   ├── AndroidManifest.xml
+│       │   ├── java/com/fawrun/customer/
+│       │   │   ├── FawrunApp.kt                          ← Application class (Hilt)
+│       │   │   ├── navigation/
+│       │   │   │   └── FawrunNavGraph.kt
+│       │   │   ├── di/
+│       │   │   │   ├── NetworkModule.kt
+│       │   │   │   ├── DatabaseModule.kt
+│       │   │   │   ├── RepositoryModule.kt
+│       │   │   │   └── ViewModelModule.kt
+│       │   │   ├── data/
+│       │   │   │   ├── api/
+│       │   │   │   │   ├── FawrunApiService.kt
+│       │   │   │   │   ├── AuthInterceptor.kt
+│       │   │   │   │   └── RefreshTokenInterceptor.kt
+│       │   │   │   ├── repository/
+│       │   │   │   │   ├── AuthRepository.kt
+│       │   │   │   │   ├── OrderRepository.kt
+│       │   │   │   │   ├── RatingRepository.kt
+│       │   │   │   │   └── ProfileRepository.kt
+│       │   │   │   ├── local/
+│       │   │   │   │   ├── db/
+│       │   │   │   │   │   ├── FawrunDatabase.kt
+│       │   │   │   │   │   ├── dao/
+│       │   │   │   │   │   │   ├── OrderDao.kt
+│       │   │   │   │   │   │   ├── OrderStoreDao.kt
+│       │   │   │   │   │   │   ├── OrderItemDao.kt
+│       │   │   │   │   │   │   ├── ReceiptDao.kt
+│       │   │   │   │   │   │   ├── RatingDao.kt
+│       │   │   │   │   │   │   ├── CustomerDao.kt
+│       │   │   │   │   │   │   ├── RunnerDao.kt
+│       │   │   │   │   │   │   ├── LedgerEntryDao.kt
+│       │   │   │   │   │   │   └── SettlementDao.kt
+│       │   │   │   │   │   └── entities/
+│       │   │   │   │   │       ├── OrderEntity.kt
+│       │   │   │   │   │       ├── OrderStoreEntity.kt
+│       │   │   │   │   │       ├── OrderItemEntity.kt
+│       │   │   │   │   │       ├── ReceiptEntity.kt
+│       │   │   │   │   │       ├── RatingEntity.kt
+│       │   │   │   │   │       ├── CustomerEntity.kt
+│       │   │   │   │   │       ├── RunnerEntity.kt
+│       │   │   │   │   │       ├── LedgerEntryEntity.kt
+│       │   │   │   │   │       └── SettlementEntity.kt
+│       │   │   │   │   └── preferences/
+│       │   │   │   │       └── TokenManager.kt
+│       │   │   │   └── websocket/
+│       │   │   │       ├── WebSocketService.kt
+│       │   │   │       └── WebSocketRepository.kt
+│       │   │   ├── domain/
+│       │   │   │   ├── model/
+│       │   │   │   │   ├── Order.kt
+│       │   │   │   │   ├── OrderItem.kt
+│       │   │   │   │   ├── OrderStore.kt
+│       │   │   │   │   ├── Receipt.kt
+│       │   │   │   │   ├── Rating.kt
+│       │   │   │   │   ├── Customer.kt
+│       │   │   │   │   ├── Runner.kt
+│       │   │   │   │   └── Settlement.kt
+│       │   │   │   └── usecase/
+│       │   │   │   ├── CreateOrderUseCase.kt
+│       │   │   │   ├── GetOrdersUseCase.kt
+│       │   │   │   ├── GetOrderDetailUseCase.kt
+│       │   │   │   ├── SubmitRatingUseCase.kt
+│       │   │   │   ├── LoginUseCase.kt
+│       │   │   │   ├── RefreshTokenUseCase.kt
+│       │   │   │   ├── UpdateProfileUseCase.kt
+│       │   │   │   └── UpdateAddressUseCase.kt
+│       │   │   ├── presentation/
+│       │   │   │   ├── auth/
+│       │   │   │   │   ├── LoginScreen.kt
+│       │   │   │   │   └── LoginViewModel.kt
+│       │   │   │   ├── home/
+│       │   │   │   │   ├── HomeScreen.kt
+│       │   │   │   │   └── HomeViewModel.kt
+│       │   │   │   ├── order/
+│       │   │   │   │   ├── CreateOrderScreen.kt
+│       │   │   │   │   ├── CreateOrderViewModel.kt
+│       │   │   │   │   ├── OrdersListScreen.kt
+│       │   │   │   │   ├── OrdersListViewModel.kt
+│       │   │   │   │   ├── OrderDetailScreen.kt
+│       │   │   │   │   └── OrderDetailViewModel.kt
+│       │   │   │   ├── rating/
+│       │   │   │   │   ├── RatingScreen.kt
+│       │   │   │   │   └── RatingViewModel.kt
+│       │   │   │   └── account/
+│       │   │   │       ├── AccountScreen.kt
+│       │   │   │       └── AccountViewModel.kt
+│       │   │   ├── utils/
+│       │   │   │   ├── UiState.kt
+│       │   │   │   ├── Intent.kt
+│       │   │   │   ├── Extensions.kt
+│       │   │   │   └── Constants.kt
+│       │   │   └── resources/
+│       │   │       ├── values/
+│       │   │       │   ├── strings.xml
+│       │   │       │   ├── colors.xml
+│       │   │       │   └── themes.xml
+│       │   │       └── mipmap-hdpi/ ... (icons)
+│       │   ├── androidTest/
+│       │   │   └── MainActivityTest.kt
+│       │   └── test/
+│       │       └── OrderViewModelTest.kt
+│   └── .gitignore
+└── build.gradle.kts (project level)
+

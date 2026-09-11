@@ -1,0 +1,420 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ─────────────────────────────────────────
+// ENUMS
+// ─────────────────────────────────────────
+
+enum UserRole {
+  CUSTOMER
+  RUNNER
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING_VERIFICATION  // بانتظار تأكيد WhatsApp
+  VERIFIED              // موثق وفعال
+  REJECTED              // مرفوض من الإدارة
+  SUSPENDED             // موقوف مؤقتاً
+}
+
+enum RunnerStatus {
+  AVAILABLE             // مستعد لاستقبال طلبات
+  ON_MISSION            // لديه طلب نشط
+  UNAVAILABLE           // غير متاح
+}
+
+enum OrderStatus {
+  DRAFT                       // قيد الإنشاء من العميل
+  PENDING_REVIEW              // أُرسل، بانتظار مراجعة الإدارة
+  UNDER_REVIEW                // الإدارة تراجعه الآن
+  AWAITING_RUNNER             // معتمد، يبحث عن مندوب
+  AWAITING_PREFERRED_RUNNER   // العميل ينتظر مندوبه المفضل
+  ASSIGNED                    // مندوب معين، لم يبدأ بعد
+  IN_PROGRESS                 // بدأ التنفيذ (مرحلة الشراء)
+  OUT_FOR_DELIVERY            // انتهى الشراء، في الطريق للتوصيل
+  DELIVERED                   // تم التسليم
+  CANCELLED                   // ملغى
+}
+
+enum OrderStoreStatus {
+  PENDING    // لم يزر المتجر بعد
+  PURCHASED  // تم الشراء (runner ضغط "تم الشراء")
+  SKIPPED    // لم يتم الشراء (متجر مغلق أو مادة غير متوفرة)
+}
+
+enum LedgerEntryType {
+  ORDER_FEE_TOTAL     // إجمالي رسم الخدمة المحصّل
+  RUNNER_SHARE        // حصة المندوب (75%)
+  PLATFORM_SHARE      // حصة FAWRUN (25%)
+  SETTLEMENT_PAID     // المندوب سدّد حصة FAWRUN
+  ADMIN_ADJUSTMENT    // تعديل يدوي من الإدارة
+}
+
+enum SettlementStatus {
+  PENDING   // لم تُغلق بعد
+  SETTLED   // مغلقة ومسواة
+}
+
+// ─────────────────────────────────────────
+// USER (Base for all roles)
+// ─────────────────────────────────────────
+
+model User {
+  id           String     @id @default(cuid())
+  whatsapp     String     @unique  // رقم WhatsApp إلزامي
+  altPhone     String?             // رقم اتصال اختياري
+  passwordHash String
+  name         String
+  role         UserRole
+  status       UserStatus @default(PENDING_VERIFICATION)
+  isDeleted    Boolean    @default(false)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  customer      Customer?
+  runner        Runner?
+  admin         Admin?
+  refreshTokens RefreshToken[]
+  auditLogs     AuditLog[]
+
+  // الطلبات التي ألغاها هذا المستخدم
+  cancelledOrders Order[] @relation("CancelledByUser")
+
+  @@index([whatsapp])
+  @@index([role, status])
+}
+
+// ─────────────────────────────────────────
+// AUTH TOKENS
+// ─────────────────────────────────────────
+
+model RefreshToken {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  tokenHash  String   @unique  // bcrypt hash of the token
+  deviceInfo String?           // معلومات الجهاز اختيارية
+  isRevoked  Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  revokedAt  DateTime?
+
+  @@index([userId, isRevoked])
+}
+
+// ─────────────────────────────────────────
+// CUSTOMER
+// ─────────────────────────────────────────
+
+model Customer {
+  id              String    @id @default(cuid())
+  userId          String    @unique
+  user            User      @relation(fields: [userId], references: [id])
+  completedOrders Int       @default(0)
+  totalFeesPaid   Int       @default(0)  // بالليرة السورية، كعدد صحيح
+  createdAt       DateTime  @default(now())
+
+  address  CustomerAddress?
+  orders   Order[]
+  ratings  Rating[]
+}
+
+model CustomerAddress {
+  id          String   @id @default(cuid())
+  customerId  String   @unique
+  customer    Customer @relation(fields: [customerId], references: [id])
+  lat         Float
+  lng         Float
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ─────────────────────────────────────────
+// RUNNER
+// ─────────────────────────────────────────
+
+model Runner {
+  id           String       @id @default(cuid())
+  userId       String       @unique
+  user         User         @relation(fields: [userId], references: [id])
+  status       RunnerStatus @default(UNAVAILABLE)
+  isVisible    Boolean      @default(true)  // false = مخفي من قوائم العملاء
+  avgRating    Float?
+  totalRatings Int          @default(0)
+  notes        String?                      // ملاحظات داخلية للإدارة
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  orders           Order[]
+  preferredInOrders Order[]      @relation("PreferredRunner")
+  ratings          Rating[]
+  settlements      Settlement[]
+
+  @@index([status, isVisible])
+}
+
+// ─────────────────────────────────────────
+// ADMIN
+// ─────────────────────────────────────────
+
+model Admin {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+  createdAt DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// ORDER
+// ─────────────────────────────────────────
+
+model Order {
+  id          String      @id @default(cuid())
+  seqNumber   Int         @unique @default(autoincrement())
+  // رقم الطلب المولَّد: FW + seqNumber مُعبَّأ بأصفار حتى 6 خانات
+  // مثال: seqNumber=1 → orderNumber="FW-000001"
+  // يُولَّد في الكود مباشرة بعد إنشاء السجل باستخدام seqNumber
+  // لا يُولَّد قبل الحفظ لضمان التفرد في حالات التزامن
+  orderNumber String      @unique
+
+  customerId  String
+  customer    Customer    @relation(fields: [customerId], references: [id])
+
+  runnerId    String?
+  runner      Runner?     @relation(fields: [runnerId], references: [id])
+
+  status      OrderStatus @default(DRAFT)
+
+  // Snapshot عنوان التسليم (ثابت لا يتأثر بتعديلات العميل اللاحقة)
+  deliveryLat  Float
+  deliveryLng  Float
+  deliveryDesc String
+
+  // التسعير (بالليرة السورية، كأعداد صحيحة)
+  isPeripheral        Boolean @default(false)
+  baseFee             Int     @default(60)
+  peripheralFee       Int     @default(0)
+  extraStoresFee      Int     @default(0)
+  totalFee            Int     @default(60)
+
+  // المندوب المفضل — ربط رسمي بجدول Runner
+  preferredRunnerId   String?
+  preferredRunner     Runner? @relation("PreferredRunner", fields: [preferredRunnerId], references: [id])
+  waitForPreferred    Boolean @default(false)
+
+  notes             String?
+  cancelReason      String?
+
+  // من ألغى الطلب — ربط رسمي بجدول User
+  cancelledByUserId String?
+  cancelledByUser   User?   @relation("CancelledByUser", fields: [cancelledByUserId], references: [id])
+
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  reviewedAt   DateTime?
+  assignedAt   DateTime?
+  startedAt    DateTime?
+  deliveredAt  DateTime?
+  cancelledAt  DateTime?
+
+  items          OrderItem[]
+  orderStores    OrderStore[]
+  ratings        Rating[]
+  auditLogs      AuditLog[]
+  ledgerEntries  LedgerEntry[]
+  settlementItem SettlementItem?
+
+  @@index([customerId, status])
+  @@index([runnerId, status])
+  @@index([status, createdAt])
+}
+
+// ─────────────────────────────────────────
+// ORDER ITEM
+// ─────────────────────────────────────────
+
+model OrderItem {
+  id       String @id @default(cuid())
+  orderId  String
+  order    Order  @relation(fields: [orderId], references: [id])
+
+  itemName String  // اسم المادة (نص حر)
+  quantity String  // الكمية أو الوصف (نص حر: "2 كغ"، "3 حبات"...)
+
+  // مصدر المتجر — نص حر يكتبه العميل أو المندوب
+  // إذا كان anyStore=true فالمندوب يختار المتجر المناسب
+  customStoreName  String?  // اسم المتجر الذي كتبه العميل يدوياً
+  anyStore         Boolean  @default(true)
+
+  // يُربط بـ OrderStore عند تعيين المندوب له
+  orderStoreId String?
+  orderStore   OrderStore? @relation(fields: [orderStoreId], references: [id])
+
+  isCancelled  Boolean  @default(false)
+  cancelNote   String?
+  createdAt    DateTime @default(now())
+
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────
+// ORDER STORE
+// (تجميع المواد حسب المتجر — مفهوم داخلي)
+// ─────────────────────────────────────────
+
+model OrderStore {
+  id      String @id @default(cuid())
+  orderId String
+  order   Order  @relation(fields: [orderId], references: [id])
+
+  // اسم المتجر دائماً نص حر (يكتبه العميل أو المندوب)
+  storeName   String           // الاسم الذي كتبه العميل أو المندوب
+  isAnyStore  Boolean @default(false)  // bucket مؤقت لمواد "أي متجر"
+  status   OrderStoreStatus @default(PENDING)
+  isExtra  Boolean          @default(false)  // متجر إضافي يُحسب +20
+  addedBy  String?          // "CUSTOMER" أو "RUNNER"
+
+  purchasedAt DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  items    OrderItem[]
+  receipts Receipt[]
+
+  @@index([orderId, status])
+}
+
+// ─────────────────────────────────────────
+// RECEIPT (صور الإيصالات)
+// ─────────────────────────────────────────
+
+model Receipt {
+  id           String     @id @default(cuid())
+  orderStoreId String
+  orderStore   OrderStore @relation(fields: [orderStoreId], references: [id])
+  imageUrl     String     // Cloudflare R2 URL
+  r2Key        String     // المفتاح في R2 (للحذف لاحقاً إذا لزم)
+
+  // Soft delete: الصورة تبقى في R2 لكن تُوضع علامة محذوفة هنا
+  isDeleted    Boolean  @default(false)
+  deletedAt    DateTime?
+
+  uploadedAt   DateTime @default(now())
+}
+
+// ─────────────────────────────────────────
+// RATING
+// ─────────────────────────────────────────
+
+model Rating {
+  id         String   @id @default(cuid())
+  orderId    String
+  order      Order    @relation(fields: [orderId], references: [id])
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id])
+
+  // تقييم للمندوب فقط — المتاجر نص حر ولا تُقيَّم بشكل منفصل في MVP
+  runnerId String?
+  runner   Runner? @relation(fields: [runnerId], references: [id])
+
+  // تقييم متجر بالاسم النصي (اختياري)
+  storeNameRated String?
+
+  stars     Int      // 1 إلى 5
+  note      String?  // خاص — للإدارة فقط
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  expiresAt DateTime // createdAt + 24 ساعة
+  isFinal   Boolean  @default(false)
+
+  @@unique([orderId, runnerId])
+  @@index([orderId])
+}
+
+// ─────────────────────────────────────────
+// FINANCIAL LEDGER (Append-Only)
+// ─────────────────────────────────────────
+
+model LedgerEntry {
+  id          String          @id @default(cuid())
+  orderId     String?
+  order       Order?          @relation(fields: [orderId], references: [id])
+  runnerId    String?
+  type        LedgerEntryType
+  amount      Int             // بالليرة السورية
+  description String
+  meta        Json?
+
+  createdAt   DateTime @default(now())
+  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only لا يُعدّل
+
+  @@index([orderId])
+  @@index([runnerId, type])
+  @@index([createdAt])
+}
+
+// ─────────────────────────────────────────
+// SETTLEMENT (التسوية اليومية)
+// ─────────────────────────────────────────
+
+model Settlement {
+  id              String           @id @default(cuid())
+  runnerId        String
+  runner          Runner           @relation(fields: [runnerId], references: [id])
+  operationalDate String           // YYYY-MM-DD (اليوم التشغيلي بتوقيت دمشق)
+  status          SettlementStatus @default(PENDING)
+  totalOrders     Int
+  totalFees       Int
+  runnerShare     Int
+  platformShare   Int
+  notes           String?
+  closedAt        DateTime?
+  closedByAdminId String?
+
+  items     SettlementItem[]
+  createdAt DateTime         @default(now())
+
+  @@unique([runnerId, operationalDate])
+  @@index([status, operationalDate])
+}
+
+model SettlementItem {
+  id           String     @id @default(cuid())
+  settlementId String
+  settlement   Settlement @relation(fields: [settlementId], references: [id])
+  orderId      String     @unique
+  order        Order      @relation(fields: [orderId], references: [id])
+  orderFee     Int
+  runnerShare  Int
+  platformShare Int
+}
+
+// ─────────────────────────────────────────
+// AUDIT LOG (سجل الأحداث — Append-Only)
+// ─────────────────────────────────────────
+
+model AuditLog {
+  id         String   @id @default(cuid())
+  orderId    String?
+  order      Order?   @relation(fields: [orderId], references: [id])
+  actorId    String?
+  actor      User?    @relation(fields: [actorId], references: [id])
+  actorRole  String?  // CUSTOMER / RUNNER / ADMIN / SYSTEM
+  event      String
+  fromStatus String?
+  toStatus   String?
+  meta       Json?
+
+  createdAt  DateTime @default(now())
+  // ⚠️ لا يوجد updatedAt — هذا الجدول لا يُعدّل أبداً
+
+  @@index([orderId, createdAt])
+  @@index([event, createdAt])
+}

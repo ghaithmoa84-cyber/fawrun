@@ -1,0 +1,52 @@
+import { z } from 'zod';
+
+export const RunnerStatusUpdateSchema = z.object({
+  status: z.enum(['AVAILABLE', 'UNAVAILABLE']),
+});
+
+export type RunnerStatusUpdate = z.infer<typeof RunnerStatusUpdateSchema>;
+
+export const CreateRunnerSchema = z.object({
+  name: z.string().min(2),
+  whatsapp: z.string(),
+  password: z.string().min(8),
+  altPhone: z.string().optional(),
+});
+
+export type CreateRunnerRequest = z.infer<typeof CreateRunnerSchema>;
+
+export const UpdateRunnerSchema = z.object({
+  name: z.string().min(2).optional(),
+  altPhone: z.string().optional(),
+  notes: z.string().optional(),
+  password: z.string().min(8).optional(),
+});
+
+export type UpdateRunnerRequest = z.infer<typeof UpdateRunnerSchema>;
+
+export const UpdateVisibilitySchema = z.object({
+  isVisible: z.boolean(),
+});
+
+export type UpdateVisibilityRequest = z.infer<typeof UpdateVisibilitySchema>;
+
+export type PurchaseResponse = {
+  orderStore: {
+    id: string;
+    status: string;
+  };
+  updatedFee: {
+    extraStoresFee: number;
+    totalFee: number;
+  };
+  customerNotified: boolean;
+};
+
+export type ApproveOrderRequest = {
+  isPeripheral: boolean;
+  notes: string | null;
+};
+
+export type AssignRunnerRequest = {
+  runnerId: string;
+};
