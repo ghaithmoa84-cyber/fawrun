@@ -688,9 +688,37 @@ export const CONFIG = {
    - أحداث Admin: `user:new_registration`
 
 6. تعريف أنواع أصوات الإشعار (للاستخدام لاحقاً في Frontend):
-   ```typescript
-   type SoundType = 'new_order' | 'status_update' | 'urgent' | 'success';
-   ```
+    ```typescript
+    type SoundType = 'new_order' | 'status_update' | 'urgent' | 'success';
+    ```
+
+**أمثلة الأحداث المرسلة في هذا Sprint:**
+
+حدث `account:verified` (للعميل في room `customer:{customerId}`):
+```typescript
+{
+  event: 'account:verified',
+  room: 'customer:USER_ID',
+  payload: { message: 'تم تفعيل حسابك' },
+  sound: 'success' as SoundType
+}
+```
+
+حدث `user:new_registration` (للإدارة في room `admin:all`):
+```typescript
+{
+  event: 'user:new_registration',
+  room: 'admin:all',
+  payload: { userId, userName, whatsapp },
+  sound: 'new_order' as SoundType
+}
+```
+
+**قواعد WebSocket:**
+- كل client يجب أن يُرسل `{ token: accessToken }` عند الاتصال — المصادقة عبر JWT (RS256)
+- الغرف تُنشأ تلقائياً حسب دور المستخدم: `customer:{id}`, `runner:{id}`, `admin:all`
+- الأحداث تُرسل دائماً من الـ Backend فقط — لا يُرسل أي حدث من الـ Frontend (Server is Source of Truth)
+- كل حدث يحتوي على `sound` اختياري من نوع `SoundType` للـ Frontend
 
 **المخرج المتوقع:**
 - WebSocket Gateway يعمل مع Socket.IO على namespace `/orders` و `/admin`

@@ -337,7 +337,7 @@ model Rating {
   expiresAt DateTime // createdAt + 24 ساعة
   isFinal   Boolean  @default(false)
 
-  @@unique([orderId, runnerId])
+  @@unique([orderId, customerId])
   @@index([orderId])
 }
 

@@ -1,6 +1,6 @@
 import { registerAs } from '@nestjs/config';
 import { readFileSync, existsSync } from 'fs';
-import { join, resolve, normalize } from 'path';
+import { join, resolve, normalize, sep } from 'path';
 
 const SECRETS_DIR = resolve(process.env.JWT_SECRETS_DIR ?? join(process.cwd(), 'secrets'));
 
@@ -23,7 +23,7 @@ export const jwtConfig = registerAs('jwt', () => {
     const targetFile = explicitFile ?? filePath;
     const fullPath = resolve(SECRETS_DIR, targetFile);
     const normalized = normalize(fullPath);
-    if (!normalized.startsWith(SECRETS_DIR + normalize.sep) && normalized !== SECRETS_DIR) {
+    if (!normalized.startsWith(SECRETS_DIR + sep) && normalized !== SECRETS_DIR) {
       throw new Error(`${envVar}_FILE path escapes the configured secrets directory`);
     }
     if (!existsSync(normalized)) {

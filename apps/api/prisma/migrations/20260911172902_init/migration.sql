@@ -100,7 +100,7 @@ CREATE TABLE "Admin" (
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
     "seqNumber" SERIAL NOT NULL,
-    "orderNumber" TEXT NOT NULL,
+    "orderNumber" TEXT,
     "customerId" TEXT NOT NULL,
     "runnerId" TEXT,
     "status" "OrderStatus" NOT NULL DEFAULT 'DRAFT',
@@ -204,11 +204,14 @@ CREATE TABLE "LedgerEntry" (
     CONSTRAINT "LedgerEntry_pkey" PRIMARY KEY ("id")
 );
 
+ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_runnerId_fkey"
+FOREIGN KEY ("runnerId") REFERENCES "Runner"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
+
 -- CreateTable
 CREATE TABLE "Settlement" (
     "id" TEXT NOT NULL,
     "runnerId" TEXT NOT NULL,
-    "operationalDate" TEXT NOT NULL,
+    "operationalDate" DATE NOT NULL,
     "status" "SettlementStatus" NOT NULL DEFAULT 'PENDING',
     "totalOrders" INTEGER NOT NULL,
     "totalFees" INTEGER NOT NULL,
@@ -307,6 +310,9 @@ CREATE INDEX "Rating_orderId_idx" ON "Rating"("orderId");
 CREATE UNIQUE INDEX "Rating_orderId_runnerId_key" ON "Rating"("orderId", "runnerId");
 
 -- CreateIndex
+CREATE UNIQUE INDEX "Rating_orderId_customerId_key" ON "Rating"("orderId", "customerId");
+
+-- CreateIndex
 CREATE INDEX "LedgerEntry_orderId_idx" ON "LedgerEntry"("orderId");
 
 -- CreateIndex
@@ -379,7 +385,7 @@ ALTER TABLE "Rating" ADD CONSTRAINT "Rating_customerId_fkey" FOREIGN KEY ("custo
 ALTER TABLE "Rating" ADD CONSTRAINT "Rating_runnerId_fkey" FOREIGN KEY ("runnerId") REFERENCES "Runner"("id") ON DELETE SET NULL ON UPDATE CASCADE;
 
 -- AddForeignKey
-ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE SET NULL ON UPDATE CASCADE;
+ALTER TABLE "LedgerEntry" ADD CONSTRAINT "LedgerEntry_orderId_fkey" FOREIGN KEY ("orderId") REFERENCES "Order"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
 ALTER TABLE "Settlement" ADD CONSTRAINT "Settlement_runnerId_fkey" FOREIGN KEY ("runnerId") REFERENCES "Runner"("id") ON DELETE RESTRICT ON UPDATE CASCADE;

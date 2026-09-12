@@ -32,7 +32,7 @@ FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 ### 5. Types First
 - New DTOs go in packages/shared-types first
 - Zod schemas shared between backend and frontend
-- Never use ny in typed APIs
+- Never use any in typed APIs
 
 ### 6. API Standards
 - All endpoints under /api/v1/
@@ -77,7 +77,7 @@ rollback plan BEFORE execution. Use /rollback-plan command to create one.
 
 ## Skills
 - pre-sprint-checklist — Pre-Sprint validation
-- ollback-plan — Financial rollback documentation
+- rollback-plan — Financial rollback documentation
 - coderabbit-workflow — PR workflow with CodeRabbit review
 
 ## Commands

@@ -64,6 +64,56 @@
 
 ---
 
+### 2.1.1 ضمان الذرّية في انتقالات الحالة
+
+**القاعدة الأساسية:** لا يُسمح بتغيير `status` مباشرة على سجل `Order`. كل انتقال حالة يجب أن يمر عبر `OrderStateMachine` داخل Prisma transaction واحدة (القسم 17).
+
+**ذرّية الانتقال — كل عملية تغيير حالة تتضمن ذريًا:**
+
+1. التحقق من صلاحية الانتقال عبر `OrderStateMachine.canTransition()`
+2. تحديث `status` في سجل `Order`
+3. تحديث `updatedAt`
+4. تسجيل سجل `AuditLog` بالحدث المناسب (`fromStatus`, `toStatus`, `actorId`, `actorRole`, `meta`)
+5. جميع الخطوات أعلاه داخل **Prisma transaction واحدة** — إما تنجح كلها أو تفشل كلها
+
+**مثال عملي — تعيين مندوب:**
+```typescript
+const result = await prisma.$transaction(async (tx) => {
+  // 1. التحقق من الحالة الحالية والانتقال المسموح
+  const order = await tx.order.findUnique({ where: { id } });
+  if (!stateMachine.canTransition(order.status, 'ASSIGNED', actorRole)) {
+    throw new BadRequestException('BUSINESS_RULE_VIOLATION');
+  }
+
+  // 2. تحديث الحالة
+  await tx.order.update({
+    where: { id },
+    data: { status: 'ASSIGNED', runnerId, assignedAt: new Date(), updatedAt: new Date() },
+  });
+
+  // 3. تسجيل AuditLog (ضمن نفس الـ transaction)
+  await tx.auditLog.create({
+    data: {
+      orderId,
+      actorId,
+      actorRole,
+      event: 'RUNNER_ASSIGNED',
+      fromStatus: 'AWAITING_RUNNER',
+      toStatus: 'ASSIGNED',
+      meta: { runnerId },
+    },
+  });
+});
+```
+
+**القواعد الصارمة:**
+- أي انتقال حالة بدون المرور عبر `OrderStateMachine` = مخالفة للقاعدة رقم 2 في AGENTS.md
+- أي `await prisma.order.update({ data: { status } })` مباشرة بدون State Machine = خطأ فوري عند المراجعة
+- AuditLog Append-Only — لا تحديث ولا حذف — مما يضمن تتبّع كامل لتاريخ الانتقالات
+- إذا فشل أي جزء من الـ transaction (مثلاً خطأ في قاعدة البيانات)، لا يتغير شيء: لا الحالة ولا AuditLog
+
+---
+
 ### 2.2 بناء OrderStore State Machine
 
 **الوصف:**

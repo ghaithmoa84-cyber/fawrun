@@ -7,6 +7,71 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-12 18:14 — إكمال التحقق من إصلاحات CodeRabbit
+
+**الملفات والدوال المعدّلة:**
+- `CHANGELOG.md` — توثيق نتائج التحقق النهائية
+
+**السبب:**
+إكمال خطة التحقق و记录 حالة الأوامر الناجحة والفاشلة دون تعديل ملفات API خارج نطاق الخطة.
+
+**الأوامر والنتائج:**
+- `pnpm --filter fawrun-api test` → لم يُعثَر على ملفات اختبارات، exit code 1
+- `pnpm --filter @fawrun/shared-types build` → نجح
+- `pnpm --filter @fawrun/shared-constants lint` → نجح
+- `pnpm --filter fawrun-api exec prisma validate` → نجح
+- `git diff --check` → نجح
+
+**الأخطاء والحلول:**
+- أخطاء `apps/api/src/app.module.ts:90` و`apps/api/src/config/jwt.config.ts:26` موجودة في `HEAD` ولم تُعدّل ضمن هذه الخطة.
+- لم يتوفر `DATABASE_URL` أو `psql` محليًا، لذا لم يُنفّذ `pnpm db:push --force`.
+
+### 2026-09-12 17:50 — إصلاح مراجعات CodeRabbit اليدوية
+
+**الملفات والدوال المعدّلة:**
+- `AGENTS.md` — إزالة الأحرف التحكمية من قواعد Types First وقائمة المهارات
+- `CHANGELOG.md` — تصحيح القوس الزائد في مهمة Auto room assignment
+- `apps/api/prisma/migrations/20260911172902_init/migration.sql` — تصحيح `orderNumber` و`operationalDate` وعلاقات LedgerEntry وإضافة فهرس Rating الفريد
+
+**السبب:**
+معالجة البنود غير المؤجلة في خطة مراجعات CodeRabbit اليدوية والحفاظ على سلامة الهجرة الأولية.
+
+**الأوامر والنتائج:**
+- `pnpm --filter @fawrun/shared-types lint` → نجح
+- `pnpm --filter fawrun-api db:generate` → نجح
+- `pnpm --filter fawrun-api lint` → فشل بسبب أخطاء parsing/type موجودة مسبقًا في `apps/api/src/app.module.ts:90` و`apps/api/src/config/jwt.config.ts:26`
+- `pnpm lint` → فشل لنفس أخطاء API الموجودة مسبقًا
+- `pnpm typecheck` → لم يُنفّذ أي مهمة بسبب إعدادات Turbo الحالية
+- `pnpm --filter fawrun-api build` → فشل بنفس أخطاء API الموجودة مسبقًا
+- `git diff --check` → نجح
+
+**الأخطاء والحلول:**
+- لم يتوفر `DATABASE_URL` أو `psql` محليًا، لذا لم يُنفّذ `pnpm db:push --force`.
+
+### 2026-09-12 16:30 — إكمال تنفيذ خطة مراجعات CodeRabbit
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/app.module.ts` — إصلاح خطأ بنائي: إغلاق `JwtModule.registerAsync` بشكل صحيح
+- `apps/api/src/config/jwt.config.ts` — إصلاح `normalize.sep` → `sep` (استيراد مباشر من `path`) للتحقق من مسار المجلد
+- `packages/shared-constants/src/pricing.ts` — إزالة `calculateFee` (نقلت إلى الـ API layer)
+- `apps/api/src/modules/pricing/pricing.service.ts` — إنشاء PricingService جديد في الـ API
+- `apps/api/src/modules/pricing/pricing.module.ts` — إنشاء PricingModule
+- `apps/api/prisma/schema.prisma` — تصحيح `@@unique([orderId, runnerId])` → `@@unique([orderId, customerId])` للفهرس الفريد
+- `docs/sprints/Sprint 2 Brief.md` — إضافة قسم ضمان الذرّية في انتقالات الحالة
+- `docs/sprints/Sprint 1 Brief.md` — إضافة أمثلة payloads WebSocket وقواعد الإرسال
+- `docs/sprints/Sprint 3 Brief.md` — إضافة قاعدة ذرّية إرسال الأحداث
+
+**السبب:**
+نقل منطق التسعير إلى طبقة الـ API وفق قاعدة Server is Source of Truth، وتوثيق انتقالات الحالة الذرّية وقواعد WebSocket.
+
+**الأوامر والنتائج:**
+- `pnpm lint` → نجح (3/3)
+- `pnpm --filter fawrun-api build` → نجح
+- `pnpm --filter @fawrun/shared-types build` → نجح
+- `pnpm --filter @fawrun/shared-constants build` → نجح
+- `pnpm --filter fawrun-api db:generate` → نجح
+- `git diff --check` → نجح
+
 ### Fixed
 - **Exception filter** — Standardized error responses: All exceptions now return `{ statusCode, error, message }` via `HTTP_ERROR_MAP` instead of NestJS default format (1:1, 400, 401, 409, 429, 404).
 - **ESLint flat config** — Created `eslint.config.mjs` for ESLint 9 compatibility (was missing entire config).
@@ -77,7 +142,7 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 - Admin: runner list/create/update/visibility endpoints
 - AuditService: append-only AuditLog for all status changes
 - WebSocket: OrdersGateway (/orders) + AdminGateway (/admin) with JWT auth on connect
-- Auto room assignment: customer:{id}, runner:{id}, admin:all}
+- Auto room assignment: customer:{id}, runner:{id}, admin:all
 - NotificationsService: emitToCustomer/Runner/Admin helpers
 - Rate limiting: 100/min default, login 10/15min, register 3/hr
 - CORS configured from env, Helmet enabled

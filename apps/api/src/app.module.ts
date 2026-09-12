@@ -87,7 +87,8 @@ import { jwtConfig } from './config/jwt.config.js';
           },
 verifyOptions: { algorithms: ['RS256' as const] },
         };
-      }),
+      },
+    }),
     PrismaModule,
     AuditModule,
     NotificationsModule,
