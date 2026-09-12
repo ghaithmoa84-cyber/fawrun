@@ -5,6 +5,22 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-09-12 18:18 — CodeRabbit review documentation fixes (Sprint 2/3 Brief)
+
+**الملفات والدوال المعدّلة:**
+- `docs/sprints/Sprint 2 Brief.md` — Fix 1: `BadRequestException` → `UnprocessableEntityException` (line 85); Fix 2: Added runner AVAILABLE/VERIFIED check + status update to ON_MISSION in transaction (lines 94-102); Fix 3: `fromStatus: 'AWAITING_RUNNER'` → `fromStatus: order.status` (line 111)
+- `docs/sprints/Sprint 3 Brief.md` — Fix 4: Replaced "ذرّية إرسال الأحداث" WebSocket transaction guidance with Outbox Pattern pattern (lines 331-338)
+
+**السبب:**
+معالجة 4 ملاحظات من CodeRabbit في توثيق Sprint 2 و Sprint 3 Briefs: استثناء غير صحيح، حالة runner مفقودة في transaction، status ثابت في AuditLog، ونمط إرسال WebSocket الخاطئ.
+
+**الأوامر والنتائج:**
+- `git add && git commit -m "fix: CodeRabbit review fixes - Sprint 2/3 brief documentation"` → نجح، commit 8faa553
+- `git push origin feature/sprint-1-auth-admin-websocket` → نجح
+
+**الأخطاء والحلول:**
+- خطأ `oldString not found` في Fix 2 و Fix 4 بسبب عدم تطابق المسافات/الفواصل → تم إصلاح بتطابق دقيق للنص بعد قراءة الأسطر الحالية
+
 ## [Unreleased]
 
 ### 2026-09-12 18:14 — إكمال التحقق من إصلاحات CodeRabbit
