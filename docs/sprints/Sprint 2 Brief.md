@@ -82,13 +82,23 @@ const result = await prisma.$transaction(async (tx) => {
   // 1. التحقق من الحالة الحالية والانتقال المسموح
   const order = await tx.order.findUnique({ where: { id } });
   if (!stateMachine.canTransition(order.status, 'ASSIGNED', actorRole)) {
-    throw new BadRequestException('BUSINESS_RULE_VIOLATION');
+    throw new UnprocessableEntityException('BUSINESS_RULE_VIOLATION');
   }
 
   // 2. تحديث الحالة
   await tx.order.update({
     where: { id },
     data: { status: 'ASSIGNED', runnerId, assignedAt: new Date(), updatedAt: new Date() },
+  });
+
+  // 2b. Verify runner is AVAILABLE and VERIFIED
+  const runner = await tx.runner.findUnique({ where: { id: runnerId } });
+  if (!runner || runner.status !== 'AVAILABLE' || runner.userId !== verifiedUserId) {
+    throw new UnprocessableEntityException('Runner not available or not verified');
+  }
+  await tx.runner.update({
+    where: { id: runnerId },
+    data: { status: 'ON_MISSION' },
   });
 
   // 3. تسجيل AuditLog (ضمن نفس الـ transaction)
@@ -98,7 +108,7 @@ const result = await prisma.$transaction(async (tx) => {
       actorId,
       actorRole,
       event: 'RUNNER_ASSIGNED',
-      fromStatus: 'AWAITING_RUNNER',
+       fromStatus: order.status,
       toStatus: 'ASSIGNED',
       meta: { runnerId },
     },
