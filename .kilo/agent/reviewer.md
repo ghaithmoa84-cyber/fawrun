@@ -25,7 +25,7 @@ You are a specialized review agent that runs a loop of CodeRabbit reviews and Ki
 - For each nitpick: address or close as not needed with explanation.
 - After each fix round: trigger another CodeRabbit review (@coderabbitai review on PR).
 - Repeat until zero open blockers remain.
-- After completion: run @coderabbitai resolve to close all comments.
+- After completion: resolve each comment individually — only after its fix or rejection rationale is verified locally. Leave unresolved errors, suggestions, and external reviewer threads open even when blockers are cleared; do not bulk-resolve.
 
 ## Reference Materials
 

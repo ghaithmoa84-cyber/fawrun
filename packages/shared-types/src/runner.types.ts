@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { passwordSchema } from './auth.types.js';
 
 export const RunnerStatusUpdateSchema = z.object({
   status: z.enum(['AVAILABLE', 'UNAVAILABLE']),
@@ -9,7 +10,7 @@ export type RunnerStatusUpdate = z.infer<typeof RunnerStatusUpdateSchema>;
 export const CreateRunnerSchema = z.object({
   name: z.string().min(2),
   whatsapp: z.string(),
-  password: z.string().min(8),
+  password: passwordSchema,
   altPhone: z.string().optional(),
 });
 
@@ -19,7 +20,7 @@ export const UpdateRunnerSchema = z.object({
   name: z.string().min(2).optional(),
   altPhone: z.string().optional(),
   notes: z.string().optional(),
-  password: z.string().min(8).optional(),
+  password: passwordSchema.optional(),
 });
 
 export type UpdateRunnerRequest = z.infer<typeof UpdateRunnerSchema>;
@@ -50,7 +51,7 @@ export const ApproveOrderSchema = z.object({
 export type ApproveOrderRequest = z.infer<typeof ApproveOrderSchema>;
 
 export const AssignRunnerSchema = z.object({
-  runnerId: z.string(),
+  runnerId: z.string().trim().min(1, 'runnerId cannot be empty'),
 });
 
 export type AssignRunnerRequest = z.infer<typeof AssignRunnerSchema>;

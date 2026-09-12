@@ -1,6 +1,9 @@
 import { z } from 'zod';
 
-const nonEmptyString = z.string().min(1, 'Field cannot be empty or whitespace');
+const nonEmptyString = z
+  .string()
+  .trim()
+  .min(1, 'Field cannot be empty or whitespace');
 
 export const CreateOrderItemSchema = z.object({
   itemName: nonEmptyString,

@@ -105,10 +105,16 @@ export class UsersService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id },
+      const updateResult = await tx.user.updateMany({
+        where: { id, status: 'PENDING_VERIFICATION', isDeleted: false, role: 'CUSTOMER' },
         data: { status: 'VERIFIED' },
       });
+
+      if (updateResult.count !== 1) {
+        throw new UnprocessableEntityException(
+          'Account is not in pending verification state',
+        );
+      }
 
       await this.auditService.log({
         actorId,
@@ -150,10 +156,16 @@ export class UsersService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.user.update({
-        where: { id },
+      const updateResult = await tx.user.updateMany({
+        where: { id, status: 'PENDING_VERIFICATION', isDeleted: false, role: 'CUSTOMER' },
         data: { status: 'REJECTED' },
       });
+
+      if (updateResult.count !== 1) {
+        throw new UnprocessableEntityException(
+          'Account is not in pending verification state',
+        );
+      }
 
       await this.auditService.log({
         actorId,

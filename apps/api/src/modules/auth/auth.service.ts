@@ -113,9 +113,9 @@ export class AuthService {
       },
     );
 
-    const refreshToken = randomBytes(32).toString('hex');
+    const refreshTokenSecret = randomBytes(32).toString('hex');
     const selector = generateSelector();
-    const tokenHash = await bcrypt.hash(refreshToken, CONFIG.BCRYPT_ROUNDS);
+    const tokenHash = await bcrypt.hash(refreshTokenSecret, CONFIG.BCRYPT_ROUNDS);
 
     await this.prisma.refreshToken.create({
       data: {
@@ -136,7 +136,7 @@ export class AuthService {
 
     return {
       accessToken,
-      refreshToken,
+      refreshToken: `${selector}:${refreshTokenSecret}`,
       user: {
         id: user.id,
         name: user.name,

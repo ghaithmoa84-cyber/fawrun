@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const passwordSchema = z.string().min(8).max(72).refine(
+export const passwordSchema = z.string().min(8).max(72).refine(
   (val) => Buffer.byteLength(val, 'utf8') <= 72,
   'Password must not exceed 72 bytes'
 );
