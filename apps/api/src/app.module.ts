@@ -81,11 +81,13 @@ import { jwtConfig } from './config/jwt.config.js';
         return {
           privateKey,
           publicKey,
-          signOptions: { algorithm: 'RS256' as const, expiresIn: '2h' },
-          verifyOptions: { algorithms: ['RS256' as const] },
+          signOptions: {
+            algorithm: 'RS256' as const,
+            expiresIn: jwtSettings?.accessTokenExpiry ?? '2h',
+          },
+verifyOptions: { algorithms: ['RS256' as const] },
         };
-      },
-    }),
+      }),
     PrismaModule,
     AuditModule,
     NotificationsModule,

@@ -62,13 +62,19 @@ gh pr create --title "<type>: <description>" --body "<PR description>"
 For EACH CodeRabbit comment:
 - [ ] Read and understand the suggestion
 - [ ] Apply fix locally
-- [ ] Run local checklist again (step 1): `pnpm lint && pnpm typecheck && pnpm test`
+- [ ] Run local checklist again (step 1): `pnpm lint && pnpm typecheck && pnpm test && pnpm db:generate` plus all required security checks
 - [ ] Push fix to same branch
-- [ ] Resolve comment on GitHub ("Resolve conversation")
+- [ ] Re-trigger review manually on GitHub
+
+#### Re-triggering review after fixes
+`coderabbit review --agent` does NOT work locally — CodeRabbit only reviews on GitHub PRs.
+After `git push`, go to the PR on GitHub and post a comment:
+@coderabbitai review
+Wait 1-3 minutes for the new review to complete. Do NOT use `coderabbit review --agent` locally.
 
 Use these commands in PR comments or VS Code:
 - `@coderabbitai summary` — Get high-level PR summary
-- `@coderabbitai review` — Re-trigger full review
+- `@coderabbitai review` — Re-trigger full review (post as PR comment)
 - `@coderabbitai fix` — Auto-fix suggestions (review before applying)
 - `@coderabbitai explain <id>` — Explain specific comment
 - `@coderabbitai resolve` — Close all resolved comments

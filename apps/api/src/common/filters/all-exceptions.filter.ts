@@ -51,7 +51,9 @@ export class AllExceptionsFilter implements ExceptionFilter {
       );
     }
 
-    const error = HTTP_ERROR_MAP[status] || 'INTERNAL_SERVER_ERROR';
+    const error = 
+      HTTP_ERROR_MAP[status] ??
+      (status >= 500 ? 'INTERNAL_SERVER_ERROR' : 'REQUEST_ERROR');
 
     response.status(status).json({
       statusCode: status,
