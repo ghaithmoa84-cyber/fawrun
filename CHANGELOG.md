@@ -55,7 +55,7 @@ PR #1 created on GitHub for Sprint 1 Foundation with CodeRabbit review requested
 - `gh pr edit 1 --title "feat: Sprint 1 — Foundation (Auth + Admin + WebSocket)"` → نجح
 - PR URL: https://github.com/ghaithmoa84-cyber/fawrun/pull/1
 
-### 2026-09-13 10:48 — إضافة مهارتي FAWRUN Domain Gate وAPI Contract Security
+### 2026-09-13 10:48 — إضافة مهارتَي FAWRUN Domain Gate وAPI Contract Security
 
 **الملفات والدوال المعدّلة:**
 - `.kilo/skills/fawrun-domain-gate/SKILL.md` — إضافة بوابة التحقق من State Machine والعمليات المالية وسلامة البيانات
