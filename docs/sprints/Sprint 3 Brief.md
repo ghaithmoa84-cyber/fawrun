@@ -242,8 +242,10 @@
    - Auth: Runner فقط
    - Ownership check
    - يستخدم Order State Machine: `OUT_FOR_DELIVERY` → `DELIVERED`
-   - **Idempotent:** إذا أُرسلت مرتين، تُنفَّذ مرة واحدة فقط (القسم 17):
-     - إذا كان الطلب بالفعل بحالة `DELIVERED`: يُرجع 409 CONFLICT (أو 200 مع البيانات الحالية)
+    - **Idempotent (القسم 17):** إذا أُرسلت مرتين، تُنفَّذ مرة واحدة فقط:
+      - إذا كان الطلب بالفعل بحالة `DELIVERED`: يُرجع 409 CONFLICT (أو 200 مع البيانات الحالية) — لا يُنشئ LedgerEntry مكرر، لا يُحدّث Customer/Runner إحصائيات، لا يُكرّر AuditLog
+      - الحماية عبر State Machine: الانتقال الوحيد المسموح هو `OUT_FOR_DELIVERY` → `DELIVERED`، وعند الوصول لـ `DELIVERED` لا يمكن تكرار الانتقال
+      - أي استدعاء لاحق مع الطلب بالفعل `DELIVERED` لا يُغيّر أي حالة
    - داخل Prisma transaction واحدة:
      a. تحديث Order:
         - `status` → `DELIVERED`

@@ -8,11 +8,12 @@ import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { SOCKET_SERVERS } from './socket-registry.js';
+import { getCorsOrigins } from './cors-origins.js';
 
 @WebSocketGateway({
   namespace: '/orders',
   cors: {
-    origin: process.env.CORS_ORIGINS?.split(',').map((o) => o.trim()) || [],
+    origin: getCorsOrigins(),
     credentials: true,
   },
 })

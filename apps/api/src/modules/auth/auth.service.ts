@@ -121,6 +121,7 @@ export class AuthService {
       data: {
         userId: user.id,
         selector,
+        tokenSecret: refreshTokenSecret,
         tokenHash,
         deviceInfo,
         isRevoked: false,
@@ -184,7 +185,7 @@ export class AuthService {
 
     return {
       accessToken,
-      refreshToken: dto.refreshToken,
+      refreshToken: `${selector}:${token.tokenSecret}`,
       user: {
         id: user.id,
         name: user.name,

@@ -47,10 +47,10 @@
           - `status`: `PENDING`
           - `totalOrders`: عدد الطلبات
           - `totalFees`: مجموع `totalFee` لكل الطلبات
-          - `runnerShare`: `Math.floor(totalFees * 0.75)`
-          - `platformShare`: `Math.ceil(totalFees * 0.25)`
-          - `closedByAdminId`: Admin ID
-        - إنشاء `SettlementItem` لكل طلب:
+         - **`runnerShare`:** `Math.floor(totalFees * 0.75)` — حصة المندوب (75%)
+         - **`platformShare`:** `Math.ceil(totalFees * 0.25)` — حصة FAWRUN (25%)
+         - **ملاحظة تقريب:** `runnerShare + platformShare` قد يختلف عن `totalFees` بفرق ±1 بسبب التقريب. الفرق يُعالج عبر `SettlementItem` الفردي — كل `SettlementItem` يحسب حصته من `orderFee` الخاص به (`Math.floor(orderFee * 0.75)` + `Math.ceil(orderFee * 0.25)`)، ومجموع الـ SettlementItems يُطابق مجموع `totalFees` بدقة لأن التقريب لكل طلب يلغي بعضه. المجاميع في `Settlement` نفسها (runnerShare, platformShare) تُشتق من مجموع الـ SettlementItem rows مباشرة: `runnerShare = Σ SettlementItem.runnerShare`, `platformShare = Σ SettlementItem.platformShare`.
+         - إنشاء `SettlementItem` لكل طلب:
           - `orderId`
           - `orderFee`: `totalFee` للطلب
           - `runnerShare`: `Math.floor(orderFee * 0.75)`

@@ -90,21 +90,21 @@ export class UsersService {
   }
 
   async verify(id: string, actorId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id, isDeleted: false, role: 'CUSTOMER' },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.status !== 'PENDING_VERIFICATION') {
-      throw new UnprocessableEntityException(
-        'Account is not in pending verification state',
-      );
-    }
-
     await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id, isDeleted: false, role: 'CUSTOMER' },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.status !== 'PENDING_VERIFICATION') {
+        throw new UnprocessableEntityException(
+          'Account is not in pending verification state',
+        );
+      }
+
       const updateResult = await tx.user.updateMany({
         where: { id, status: 'PENDING_VERIFICATION', isDeleted: false, role: 'CUSTOMER' },
         data: { status: 'VERIFIED' },
@@ -141,21 +141,21 @@ export class UsersService {
   }
 
   async reject(id: string, actorId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id, isDeleted: false, role: 'CUSTOMER' },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
-    if (user.status !== 'PENDING_VERIFICATION') {
-      throw new UnprocessableEntityException(
-        'Account is not in pending verification state',
-      );
-    }
-
     await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id, isDeleted: false, role: 'CUSTOMER' },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.status !== 'PENDING_VERIFICATION') {
+        throw new UnprocessableEntityException(
+          'Account is not in pending verification state',
+        );
+      }
+
       const updateResult = await tx.user.updateMany({
         where: { id, status: 'PENDING_VERIFICATION', isDeleted: false, role: 'CUSTOMER' },
         data: { status: 'REJECTED' },
@@ -184,16 +184,15 @@ export class UsersService {
   }
 
   async suspend(id: string, actorId: string) {
-    const user = await this.prisma.user.findUnique({
-      where: { id, isDeleted: false, role: 'CUSTOMER' },
-      include: { refreshTokens: true },
-    });
-
-    if (!user) {
-      throw new NotFoundException('User not found');
-    }
-
     await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id, isDeleted: false, role: 'CUSTOMER' },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
       await tx.user.update({
         where: { id },
         data: { status: 'SUSPENDED' },

@@ -39,6 +39,8 @@ CREATE TABLE "User" (
 CREATE TABLE "RefreshToken" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
+    "selector" TEXT NOT NULL,
+    "tokenSecret" TEXT NOT NULL,
     "tokenHash" TEXT NOT NULL,
     "deviceInfo" TEXT,
     "isRevoked" BOOLEAN NOT NULL DEFAULT false,
@@ -100,7 +102,7 @@ CREATE TABLE "Admin" (
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
     "seqNumber" SERIAL NOT NULL,
-    "orderNumber" TEXT,
+    "orderNumber" TEXT NOT NULL,
     "customerId" TEXT NOT NULL,
     "runnerId" TEXT,
     "status" "OrderStatus" NOT NULL DEFAULT 'DRAFT',
@@ -211,7 +213,7 @@ FOREIGN KEY ("runnerId") REFERENCES "Runner"("id") ON DELETE RESTRICT ON UPDATE 
 CREATE TABLE "Settlement" (
     "id" TEXT NOT NULL,
     "runnerId" TEXT NOT NULL,
-    "operationalDate" DATE NOT NULL,
+    "operationalDate" VARCHAR(10) NOT NULL,
     "status" "SettlementStatus" NOT NULL DEFAULT 'PENDING',
     "totalOrders" INTEGER NOT NULL,
     "totalFees" INTEGER NOT NULL,
@@ -260,6 +262,9 @@ CREATE INDEX "User_whatsapp_idx" ON "User"("whatsapp");
 
 -- CreateIndex
 CREATE INDEX "User_role_status_idx" ON "User"("role", "status");
+
+-- CreateIndex
+CREATE UNIQUE INDEX "RefreshToken_selector_key" ON "RefreshToken"("selector");
 
 -- CreateIndex
 CREATE UNIQUE INDEX "RefreshToken_tokenHash_key" ON "RefreshToken"("tokenHash");

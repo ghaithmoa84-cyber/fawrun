@@ -11,6 +11,7 @@ export const CloseSettlementSchema = z.object({
     },
     'Invalid date: components do not form a valid UTC date',
   ),
+  runnerId: z.string().trim().min(1, 'runnerId cannot be empty'),
   notes: z.string().nullable(),
 });
 
