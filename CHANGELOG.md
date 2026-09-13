@@ -36,9 +36,24 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 Triage of CodeRabbit round 5 comments. Only Category A (real blockers) fixed. Category B deferred to Sprint 2/3/4 per triage classification.
 
 **الأوامر والنتائج:**
-- `pnpm --filter @fawrun/shared-types build` → قيد التنفيذ
-- `pnpm --filter fawrun-api db:generate` → قيد التنفيذ
-- `pnpm --filter fawrun-api build` → قيد التنفيذ
+- `pnpm --filter @fawrun/shared-types build` → نجح
+- `pnpm --filter fawrun-api db:generate` → نجح
+- `pnpm --filter fawrun-api build` → نجح
+- `pnpm lint` → نجح (3/3)
+
+### 2026-09-13 — PR #1 Created — Sprint 1 Foundation
+
+**الملفات والدوال المعدّلة:**
+- `CHANGELOG.md` — PR creation entry
+- `feature/sprint-1-auth-admin-websocket` — Pushed commit 84a4aa3
+
+**السبب:**
+PR #1 created on GitHub for Sprint 1 Foundation with CodeRabbit review requested.
+
+**الأوامر والنتائج:**
+- `git push origin feature/sprint-1-auth-admin-websocket` → نجح
+- `gh pr edit 1 --title "feat: Sprint 1 — Foundation (Auth + Admin + WebSocket)"` → نجح
+- PR URL: https://github.com/ghaithmoa84-cyber/fawrun/pull/1
 
 ### 2026-09-13 10:48 — إضافة مهارتي FAWRUN Domain Gate وAPI Contract Security
 
