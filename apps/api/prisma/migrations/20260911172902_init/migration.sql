@@ -40,7 +40,6 @@ CREATE TABLE "RefreshToken" (
     "id" TEXT NOT NULL,
     "userId" TEXT NOT NULL,
     "selector" TEXT NOT NULL,
-    "tokenSecret" TEXT NOT NULL,
     "tokenHash" TEXT NOT NULL,
     "deviceInfo" TEXT,
     "isRevoked" BOOLEAN NOT NULL DEFAULT false,
@@ -102,7 +101,7 @@ CREATE TABLE "Admin" (
 CREATE TABLE "Order" (
     "id" TEXT NOT NULL,
     "seqNumber" SERIAL NOT NULL,
-    "orderNumber" TEXT NOT NULL,
+    "orderNumber" TEXT,
     "customerId" TEXT NOT NULL,
     "runnerId" TEXT,
     "status" "OrderStatus" NOT NULL DEFAULT 'DRAFT',

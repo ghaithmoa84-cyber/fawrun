@@ -100,7 +100,6 @@ model RefreshToken {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   selector    String   @unique
-  tokenSecret String
   tokenHash   String
   deviceInfo  String?
   isRevoked   Boolean  @default(false)
@@ -186,7 +185,7 @@ model Order {
   // مثال: seqNumber=1 → orderNumber="FW-000001"
   // يُولَّد في الكود مباشرة بعد إنشاء السجل باستخدام seqNumber
   // لا يُولَّد قبل الحفظ لضمان التفرد في حالات التزامن
-  orderNumber String @unique
+  orderNumber String? @unique
 
   customerId  String
   customer    Customer    @relation(fields: [customerId], references: [id])

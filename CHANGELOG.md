@@ -23,6 +23,41 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-13 — CodeRabbit Triage (Round 5)
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/prisma/schema.prisma` — Fix A1: orderNumber reverted to nullable; Fix A2: tokenSecret removed
+- `apps/api/prisma/migrations/20260911172902_init/migration.sql` — Sync with schema (orderNumber nullable, tokenSecret removed)
+- `apps/api/src/modules/auth/auth.service.ts` — Fix A2: tokenSecret removed, refresh() reverted
+- `packages/shared-types/src/settlement.types.ts` — Fix A3: runnerId removed from CloseSettlementSchema
+- `CHANGELOG.md` — Documented deferred items (Category B)
+
+**السبب:**
+Triage of CodeRabbit round 5 comments. Only Category A (real blockers) fixed. Category B deferred to Sprint 2/3/4 per triage classification.
+
+**الأوامر والنتائج:**
+- `pnpm --filter @fawrun/shared-types build` → قيد التنفيذ
+- `pnpm --filter fawrun-api db:generate` → قيد التنفيذ
+- `pnpm --filter fawrun-api build` → قيد التنفيذ
+
+### 2026-09-13 10:48 — إضافة مهارتي FAWRUN Domain Gate وAPI Contract Security
+
+**الملفات والدوال المعدّلة:**
+- `.kilo/skills/fawrun-domain-gate/SKILL.md` — إضافة بوابة التحقق من State Machine والعمليات المالية وسلامة البيانات
+- `.kilo/skills/api-contract-security/SKILL.md` — إضافة بوابة العقود المشتركة والتحقق التفويضي وأمان APIs
+- `AGENTS.md` — إضافة المهارتين إلى قائمة مهارات المشروع
+
+**السبب:**
+توحيد فرض قواعد المجال والعقود الأمنية أثناء تطوير FAWRUN، والحد من تغييرات الحالة المباشرة والعمليات المالية غير الآمنة وثغرات APIs.
+
+**الأوامر والنتائج:**
+- `git diff --check` → نجح، مع تحذير Git المعتاد حول LF/CRLF في `AGENTS.md`
+- `pnpm lint` → نجح، 3 مهام ناجحة
+- `pnpm typecheck` → نجح كإعداد Turbo، لكن لم تُنفّذ مهام لأن الحزم لا تعرّف مهام `typecheck`
+
+**الأخطاء والحلول:**
+- لم تُكتشف مهام `typecheck` في Turbo؛ تم تسجيل ذلك بدل اعتبار النتيجة تحققًا نوعيًا كاملًا.
+
 ### 2026-09-12 18:14 — إكمال التحقق من إصلاحات CodeRabbit
 
 **الملفات والدوال المعدّلة:**
