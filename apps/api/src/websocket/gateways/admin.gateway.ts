@@ -1,0 +1,70 @@
+import {
+  WebSocketGateway,
+  WebSocketServer,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+} from '@nestjs/websockets';
+import { Server, Socket } from 'socket.io';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
+import { SOCKET_SERVERS } from './socket-registry.js';
+import { getCorsOrigins } from './cors-origins.js';
+
+@WebSocketGateway({
+  namespace: '/admin',
+  cors: {
+    origin: getCorsOrigins(),
+    credentials: true,
+  },
+})
+export class AdminGateway
+  implements OnGatewayConnection, OnGatewayDisconnect
+{
+  @WebSocketServer()
+  io: Server;
+
+  constructor(
+    private readonly jwtService: JwtService,
+    private readonly configService: ConfigService,
+  ) {
+    SOCKET_SERVERS.admin = null;
+  }
+
+  async afterInit(server: Server) {
+    SOCKET_SERVERS.admin = server;
+  }
+
+  async handleConnection(client: Socket) {
+    const token = client.handshake.auth?.token || client.handshake.headers?.authorization?.toString().split(' ')[1];
+
+    if (!token) {
+      client.disconnect(true);
+      return;
+    }
+
+    try {
+      const jwtConfig = this.configService.get('jwt');
+      const publicKey = jwtConfig?.publicKey;
+      const payload = this.jwtService.verify(token, {
+        publicKey: publicKey || undefined,
+        algorithms: ['RS256'],
+      });
+
+      if (payload.role !== 'ADMIN') {
+        client.disconnect(true);
+        return;
+      }
+
+      client.data.userId = payload.sub;
+      client.data.role = payload.role;
+
+      client.join('admin:all');
+    } catch {
+      client.disconnect(true);
+    }
+  }
+
+  handleDisconnect(_client: Socket) {
+    // Cleanup logic if needed
+  }
+}

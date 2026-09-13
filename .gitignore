@@ -1,0 +1,26 @@
+# Dependencies
+node_modules/
+.turbo/
+
+# Build output
+dist/
+*.tsbuildinfo
+*.js.map
+
+# Environment
+.env
+.env.*
+!.env.example
+
+# Prisma
+prisma/*.db
+prisma/*.db-journal
+
+# JWT keys
+*.pem
+*.key
+
+# Misc
+coverage/
+.nest/
+*.log

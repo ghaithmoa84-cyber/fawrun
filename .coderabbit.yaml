@@ -1,0 +1,191 @@
+# CodeRabbit configuration for FAWRUN
+# Docs: https://docs.coderabbit.ai
+
+language: en
+tone_instructions: |
+  كن صارم على المشاكل الأمنية والمالية. 💥 Blocker لأي مخالفة لقواعد AGENTS.md (Spec Section 17) أو Done Criteria.
+  💡 لغير الحرجة. لا تستخدم "chill" على القضايا المالية.
+
+reviews:
+  profile: chill
+  request_changes_workflow: true
+  high_level_summary: true
+  sequence_diagrams: false
+  poem: false
+  auto_review:
+    enabled: true
+    auto_incremental_review: true
+    drafts: false
+  finishing_reviews:
+    enabled: true
+  pre_merge_checks:
+    enabled: false
+  path_filters:
+    - "!node_modules/"
+    - "!dist/"
+    - "!build/"
+    - "!.next/"
+    - "!coverage/"
+    - "!out/"
+    - "!**/*.min.js"
+    - "!**/*.min.css"
+    - "!**/*.map"
+    - "!**/*.lock"
+    - "!**/*.png"
+    - "!**/*.jpg"
+    - "!**/*.jpeg"
+    - "!**/*.gif"
+    - "!**/*.svg"
+    - "!**/*.webp"
+    - "!**/*.ico"
+    - "!**/*.pdf"
+    - "!**/*.zip"
+    - "!**/*.tar.gz"
+
+path_instructions:
+  # === NestJS Backend Modules ===
+  # Covers both apps/api/src/modules and apps/api/src/src/modules
+  - path: "apps/api/src/**/modules/**/*.ts"
+    instructions: |
+      راجع كمهندس أمني/خوادم. تحقق من:
+      - فقط الأدوار المصرح بها (Roles) يمكنها استدعاء كل endpoint (Role check إلزامي).
+      - كل POST يقبل Idempotency-Key ويتعامل مع التكرار الآمن.
+      - العمليات المتعددة الخطوات تستخدم Prisma $transaction.
+      - لا يُغيّر حالة الوضع إلا عبر State Machine (apps/api/src/**/state-machine/).
+      - كل عملية مالية تسجل LedgerEntry.
+      - لا يُسجّل أي Sensitive Data (PII) في السجلات.
+      - Soft delete فقط (isDeleted flag) — لا hard deletes.
+      - Zod validation على كل input باستخدام ZodValidationPipe.
+
+  # === Prisma Schema ===
+  - path: "apps/api/prisma/schema.prisma"
+    instructions: |
+      راجع بصفتك خبير Prisma. تحقق من:
+      - صحة العلاقات (Relations) والقيود (Cascading).
+      - تعريف الفهارس (Indexes) الضرورية للأداء.
+      - الحقول المالية تستخدم Decimal (Decimal(10,2)) وليس Float.
+      - التعامل مع Enums وفقًا لتعريفات State Machine (Spec Section 6).
+      - @unique و @id مطبقة بشكل صحيح.
+      - الإشارات الخلوية (Back-references) سليمة.
+      - soft delete: isDeleted Boolean @default(false).
+
+  # === Shared Types (Zod Schemas + DTOs) ===
+  - path: "packages/shared-types/src/**/*.ts"
+    instructions: |
+      راجع كمحلل أنواع. تحقق من:
+      - Zod schemas تطابق Prisma models تمامًا.
+      - لا يوجد `any` في الأنواع العامة.
+      - كل DTO مُصدّر بشكل صحيح عبر index.ts.
+      - التوافق بين Backend و Frontend أنيق.
+      - استخدام Zod.object() لكل DTO مع valid() constraints.
+
+  # === Shared Constants ===
+  - path: "packages/shared-constants/src/**/*.ts"
+    instructions: |
+      راجع كخبير منطق. تحقق من:
+      - ORDER_STATUSES تُطابق State Machine transitions (Spec Section 6).
+      - PRICING (calculateFee) يطبق منطق العقد المالية بدقة.
+      - القيم الافتراضية واضحة وموثقة.
+      - لا يوجد أي hardcoded values للمنطق المالي.
+
+  # === State Machine ===
+  - path: "apps/api/src/**/state-machine/**/*.ts"
+    instructions: |
+      راجع كخبير أنظمة موزعة. تحقق من:
+      - State transitions: التحقق من صحة كل انتقال بين الحالات.
+      - OrderState, OrderStoreState, RunnerStatus — يطابقون Spec Sections 6.1, 6.2, 6.3.
+      - تطبيق Idempotency لمنع تكرار تنفيذ نفس الحدث.
+      - استخدام Versioning أو Optimistic Locking لتجنب فقدان التحديثات.
+      - التعامل مع حالات الفشل الجزئي (Partial Failure) والتراجع.
+      - كل انتقال يُسجّل في AuditLog مع OrderEvent.
+      - DELIVERED يجب أن يكون idempotent.
+
+  # === Financial Services ===
+  - path: "apps/api/src/**/modules/**/*service.ts"
+    instructions: |
+      راجع كمحاسب. تحقق من:
+      - Ledger (LedgerEntry): Append-only — لا تعديل ولا حذف للقيود.
+      - الحسابات المالية بـ Decimal (Prisma.Decimal).
+      - قاعدة Debit = Credit في كل معاملة ثنائية.
+      - Precision صحيحة عند التقريب (Math.round أو Decimal).
+      - كل عملية مالية مسجل في أثناء Transaction.
+      - معالجة Rollback عند الفشل — أوقف كل العملية.
+      - التحقق من التوازن قبل وبعد كل معاملة.
+      - Settlement batch operations: استخدم $transaction.
+
+  # === Auth & Security ===
+  - path: "apps/api/src/**/auth/**/*.ts"
+    instructions: |
+      راجع بصفتك خبير أمني. تحقق من:
+      - Authentication: JWT RS256 مع proper key management.
+      - Authorization: Role check إلزامي في كل endpoint (@Roles guard).
+      - bcrypt 12 rounds لكلمة المرور.
+      - Refresh token مُخزّن مُشفّر (bcrypt hash في قاعدة البيانات).
+      - Rate limiting: login 10/15min, register 3/hr، default 100/min.
+      - لا يُعيد تعيين الـ password hash عبر raw SQL.
+
+  # === Common Guards, Pipes & Decorators ===
+  - path: "apps/api/src/common/**"
+    instructions: |
+      راجع بصفتك خبير TypeScript/NestJS. تحقق من:
+      - ZodValidationPipe يستخدم Zod schemas من packages/shared-types.
+      - RolesGuard يتحقق من الصلاحيات قبل كل handler.
+      - AllExceptionsFilter يُرجع { statusCode, error, message } وفق Spec 9.0.
+      - لا يوجد `any` في الأنواع.
+      - JWT Auth Guard يتحقق من صلاحية الـ access token.
+
+  # === WebSocket Gateways ===
+  - path: "apps/api/src/**/websocket/**/*.ts"
+    instructions: |
+      راجع بصفتك خبير Realtime Systems. تحقق من:
+      - JWT authentication عند الاتصال (socket.handshake).
+      - Auto room assignment: customer:{id}, runner:{id}, admin:all.
+      - لا يُرسل Sensitive Data عبر الـ socket.
+      - Connection/disconnect events مسجلة.
+      - Error handling على كل emit.
+
+  # === Runner PWA (React + Vite + PWA) ===
+  - path: "apps/runner-pwa/**/*.tsx"
+    instructions: |
+      راجع كخبير تجربة مستخدم للهواتف. تحقق من:
+      - أزرار بحد أدنى 48px (Mobile-first — UI Rule).
+      - حالة المهمة (Request/Assigned/Delivered) واضحة في كل لحظة.
+      - التأكيد على الإجراءات الحساسة (قبول الطلب، تأكيد التسليم).
+      - حالات تحميل واضحة أثناء Polling أو WebSocket.
+      - منع النقر المزدوج على الأزرار (debouncing).
+      - العمل بدون اتصال/شبكة ضعيفة (Offline/PWA support).
+      - زر غير مفعّل لا يظهر في الحالة الحالية.
+
+  # === Admin Dashboard (Next.js 14 App Router) ===
+  - path: "apps/admin-web/**"
+    instructions: |
+      راجع بصفتك خبير أمني. تحقق من:
+      - Authorization مطلوب قبل كل عملية إدارية.
+      - لا يُظهر PII إلا عند الضرورة.
+      - تسجيل كل عملية إدارية في AuditLog.
+      - تأكيد الإجراءات الحساسة (حذف، تعديل أسعار).
+      - فلاتر وبحث متوافقان مع صلاحيات المستخدم.
+
+  # === Global TypeScript Rules ===
+  - path: "**/*.{ts,tsx,js,jsx}"
+    instructions: |
+      راجع بصفتك خبير TypeScript. تحقق من:
+      - منع `any` — استبدله بـ `unknown` أو نوع محدد.
+      - التعامل الصحيح مع null/undefined (Optional Chaining, Nullish Coalescing).
+      - إضافة JSDoc للدوار العامة والواجهات.
+      - تجنب Type Assertions غير الضرورية.
+      - استخدام Generics للأمان والمرونة.
+
+      طبق القواعد التالية من AGENTS.md (Spec Section 17) بدقة:
+      - TypeScript strict — ممنوع `any` دون سبب موثق.
+      - Zod لكل input خارجي.
+      - Role check في كل API endpoint.
+      - Prisma Transactions للعمليات متعددة الخطوات.
+      - لا secrets في الكود.
+      - لا silent catch — يلتقط الأخطاء بشكل صحيح.
+      - كل تغيير في السعر يسجل PriceHistory.
+      - كل انتقال لحالة الطلب عبر State Machine ويسجل OrderEvent.
+      - Ledger المالي: Append-only، العمليات Idempotent.
+
+chat:
+  auto_reply: true

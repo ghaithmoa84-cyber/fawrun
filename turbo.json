@@ -1,0 +1,19 @@
+{
+  "$schema": "https://turbo.build/task-config.json",
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**", ".prisma/client/**"]
+    },
+    "dev": {
+      "cache": false
+    },
+    "lint": {},
+    "test": {},
+    "typecheck": {},
+    "db:generate": {},
+    "db:push": {
+      "cache": false
+    }
+  }
+}
