@@ -2,12 +2,13 @@ import { Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { CONFIG } from '@fawrun/shared-constants';
 
 @Controller('admin/users')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(VerifiedUserGuard, JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}

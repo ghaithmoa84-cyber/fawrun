@@ -2,6 +2,7 @@ import { Body, Controller, Get, Post, Put, Param, Query, UseGuards } from '@nest
 import { RunnersService } from './runners.service.js';
 import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { CONFIG } from '@fawrun/shared-constants';
@@ -16,7 +17,7 @@ import {
 } from '@fawrun/shared-types';
 
 @Controller('admin/runners')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(VerifiedUserGuard, JwtAuthGuard, RolesGuard)
 @Roles('ADMIN')
 export class RunnersController {
   constructor(private readonly runnersService: RunnersService) {}

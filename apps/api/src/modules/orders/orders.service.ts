@@ -2,6 +2,7 @@ import {
   Injectable,
   ForbiddenException,
   NotFoundException,
+  UnprocessableEntityException,
 } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
 import type { OrderStatus } from '@fawrun/shared-constants';
@@ -415,12 +416,13 @@ export class OrdersService {
         });
 
         if (order.runnerId) {
-          if (order.runner && order.runner.status === 'ON_MISSION') {
-            await tx.runner.updateMany({
-              where: { id: order.runnerId },
-              data: { status: 'AVAILABLE' },
-            });
+          if (!order.runner || order.runner.status !== 'ON_MISSION') {
+            throw new UnprocessableEntityException('BUSINESS_RULE_VIOLATION');
           }
+          await tx.runner.update({
+            where: { id: order.runnerId },
+            data: { status: 'AVAILABLE' },
+          });
         }
 
         await this.auditService.log(
@@ -1140,12 +1142,13 @@ export class OrdersService {
         });
 
         if (order.runnerId) {
-          if (order.runner && order.runner.status === 'ON_MISSION') {
-            await tx.runner.updateMany({
-              where: { id: order.runnerId },
-              data: { status: 'AVAILABLE' },
-            });
+          if (!order.runner || order.runner.status !== 'ON_MISSION') {
+            throw new UnprocessableEntityException('BUSINESS_RULE_VIOLATION');
           }
+          await tx.runner.update({
+            where: { id: order.runnerId },
+            data: { status: 'AVAILABLE' },
+          });
         }
 
         await this.auditService.log(
