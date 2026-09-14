@@ -48,9 +48,16 @@ export class OrdersService {
   ) {}
 
   async createOrder(
-    customerId: string,
+    userId: string,
     dto: CreateOrderRequest,
   ): Promise<CreateOrderResult> {
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+    });
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
     const storeGroups = new Map<string, typeof dto.items>();
 
     for (const item of dto.items) {
@@ -102,7 +109,7 @@ export class OrdersService {
 
         const order = await tx.order.create({
           data: {
-            customerId,
+            customerId: customer.id,
             deliveryLat: dto.deliveryAddress.lat,
             deliveryLng: dto.deliveryAddress.lng,
             deliveryDesc: dto.deliveryAddress.description,
@@ -160,7 +167,7 @@ export class OrdersService {
         await this.auditService.log(
           {
             orderId: updatedOrder.id,
-            actorId: customerId,
+            actorId: userId,
             actorRole: 'CUSTOMER',
             event: 'ORDER_CREATED',
             fromStatus: 'DRAFT',
@@ -173,7 +180,7 @@ export class OrdersService {
         await this.auditService.log(
           {
             orderId: updatedOrder.id,
-            actorId: customerId,
+            actorId: userId,
             actorRole: 'CUSTOMER',
             event: 'ORDER_SUBMITTED',
             fromStatus: 'PENDING_REVIEW',
@@ -192,7 +199,7 @@ export class OrdersService {
       await this.notificationsService.emitToAdmin('order:new', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        customerId,
+        customerId: customer.id,
         itemCount: dto.items.length,
         status: result.order.status,
         totalFee: result.fee.totalFee,
@@ -216,7 +223,7 @@ export class OrdersService {
   }
 
   async listCustomerOrders(
-    customerId: string,
+    userId: string,
     page: number,
     limit: number,
     status?: CustomerOrdersQuery['status'],
@@ -224,8 +231,15 @@ export class OrdersService {
     data: CustomerOrderListItem[];
     meta: { total: number; page: number; limit: number; totalPages: number };
   }> {
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+    });
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
     const where = {
-      customerId,
+      customerId: customer.id,
       ...(status ? { status } : {}),
     };
 
@@ -265,12 +279,19 @@ export class OrdersService {
 
   async getOrderDetails(
     orderId: string,
-    customerId: string,
+    userId: string,
   ): Promise<CustomerOrderDetails> {
+    const customer = await this.prisma.customer.findUnique({
+      where: { userId },
+    });
+    if (!customer) {
+      throw new NotFoundException('Customer not found');
+    }
+
     const order = await this.prisma.order.findFirst({
       where: {
         id: orderId,
-        customerId,
+        customerId: customer.id,
       },
       include: {
         items: {
@@ -360,7 +381,7 @@ export class OrdersService {
     };
   }
 
-  async cancelOrder(orderId: string, customerId: string) {
+  async cancelOrder(orderId: string, userId: string) {
     const result = await this.prisma.$transaction(
       async (tx) => {
         const order = await tx.order.findUnique({
@@ -368,7 +389,13 @@ export class OrdersService {
           include: { runner: true },
         });
 
-        if (!order || order.customerId !== customerId) {
+        const customer = await tx.customer.findUnique({
+          where: { userId },
+        });
+        if (!customer) {
+          throw new NotFoundException('Customer not found');
+        }
+        if (!order || order.customerId !== customer.id) {
           throw new NotFoundException('Order not found');
         }
 
@@ -382,7 +409,7 @@ export class OrdersService {
           where: { id: order.id },
           data: {
             status: transitionResult.to,
-            cancelledByUserId: customerId,
+            cancelledByUserId: userId,
             cancelledAt: new Date(),
           },
         });
@@ -399,7 +426,7 @@ export class OrdersService {
         await this.auditService.log(
           {
             orderId: order.id,
-            actorId: customerId,
+            actorId: userId,
             actorRole: 'CUSTOMER',
             event: 'ORDER_CANCELLED',
             fromStatus: order.status,
@@ -661,6 +688,7 @@ export class OrdersService {
           include: {
             preferredRunner: true,
             customer: true,
+            orderStores: true,
           },
         });
 
@@ -681,9 +709,12 @@ export class OrdersService {
           'ADMIN',
         );
 
+        const purchasedStoreCount = order.orderStores.filter(
+          (s) => s.status === 'PURCHASED',
+        ).length;
         const newFee = this.pricingService.calculateFee({
           isPeripheral: dto.isPeripheral,
-          purchasedStoreCount: 0,
+          purchasedStoreCount,
         });
         const oldFee = {
           baseFee: order.baseFee,

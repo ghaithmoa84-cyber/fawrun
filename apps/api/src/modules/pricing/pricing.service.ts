@@ -1,5 +1,5 @@
 import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
-import type { PrismaClient } from '@prisma/client';
+import type { Prisma } from '@prisma/client';
 import { PRICING } from '@fawrun/shared-constants';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
@@ -66,7 +66,7 @@ export class PricingService {
 
   async recalculateFee(
     orderId: string,
-    tx?: PrismaClient,
+    tx?: Prisma.TransactionClient,
   ): Promise<RecalculateFeeResult> {
     const client = tx ?? this.prisma;
 
