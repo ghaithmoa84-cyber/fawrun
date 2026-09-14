@@ -1049,10 +1049,13 @@ export class OrdersService {
           'ADMIN',
         );
 
-        await tx.runner.update({
-          where: { id: runnerId },
+        const updated = await tx.runner.updateMany({
+          where: { id: runnerId, status: 'AVAILABLE' },
           data: { status: 'ON_MISSION' },
         });
+        if (updated.count === 0) {
+          throw new UnprocessableEntityException('RUNNER_NOT_AVAILABLE');
+        }
 
         const updatedOrder = await tx.order.update({
           where: { id: order.id },

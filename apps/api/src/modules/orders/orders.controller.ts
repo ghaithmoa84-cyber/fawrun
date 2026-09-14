@@ -1,3 +1,4 @@
+import { Throttle } from '@nestjs/throttler';
 import { z } from 'zod';
 import {
   Body,
@@ -53,6 +54,7 @@ export class OrdersController {
 
   @Post('customer/orders')
   @Roles('CUSTOMER')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
   async create(
     @Body(new ZodValidationPipe(CreateOrderSchema)) dto: CreateOrderRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
