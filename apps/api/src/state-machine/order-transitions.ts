@@ -1,0 +1,259 @@
+import { ORDER_STATUSES, ORDER_STORE_STATUSES } from '@fawrun/shared-constants';
+import type { OrderStatus, OrderStoreStatus } from '@fawrun/shared-constants';
+import { Injectable, ForbiddenException, NotFoundException } from '@nestjs/common';
+import { PRICING } from '@fawrun/shared-constants';
+import { PrismaService } from '../database/prisma.service.js';
+import { AuditService } from '../modules/audit/audit.service.js';
+import { NotificationsService } from '../modules/notifications/notifications.service.js';
+import type { Prisma } from '@prisma/client';
+
+export type OrderActor = 'CUSTOMER' | 'ADMIN' | 'RUNNER' | 'SYSTEM';
+
+export interface OrderTransition {
+  readonly from: OrderStatus;
+  readonly to: OrderStatus;
+  readonly actor: OrderActor;
+  readonly description: string;
+}
+
+export interface OrderStoreTransition {
+  readonly from: OrderStoreStatus;
+  readonly to: OrderStoreStatus;
+  readonly actor: 'RUNNER' | 'SYSTEM';
+  readonly description: string;
+}
+
+export const ORDER_TRANSITIONS: readonly OrderTransition[] = [
+  // DRAFT → PENDING_REVIEW  (customer submits order for review)
+  { from: 'DRAFT', to: 'PENDING_REVIEW', actor: 'CUSTOMER', description: 'Customer submits order for admin review' },
+
+  // PENDING_REVIEW → UNDER_REVIEW  (admin begins review)
+  { from: 'PENDING_REVIEW', to: 'UNDER_REVIEW', actor: 'ADMIN', description: 'Admin starts reviewing the order' },
+
+  // PENDING_REVIEW → CANCELLED  (customer cancels while pending review)
+  { from: 'PENDING_REVIEW', to: 'CANCELLED', actor: 'CUSTOMER', description: 'Customer cancels order during pending review' },
+
+  // UNDER_REVIEW → AWAITING_PREFERRED_RUNNER  (admin approves + preferred unavailable)
+  { from: 'UNDER_REVIEW', to: 'AWAITING_PREFERRED_RUNNER', actor: 'ADMIN', description: 'Admin approves, preferred runner unavailable' },
+
+  // UNDER_REVIEW → AWAITING_RUNNER  (admin approves + any runner)
+  { from: 'UNDER_REVIEW', to: 'AWAITING_RUNNER', actor: 'ADMIN', description: 'Admin approves order, awaiting runner assignment' },
+
+  // UNDER_REVIEW → CANCELLED  (admin rejects during review)
+  { from: 'UNDER_REVIEW', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin rejects order during review' },
+
+  // AWAITING_RUNNER → AWAITING_PREFERRED_RUNNER  (system routes to preferred)
+  { from: 'AWAITING_RUNNER', to: 'AWAITING_PREFERRED_RUNNER', actor: 'SYSTEM', description: 'System routes order to preferred runner queue' },
+
+  // AWAITING_RUNNER → ASSIGNED  (runner accepts from pool)
+  { from: 'AWAITING_RUNNER', to: 'ASSIGNED', actor: 'RUNNER', description: 'Runner accepts order from pool' },
+
+  // AWAITING_PREFERRED_RUNNER → ASSIGNED  (preferred runner accepts)
+  { from: 'AWAITING_PREFERRED_RUNNER', to: 'ASSIGNED', actor: 'RUNNER', description: 'Preferred runner accepts the order' },
+
+  // AWAITING_PREFERRED_RUNNER → AWAITING_RUNNER  (preferred runner declines, fallback)
+  { from: 'AWAITING_PREFERRED_RUNNER', to: 'AWAITING_RUNNER', actor: 'SYSTEM', description: 'Preferred runner unavailable, order returns to general pool' },
+
+  // ASSIGNED → IN_PROGRESS  (runner begins shopping)
+  { from: 'ASSIGNED', to: 'IN_PROGRESS', actor: 'RUNNER', description: 'Runner starts shopping for order items' },
+
+  // ASSIGNED → CANCELLED  (customer cancels while runner assigned)
+  { from: 'ASSIGNED', to: 'CANCELLED', actor: 'CUSTOMER', description: 'Customer cancels order while runner is assigned' },
+
+  // IN_PROGRESS → OUT_FOR_DELIVERY  (shopping complete, heading for delivery)
+  { from: 'IN_PROGRESS', to: 'OUT_FOR_DELIVERY', actor: 'RUNNER', description: 'Runner completes shopping and departs for delivery' },
+
+  // OUT_FOR_DELIVERY → DELIVERED  (delivery confirmed)
+  { from: 'OUT_FOR_DELIVERY', to: 'DELIVERED', actor: 'RUNNER', description: 'Runner confirms delivery to customer' },
+
+  // Admin cancellations from non-terminal states
+  { from: 'PENDING_REVIEW', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin cancels order during pending review' },
+  { from: 'ASSIGNED', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin cancels order while assigned' },
+  { from: 'IN_PROGRESS', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin cancels order during shopping' },
+  { from: 'OUT_FOR_DELIVERY', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin cancels order during delivery' },
+  { from: 'AWAITING_RUNNER', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin cancels order while awaiting runner' },
+  { from: 'AWAITING_PREFERRED_RUNNER', to: 'CANCELLED', actor: 'ADMIN', description: 'Admin cancels order while awaiting preferred runner' },
+
+  // Runner reassignment transitions
+  { from: 'ASSIGNED', to: 'AWAITING_RUNNER', actor: 'ADMIN', description: 'Admin returns order to runner pool for reassignment' },
+  { from: 'IN_PROGRESS', to: 'ASSIGNED', actor: 'ADMIN', description: 'Admin reverts order to assigned for reassignment' },
+  { from: 'AWAITING_RUNNER', to: 'ASSIGNED', actor: 'ADMIN', description: 'Admin assigns runner from pool' },
+  { from: 'ASSIGNED', to: 'AWAITING_PREFERRED_RUNNER', actor: 'ADMIN', description: 'Admin routes order to preferred runner queue' },
+  { from: 'IN_PROGRESS', to: 'OUT_FOR_DELIVERY', actor: 'ADMIN', description: 'Admin confirms shopping complete' },
+];
+
+export const ORDER_STORE_TRANSITIONS: readonly OrderStoreTransition[] = [
+  { from: 'PENDING', to: 'PURCHASED', actor: 'RUNNER', description: 'Runner confirms purchase at store' },
+  { from: 'PENDING', to: 'SKIPPED', actor: 'RUNNER', description: 'Runner skips store (closed or item unavailable)' },
+];
+
+export { ORDER_STATUSES };
+export { ORDER_STORE_STATUSES };
+
+export const TERMINAL_ORDER_STATUSES: readonly OrderStatus[] = ['DELIVERED', 'CANCELLED'];
+export const TERMINAL_ORDER_STORE_STATUSES: readonly OrderStoreStatus[] = ['PURCHASED', 'SKIPPED'];
+
+export interface FeeResult {
+  baseFee: number;
+  peripheralFee: number;
+  extraStoresFee: number;
+  totalFee: number;
+  runnerShare: number;
+  platformShare: number;
+}
+
+export interface RecalculateFeeResult {
+  feeChanged: boolean;
+  oldFee: {
+    baseFee: number;
+    peripheralFee: number;
+    extraStoresFee: number;
+    totalFee: number;
+  } | null;
+  newFee: FeeResult;
+}
+
+@Injectable()
+export class PricingService {
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly auditService: AuditService,
+    private readonly notificationsService: NotificationsService,
+  ) {}
+
+  calculateFee(params: {
+    isPeripheral: boolean;
+    purchasedStoreCount: number;
+  }): FeeResult {
+    if (
+      !Number.isInteger(params.purchasedStoreCount) ||
+      params.purchasedStoreCount < 0
+    ) {
+      throw new ForbiddenException(
+        'purchasedStoreCount must be a non-negative integer',
+      );
+    }
+
+    const baseFee = PRICING.BASE_FEE;
+    const peripheralFee = params.isPeripheral
+      ? PRICING.PERIPHERAL_FEE
+      : 0;
+    const extraStoresFee =
+      Math.max(0, params.purchasedStoreCount - 1) * PRICING.EXTRA_STORE_FEE;
+    const totalFee = baseFee + peripheralFee + extraStoresFee;
+
+    return {
+      baseFee,
+      peripheralFee,
+      extraStoresFee,
+      totalFee,
+      runnerShare: Math.floor(totalFee * PRICING.RUNNER_SHARE),
+      platformShare: Math.ceil(totalFee * PRICING.PLATFORM_SHARE),
+    };
+  }
+
+  async recalculateFee(
+    orderId: string,
+    tx?: Prisma.TransactionClient,
+  ): Promise<RecalculateFeeResult> {
+    const client = tx ?? this.prisma;
+
+    const order = await client.order.findUnique({
+      where: { id: orderId },
+      include: {
+        orderStores: {
+          where: { status: 'PURCHASED' },
+        },
+      },
+    });
+
+    if (!order) {
+      throw new NotFoundException('Order not found');
+    }
+
+    if (order.status === 'DELIVERED') {
+      throw new ForbiddenException(
+        'Cannot recalculate fee for a delivered order',
+      );
+    }
+
+    const purchasedStoreCount = order.orderStores.length;
+    const newFee = this.calculateFee({
+      isPeripheral: order.isPeripheral,
+      purchasedStoreCount,
+    });
+
+    const oldFee = {
+      baseFee: order.baseFee,
+      peripheralFee: order.peripheralFee,
+      extraStoresFee: order.extraStoresFee,
+      totalFee: order.totalFee,
+    };
+
+    const feeChanged =
+      oldFee.baseFee !== newFee.baseFee ||
+      oldFee.peripheralFee !== newFee.peripheralFee ||
+      oldFee.extraStoresFee !== newFee.extraStoresFee ||
+      oldFee.totalFee !== newFee.totalFee;
+
+    const updatedOrder = await client.order.update({
+      where: { id: order.id },
+      data: {
+        baseFee: newFee.baseFee,
+        peripheralFee: newFee.peripheralFee,
+        extraStoresFee: newFee.extraStoresFee,
+        totalFee: newFee.totalFee,
+      },
+    });
+
+    if (feeChanged) {
+      await this.auditService.log(
+        {
+          orderId: order.id,
+          actorRole: 'SYSTEM',
+          event: 'ORDER_FEE_UPDATED',
+          fromStatus: order.status,
+          toStatus: order.status,
+          meta: {
+            orderNumber: order.orderNumber,
+            oldFee,
+            newFee,
+            purchasedStoreCount,
+            reason: 'RECALCULATE_FEE',
+          },
+        },
+        client,
+      );
+
+      try {
+        await this.notificationsService.emitToCustomer(
+          order.customerId,
+          'order:fee_updated',
+          {
+            orderId: updatedOrder.id,
+            orderNumber: updatedOrder.orderNumber,
+            oldFee,
+            newFee,
+            reason: 'RECALCULATE_FEE',
+          },
+        );
+
+        await this.notificationsService.emitToAdmin('order:fee_updated', {
+          orderId: updatedOrder.id,
+          orderNumber: updatedOrder.orderNumber,
+          oldFee,
+          newFee,
+          reason: 'RECALCULATE_FEE',
+        });
+      } catch {
+        void 0;
+      }
+    }
+
+    return {
+      feeChanged,
+      oldFee: feeChanged ? oldFee : null,
+      newFee,
+    };
+  }
+}

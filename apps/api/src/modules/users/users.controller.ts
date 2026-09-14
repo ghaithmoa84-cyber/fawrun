@@ -33,24 +33,24 @@ export class UsersController {
   @Put(':id/verify')
   async verify(
     @Param('id') id: string,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.usersService.verify(id, user.id);
+    return this.usersService.verify(id, user.userId);
   }
 
   @Put(':id/reject')
   async reject(
     @Param('id') id: string,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.usersService.reject(id, user.id);
+    return this.usersService.reject(id, user.userId);
   }
 
   @Put(':id/suspend')
   async suspend(
     @Param('id') id: string,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.usersService.suspend(id, user.id);
+    return this.usersService.suspend(id, user.userId);
   }
 }

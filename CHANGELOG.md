@@ -23,6 +23,108 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-14 02:40 — Order state machine enhancements & admin review endpoint
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/state-machine/order-transitions.ts` — إضافة انتقال `UNDER_REVIEW -> AWAITING_PREFERRED_RUNNER` بصلاحية `ADMIN`
+- `apps/api/src/modules/orders/orders.service.ts` — `createOrder()`: إزالة `status: 'DRAFT'` و`status: 'PENDING_REVIEW'` المباشرين، استخدام نتيجة `OrderStateMachine.transition()`، إضافة تحقق `preferredRunnerId` عبر `tx.runner.findUnique` قبل إنشاء الطلب؛ `cancelOrder()`: إزالة `status: 'CANCELLED'` المباشر، إضافة تحقق صارم من حالة runner (يتم التحديث فقط إذا كانت `ON_MISSION`)؛ `approveOrder()` و`rejectOrder()`: إزالة status literals واستخدام `transitionResult.to`؛ إضافة `startOrderReview()` (PENDING_REVIEW -> UNDER_REVIEW, ADMIN, transaction, AuditLog, WebSocket)
+- `apps/api/src/modules/orders/orders.controller.ts` — إضافة `PUT admin/orders/:id/start-review` مع `@Roles('ADMIN')` و Zod validation
+- `apps/api/src/app.module.ts` — تسجيل `ThrottlerGuard` كـ `APP_GUARD` مع `JwtAuthGuard` و `RolesGuard`
+- `packages/shared-types/src/order.types.ts` — `StartOrderReviewSchema` و `StartOrderReviewRequest`
+- `apps/api/test/state-machine/order-state-machine.spec.ts` — تحديث لاختبار الانتقال الجديد (13 -> 14 انتقال)
+
+**السبب:**
+تطبيق انتقال حالة جديد، endpoint admin لبدء المراجعة، إزالة جميع كتابات status المباشرة لصالح State Machine transitions، تحقق أمان للـ preferred runner و runner status، وتسجيل ThrottlerGuard.
+
+**الأوامر والنتائج:**
+- `pnpm --filter @fawrun/shared-types build` → نجح
+- `pnpm --filter fawrun-api exec tsc --noEmit` → نجح، صفر أخطاء
+- `pnpm --filter fawrun-api build` → نجح
+- `pnpm --filter fawrun-api test` → نجح، 59/59 اختبار
+- `pnpm lint` → نجح، 3/3 مهام
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء
+
+### 2026-09-13 20:05 — Admin Order Review endpoints (task 2.6)
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/orders/orders.controller.ts` — `OrdersController`: إضافة endpoints الـ Admin list/detail/audit/approve/reject مع `@Roles('ADMIN')` وZod validation
+- `apps/api/src/modules/orders/orders.service.ts` — `listAdminOrders()`, `getAdminOrderDetails()`, `getAdminOrderAudit()`, `approveOrder()`, `rejectOrder()`: filters، details، AuditLog، State Machine transitions، fee recalculation، وWebSocket events داخل transactions
+- `packages/shared-types/src/order.types.ts` — `AdminOrdersQuerySchema`, `RejectOrderSchema`, Admin order response types
+- `packages/shared-types/src/runner.types.ts` — `ApproveOrderSchema.notes` أصبح optional ليتطابق مع contract المطلوب
+- `apps/api/src/modules/orders/ROLLBACK_PLAN_task-2.6.md` — خطة rollback للتعديلات المالية/الحالية في مراجعة الطلبات
+
+**السبب:**
+تنفيذ المهمة 2.6 — مراجعة الطلبات من الإدارة: list كل الطلبات مع filters، عرض التفاصيل والـ audit، approve مع State Machine وfee update، وreject مع cancellation audit.
+
+**الأوامر والنتائج:**
+- `git add -A && git commit -m "feat: Customer order endpoints (list, detail, cancel) + Customer profile endpoints (tasks 2.4, 2.5)"` → نجح، commit `28de0bd`
+- `pnpm --filter @fawrun/shared-types build` → نجح
+- `pnpm --filter fawrun-api exec tsc --noEmit` → نجح، صفر أخطاء
+- `pnpm build` → نجح، 3/3 حزم
+- `pnpm lint` → نجح، 3/3 مهام
+- `pnpm test` → نجح، 58/58 اختبار
+- `pnpm --filter fawrun-api db:generate` → نجح
+- `git diff --check` → نجح
+
+**الأخطاء والحلول:**
+- `order.types.ts` استخدم `CustomerOrderItem` و`CustomerOrderStore` دون import → تم إضافة type imports من `customer.types`.
+- `orders.service.ts` كان ينقص closing brace قبل `listAdminOrders()` → تم إصلاح البنية ثم إعادة `prettier` و`tsc`.
+- `lint` كشف import غير مستخدم لـ `CustomerOrderStore` → تم حذفه.
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/orders/orders.controller.ts` — `OrdersController`: إضافة/تصحيح routes لـ `POST/GET/DELETE /customer/orders` و`GET /customer/orders/:id` مع `VerifiedUserGuard` و`RolesGuard` وZod validation
+- `apps/api/src/modules/orders/orders.service.ts` — `createOrder()`, `listCustomerOrders()`, `getOrderDetails()`, `cancelOrder()`: pagination، ownership check، تفاصيل الطلب، إلغاء عبر `OrderStateMachine`، AuditLog، WebSocket events، وتوليد `orderNumber` داخل transaction
+- `apps/api/src/modules/customers/customers.controller.ts` — `CustomersController`: `GET/PUT /customer/me`، `GET/PUT /customer/me/address`، `GET /customer/runners`
+- `apps/api/src/modules/customers/customers.service.ts` — `getProfile()`, `updateProfile()`, `getAddress()`, `updateAddress()`, `listAvailableRunners()`
+- `apps/api/src/modules/customers/customers.module.ts` — تعريف `CustomersModule`
+- `apps/api/src/app.module.ts` — تسجيل `OrdersModule` و`CustomersModule`
+- `packages/shared-types/src/customer.types.ts` — schemas/types لـ customer orders/profile/address/runners
+- `packages/shared-types/src/index.ts` — تصدير `customer.types`
+- `apps/api/src/state-machine/order-state-machine.ts` و`order-store-state-machine.ts` — إزالة imports غير المستخدمة وتسمية `ctx` إلى `_ctx` لتوافق lint
+- `apps/api/src/src/` — إزالة artifact خاطئ كان يحتوي على `.gitkeep`
+
+**السبب:**
+إكمال المهام 2.4 و2.5 من Sprint 2: عرض الطلبات وتفاصيلها وإلغاؤها بضوابط State Machine، وإضافة endpoints الملف الشخصي والعنوان وقائمة المندوبين المتاحين مع contracts مشتركة وتحقق أمني.
+
+**الأوامر والنتائج:**
+- `pnpm --filter @fawrun/shared-types build` → نجح
+- `pnpm --filter fawrun-api exec tsc --noEmit` → نجح، صفر أخطاء
+- `pnpm build` → نجح، 3/3 حزم
+- `pnpm lint` → نجح، 3/3 مهام
+- `pnpm test` → نجح، 58/58 اختبار
+- `pnpm --filter fawrun-api db:generate` → نجح
+- `git diff --check` → نجح
+
+**الأخطاء والحلول:**
+- `pnpm --filter fawrun-api typecheck` لم يُنفّذ لأن الحزمة لا تعرّف script باسم `typecheck`؛ تم استخدام `pnpm --filter fawrun-api exec tsc --noEmit` بدلًا منه.
+- `pnpm lint` كشف `no-empty` في catch blocks وunused imports/args في state machine؛ تم استبدال catch blocks بـ `void 0`، وإزالة imports الزائدة، وتسمية `ctx` إلى `_ctx`.
+- `@fawrun/shared-types` كان يحتاج rebuild قبل أن ترى API الـ exports الجديدة؛ تم تشغيل build للحزمة.
+
+### 2026-09-13 13:28 — تفعيل مهارات FAWRUN تلقائيًا حسب نطاق المهمة
+
+**الملفات والدوال المعدّلة:**
+- `AGENTS.md` — إضافة Trigger Matrix و10 قواعد Automatic Skill Activation مع الحفاظ على سير العمل والأوامر الحالية
+- `.kilo/skills/pre-sprint-checklist/SKILL.md` — إضافة YAML frontmatter بالمعرف والوصف
+- `.kilo/skills/rollback-plan/SKILL.md` — إضافة YAML frontmatter بالمعرف والوصف
+- `.kilo/skills/coderabbit-workflow/SKILL.md` — إضافة YAML frontmatter بالمعرف والوصف
+
+**السبب:**
+جعل Kilo يستدعي المهارات المناسبة تلقائيًا عبر آلية تحميل المهارات عند بداية كل مهمة، مع تفعيل مشروط يمنع تحميل مهارات غير مرتبطة أو تجاوز الموافقات والأوامر الحساسة.
+
+**الأوامر والنتائج:**
+- `git diff --word-diff=porcelain -- AGENTS.md` → أظهر إضافات فقط دون حذف القواعد السابقة
+- `git diff --word-diff=porcelain -- .kilo/skills/pre-sprint-checklist/SKILL.md .kilo/skills/rollback-plan/SKILL.md .kilo/skills/coderabbit-workflow/SKILL.md` → أظهر إضافة frontmatter فقط للمهارات الثلاث
+- `grep` للتحقق من `name:` → تأكد من وجود المعرفات الخمسة وتطابقها مع مجلدات المهارات
+- `git diff --check` → نجح، مع تحذير Git المعتاد حول LF/CRLF
+- `pnpm lint` → نجح، 3 مهام ناجحة
+- `pnpm typecheck` → نجح كإعداد Turbo، لكن لم تُنفّذ مهام لأن الحزم لا تعرّف مهام `typecheck`
+
+**الأخطاء والحلول:**
+- لم تُكتشف مهام `typecheck` في Turbo؛ تم تسجيل ذلك بدل اعتبار النتيجة تحققًا نوعيًا كاملًا.
+- لم تُجرَ أي عملية مالية أو push/merge أو PR؛ التعديلات وثائقية فقط.
+
 ### 2026-09-13 — CodeRabbit Triage (Round 5)
 
 **الملفات والدوال المعدّلة:**

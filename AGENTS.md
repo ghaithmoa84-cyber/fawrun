@@ -79,6 +79,34 @@ rollback plan BEFORE execution. Use /rollback-plan command to create one.
 - pre-sprint-checklist — Pre-Sprint validation
 - rollback-plan — Financial rollback documentation
 - coderabbit-workflow — PR workflow with CodeRabbit review
+- fawrun-domain-gate — State Machine, financial, and data-integrity enforcement
+- api-contract-security — Shared API contracts, validation, authorization, and security checks
+
+## Automatic Skill Activation
+
+Kilo must inspect the task scope at the start of each task, before planning or editing, and automatically load every clearly applicable FAWRUN project skill. Skills are supplemental gates; they do not replace the rules, agents, commands, or workflow defined in this file.
+
+### Trigger Matrix
+
+- Load `pre-sprint-checklist` at the start of a new Sprint, before a new module or major feature, or when switching between major work areas.
+- Load `fawrun-domain-gate` whenever a task touches Order, Runner, State Machine, state transitions, LedgerEntry, Settlement, AuditLog, pricing, fees, persistence, migrations, or data integrity.
+- Load `api-contract-security` whenever a task adds or changes an API, DTO, Zod schema, request, response, query, path type, WebSocket event, authentication, authorization, rate limiting, CORS, error handling, or frontend API integration.
+- Load `rollback-plan` before planning or executing any financial operation involving Ledger, Settlement, order fees, or financial state transitions.
+- Load `coderabbit-workflow` before creating or updating a PR, pushing a feature branch for review, or addressing CodeRabbit comments.
+
+### Activation Rules
+
+1. For each applicable trigger, invoke the corresponding skill through Kilo's skill-loading mechanism; do not merely mention the skill in the response.
+2. Load each applicable skill once per active task context. When delegating to a subagent, pass the applicable skill requirement to that subagent.
+3. If multiple skills apply, load all of them. Use this order when applicable: `pre-sprint-checklist`, then `fawrun-domain-gate` and/or `api-contract-security`, then `rollback-plan`, then `coderabbit-workflow`.
+4. Do not load unrelated skills for a task. If a skill is already loaded in the active context, do not reload it.
+5. Automatic activation means reading and applying the skill checks. It does not bypass approval or automatically execute destructive or state-changing actions, including production migrations, financial operations, `git push`, merge, or PR creation.
+6. Preserve all existing `AGENTS.md` rules, agent responsibilities, commands, security requirements, and Sprint workflow. In particular, `/pre-sprint`, `/rollback-plan`, and `/pr` remain required where specified.
+7. If an explicit user instruction conflicts with a skill, follow the explicit user instruction, report the conflict, and do not silently ignore either constraint.
+8. If the task scope is ambiguous, load the potentially relevant safety skill and state why; do not skip a safety gate because of uncertainty.
+9. After loading a skill, report which skills were loaded and identify any blocking findings before proceeding.
+10. Do not disable or replace global, compatibility, or previously configured skills.
+
 
 ## Commands
 - /pre-sprint — Run pre-sprint checklist

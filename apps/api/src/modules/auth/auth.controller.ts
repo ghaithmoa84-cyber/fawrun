@@ -1,12 +1,8 @@
 import { Body, Controller, Post, Headers } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
-import { RegisterSchema } from './dto/register.dto.js';
-import type { RegisterDto } from './dto/register.dto.js';
-import { LoginSchema } from './dto/login.dto.js';
-import type { LoginDto } from './dto/login.dto.js';
-import { RefreshSchema } from './dto/refresh.dto.js';
-import type { RefreshDto } from './dto/refresh.dto.js';
+import { RegisterSchema, LoginSchema, RefreshSchema } from '@fawrun/shared-types';
+import type { RegisterRequest, LoginRequest, RefreshRequest } from '@fawrun/shared-types';
 import { LogoutSchema } from './dto/logout.dto.js';
 import type { LogoutDto } from './dto/logout.dto.js';
 import { Public } from '../../common/decorators/public.decorator.js';
@@ -19,7 +15,7 @@ export class AuthController {
   @Post('register')
   @Public()
   @Throttle({ register: { limit: 3, ttl: 3600000 } })
-  register(@Body(new ZodValidationPipe(RegisterSchema)) dto: RegisterDto) {
+  register(@Body(new ZodValidationPipe(RegisterSchema)) dto: RegisterRequest) {
     return this.authService.register(dto);
   }
 
@@ -27,7 +23,7 @@ export class AuthController {
   @Public()
   @Throttle({ login: { limit: 10, ttl: 900000 } })
   login(
-    @Body(new ZodValidationPipe(LoginSchema)) dto: LoginDto,
+    @Body(new ZodValidationPipe(LoginSchema)) dto: LoginRequest,
     @Headers('user-agent') deviceInfo?: string,
   ) {
     return this.authService.login(dto, deviceInfo);
@@ -35,7 +31,7 @@ export class AuthController {
 
   @Post('refresh')
   @Public()
-  refresh(@Body(new ZodValidationPipe(RefreshSchema)) dto: RefreshDto) {
+  refresh(@Body(new ZodValidationPipe(RefreshSchema)) dto: RefreshRequest) {
     return this.authService.refresh(dto);
   }
 

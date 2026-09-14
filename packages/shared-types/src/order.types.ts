@@ -1,9 +1,14 @@
-import { z } from 'zod';
+import { z } from "zod";
+import { ORDER_STATUS_VALUES } from "./customer.types.js";
+import type {
+  CustomerOrderItem,
+  CustomerOrderStore,
+} from "./customer.types.js";
 
 const nonEmptyString = z
   .string()
   .trim()
-  .min(1, 'Field cannot be empty or whitespace');
+  .min(1, "Field cannot be empty or whitespace");
 
 export const CreateOrderItemSchema = z.object({
   itemName: nonEmptyString,
@@ -19,7 +24,7 @@ export const DeliveryAddressSchema = z.object({
 });
 
 export const CreateOrderSchema = z.object({
-  items: z.array(CreateOrderItemSchema).min(1, 'At least one item is required'),
+  items: z.array(CreateOrderItemSchema).min(1, "At least one item is required"),
   notes: z.string().nullable(),
   preferredRunnerId: z.string().nullable(),
   waitForPreferred: z.boolean(),
@@ -56,7 +61,9 @@ export const PaginatedMetaSchema = z.object({
 
 export type PaginatedMeta = z.infer<typeof PaginatedMetaSchema>;
 
-export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =>
+export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(
+  itemSchema: T,
+) =>
   z.object({
     data: z.array(itemSchema),
     meta: PaginatedMetaSchema,
@@ -65,4 +72,141 @@ export const PaginatedResponseSchema = <T extends z.ZodTypeAny>(itemSchema: T) =
 export type PaginatedResponse<T> = {
   data: T[];
   meta: PaginatedMeta;
+};
+
+export const AdminOrdersQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+  status: z.enum(ORDER_STATUS_VALUES).optional(),
+  runnerId: z.string().trim().min(1).optional(),
+  customerId: z.string().trim().min(1).optional(),
+  dateFrom: z.coerce.date().optional(),
+  dateTo: z.coerce.date().optional(),
+});
+
+export type AdminOrdersQuery = z.infer<typeof AdminOrdersQuerySchema>;
+
+export const RejectOrderSchema = z.object({
+  cancelReason: z.string().trim().min(1).optional(),
+});
+
+export type RejectOrderRequest = z.infer<typeof RejectOrderSchema>;
+
+export const StartOrderReviewSchema = z.object({
+  notes: z.string().trim().min(1).optional(),
+});
+
+export type StartOrderReviewRequest = z.infer<typeof StartOrderReviewSchema>;
+
+export type AdminOrderListItem = {
+  id: string;
+  orderNumber: string;
+  status: (typeof ORDER_STATUS_VALUES)[number];
+  customerId: string;
+  customerName: string;
+  runnerId: string | null;
+  runnerName: string | null;
+  totalFee: number;
+  itemCount: number;
+  createdAt: Date;
+  deliveredAt: Date | null;
+  cancelledAt: Date | null;
+};
+
+export type AdminOrderDetails = {
+  id: string;
+  orderNumber: string;
+  status: (typeof ORDER_STATUS_VALUES)[number];
+  isPeripheral: boolean;
+  baseFee: number;
+  peripheralFee: number;
+  extraStoresFee: number;
+  totalFee: number;
+  deliveryLat: number;
+  deliveryLng: number;
+  deliveryDesc: string;
+  notes: string | null;
+  preferredRunnerId: string | null;
+  waitForPreferred: boolean;
+  createdAt: Date;
+  updatedAt: Date;
+  deliveredAt: Date | null;
+  cancelledAt: Date | null;
+  customer: {
+    id: string;
+    userId: string;
+    name: string;
+    whatsapp: string;
+    altPhone: string | null;
+    status: string;
+  };
+  runner: {
+    id: string;
+    userId: string;
+    name: string;
+    status: string;
+    avgRating: number | null;
+    totalRatings: number;
+    isVisible: boolean;
+    notes: string | null;
+  } | null;
+  items: CustomerOrderItem[];
+  orderStores: CustomerOrderStore[];
+  ratings: Array<{
+    id: string;
+    orderId: string;
+    customerId: string;
+    runnerId: string | null;
+    storeNameRated: string | null;
+    stars: number;
+    note: string | null;
+    createdAt: Date;
+    updatedAt: Date;
+    expiresAt: Date;
+    isFinal: boolean;
+  }>;
+};
+
+export type AdminOrderAuditEntry = {
+  id: string;
+  orderId: string | null;
+  actorId: string | null;
+  actorRole: string | null;
+  event: string;
+  fromStatus: string | null;
+  toStatus: string | null;
+  meta: unknown;
+  createdAt: Date;
+};
+
+export type AdminOrderApprovalResult = {
+  order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+  };
+  customerId: string;
+  feeChanged: boolean;
+  oldFee: {
+    baseFee: number;
+    peripheralFee: number;
+    extraStoresFee: number;
+    totalFee: number;
+  };
+  newFee: {
+    baseFee: number;
+    peripheralFee: number;
+    extraStoresFee: number;
+    totalFee: number;
+  };
+};
+
+export type AdminOrderRejectionResult = {
+  order: {
+    id: string;
+    orderNumber: string;
+    status: string;
+    cancelledAt: Date | null;
+  };
+  customerId: string;
 };

@@ -1,6 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ThrottlerModule } from '@nestjs/throttler';
+import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
 import { APP_GUARD } from '@nestjs/core';
 import * as crypto from 'crypto';
@@ -8,6 +8,8 @@ import { PrismaModule } from './database/prisma.module.js';
 import { AuthModule } from './modules/auth/auth.module.js';
 import { UsersModule } from './modules/users/users.module.js';
 import { RunnersModule } from './modules/runners/runners.module.js';
+import { OrdersModule } from './modules/orders/orders.module.js';
+import { CustomersModule } from './modules/customers/customers.module.js';
 import { NotificationsModule } from './modules/notifications/notifications.module.js';
 import { WebsocketModule } from './websocket/websocket.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
@@ -50,7 +52,9 @@ import { jwtConfig } from './config/jwt.config.js';
         const publicKey = jwtSettings?.publicKey?.trim() || '';
 
         if (!privateKey || !publicKey) {
-          throw new Error('JWT RS256 keys are required: both privateKey and publicKey must be configured');
+          throw new Error(
+            'JWT RS256 keys are required: both privateKey and publicKey must be configured',
+          );
         }
 
         // Parse and reject malformed keys
@@ -66,16 +70,32 @@ import { jwtConfig } from './config/jwt.config.js';
         // Verify that private and public keys form a matching pair
         try {
           const testPayload = Buffer.from('key-pair-verification', 'utf8');
-          const signature = crypto.sign('sha256', testPayload, parsedPrivateKey);
-          const matched = crypto.verify('sha256', testPayload, parsedPublicKey, signature);
+          const signature = crypto.sign(
+            'sha256',
+            testPayload,
+            parsedPrivateKey,
+          );
+          const matched = crypto.verify(
+            'sha256',
+            testPayload,
+            parsedPublicKey,
+            signature,
+          );
           if (!matched) {
-            throw new Error('JWT private and public keys do not form a matching pair');
+            throw new Error(
+              'JWT private and public keys do not form a matching pair',
+            );
           }
         } catch (err) {
-          if (err instanceof Error && err.message.includes('do not form a matching pair')) {
+          if (
+            err instanceof Error &&
+            err.message.includes('do not form a matching pair')
+          ) {
             throw err;
           }
-          throw new Error(`JWT key pair verification failed: ${(err as Error).message}`);
+          throw new Error(
+            `JWT key pair verification failed: ${(err as Error).message}`,
+          );
         }
 
         return {
@@ -85,7 +105,7 @@ import { jwtConfig } from './config/jwt.config.js';
             algorithm: 'RS256' as const,
             expiresIn: jwtSettings?.accessTokenExpiry ?? '2h',
           },
-verifyOptions: { algorithms: ['RS256' as const] },
+          verifyOptions: { algorithms: ['RS256' as const] },
         };
       },
     }),
@@ -96,6 +116,8 @@ verifyOptions: { algorithms: ['RS256' as const] },
     AuthModule,
     UsersModule,
     RunnersModule,
+    OrdersModule,
+    CustomersModule,
   ],
   providers: [
     {
@@ -105,6 +127,10 @@ verifyOptions: { algorithms: ['RS256' as const] },
     {
       provide: APP_GUARD,
       useClass: RolesGuard,
+    },
+    {
+      provide: APP_GUARD,
+      useClass: ThrottlerGuard,
     },
   ],
 })

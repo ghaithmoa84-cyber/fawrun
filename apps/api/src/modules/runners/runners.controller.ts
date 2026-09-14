@@ -37,21 +37,21 @@ export class RunnersController {
   @Post()
   async create(
     @Body(new ZodValidationPipe(CreateRunnerSchema)) body: CreateRunnerRequest,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.create({
       name: body.name,
       whatsapp: body.whatsapp,
       password: body.password,
       altPhone: body.altPhone,
-    }, user.id);
+    }, user.userId);
   }
 
   @Put(':id')
   async update(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateRunnerSchema)) body: UpdateRunnerRequest,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.update({
       id,
@@ -59,18 +59,18 @@ export class RunnersController {
       altPhone: body.altPhone,
       notes: body.notes,
       password: body.password,
-    }, user.id);
+    }, user.userId);
   }
 
   @Put(':id/visibility')
   async updateVisibility(
     @Param('id') id: string,
     @Body(new ZodValidationPipe(UpdateVisibilitySchema)) body: UpdateVisibilityRequest,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.updateVisibility({
       id,
       isVisible: body.isVisible,
-    }, user.id);
+    }, user.userId);
   }
 }
