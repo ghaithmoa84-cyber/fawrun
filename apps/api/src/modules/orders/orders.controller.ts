@@ -40,7 +40,7 @@ const AssignRunnerSchema = z.object({
 });
 
 const CancelOrderSchema = z.object({
-  cancelReason: z.string().optional(),
+  cancelReason: z.string().min(1, 'Cancel reason must be at least 1 character').optional(),
 });
 
 type AssignRunnerRequest = z.infer<typeof AssignRunnerSchema>;

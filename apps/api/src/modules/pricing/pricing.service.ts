@@ -23,6 +23,19 @@ export interface RecalculateFeeResult {
     totalFee: number;
   } | null;
   newFee: FeeResult;
+  notificationPayload: {
+    customerId: string;
+    orderId: string;
+    orderNumber: string | null;
+    oldFee: {
+      baseFee: number;
+      peripheralFee: number;
+      extraStoresFee: number;
+      totalFee: number;
+    } | null;
+    newFee: FeeResult;
+    reason: string;
+  } | null;
 }
 
 @Injectable()
@@ -136,36 +149,22 @@ export class PricingService {
         },
         client,
       );
-
-      try {
-        await this.notificationsService.emitToCustomer(
-          order.customerId,
-          'order:fee_updated',
-          {
-            orderId: order.id,
-            orderNumber: order.orderNumber,
-            oldFee,
-            newFee,
-            reason: 'RECALCULATE_FEE',
-          },
-        );
-
-        await this.notificationsService.emitToAdmin('order:fee_updated', {
-          orderId: order.id,
-          orderNumber: order.orderNumber,
-          oldFee,
-          newFee,
-          reason: 'RECALCULATE_FEE',
-        });
-      } catch {
-        void 0;
-      }
     }
 
     return {
       feeChanged,
       oldFee: feeChanged ? oldFee : null,
       newFee,
+      notificationPayload: feeChanged
+        ? {
+            customerId: order.customerId,
+            orderId: order.id,
+            orderNumber: order.orderNumber,
+            oldFee: feeChanged ? oldFee : null,
+            newFee,
+            reason: 'RECALCULATE_FEE',
+          }
+        : null,
     };
   }
 }

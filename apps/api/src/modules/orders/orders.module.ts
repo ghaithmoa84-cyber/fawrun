@@ -1,5 +1,5 @@
 import { Module } from '@nestjs/common';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaModule } from '../../database/prisma.module.js';
 import { AuditModule } from '../audit/audit.module.js';
 import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PricingModule } from '../pricing/pricing.module.js';
@@ -9,12 +9,13 @@ import { OrdersService } from './orders.service.js';
 
 @Module({
   imports: [
+    PrismaModule,
     AuditModule,
     NotificationsModule,
     PricingModule,
     StateMachineModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService, PrismaService],
+  providers: [OrdersService],
 })
 export class OrdersModule {}
