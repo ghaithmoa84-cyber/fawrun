@@ -1,3 +1,8 @@
+---
+name: coderabbit-workflow
+description: "Enforce FAWRUN local checks, GitHub PR, CodeRabbit review, and merge workflow before pushing or merging"
+---
+
 # CodeRabbit Workflow Skill — FAWRUN Edition
 
 ## Purpose

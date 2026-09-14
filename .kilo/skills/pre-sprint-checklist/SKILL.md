@@ -1,3 +1,8 @@
+---
+name: pre-sprint-checklist
+description: "Run FAWRUN pre-Sprint validation before a new Sprint, major feature, or major work-area switch"
+---
+
 # Pre-Sprint Checklist Skill
 
 ## Purpose

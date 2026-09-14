@@ -1,8 +1,8 @@
-import { z } from 'zod';
-import { passwordSchema } from './auth.types.js';
+import { z } from "zod";
+import { passwordSchema } from "./auth.types.js";
 
 export const RunnerStatusUpdateSchema = z.object({
-  status: z.enum(['AVAILABLE', 'UNAVAILABLE']),
+  status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
 });
 
 export type RunnerStatusUpdate = z.infer<typeof RunnerStatusUpdateSchema>;
@@ -45,13 +45,13 @@ export type PurchaseResponse = {
 
 export const ApproveOrderSchema = z.object({
   isPeripheral: z.boolean(),
-  notes: z.string().nullable(),
+  notes: z.string().nullable().optional(),
 });
 
 export type ApproveOrderRequest = z.infer<typeof ApproveOrderSchema>;
 
 export const AssignRunnerSchema = z.object({
-  runnerId: z.string().trim().min(1, 'runnerId cannot be empty'),
+  runnerId: z.string().trim().min(1, "runnerId cannot be empty"),
 });
 
 export type AssignRunnerRequest = z.infer<typeof AssignRunnerSchema>;

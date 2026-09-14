@@ -227,6 +227,8 @@ model Order {
   deliveredAt  DateTime?
   cancelledAt  DateTime?
 
+  idempotencyKey String? @unique
+
   items          OrderItem[]
   orderStores    OrderStore[]
   ratings        Rating[]

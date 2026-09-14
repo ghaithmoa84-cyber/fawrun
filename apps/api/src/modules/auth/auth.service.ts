@@ -10,9 +10,7 @@ import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
 import { CONFIG } from '@fawrun/shared-constants';
-import type { RegisterDto } from './dto/register.dto.js';
-import type { LoginDto } from './dto/login.dto.js';
-import type { RefreshDto } from './dto/refresh.dto.js';
+import type { RegisterRequest, LoginRequest, RefreshRequest } from '@fawrun/shared-types';
 import type { LogoutDto } from './dto/logout.dto.js';
 
 function generateSelector(): string {
@@ -28,7 +26,7 @@ export class AuthService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
-  async register(dto: RegisterDto) {
+  async register(dto: RegisterRequest) {
     const existing = await this.prisma.user.findUnique({
       where: { whatsapp: dto.whatsapp },
     });
@@ -66,6 +64,19 @@ export class AuthService {
         },
       });
 
+      await this.auditService.log(
+        {
+          orderId: undefined,
+          actorId: user.id,
+          actorRole: 'CUSTOMER',
+          event: 'USER_REGISTERED',
+          fromStatus: undefined,
+          toStatus: 'PENDING_VERIFICATION',
+          meta: { userId: user.id, role: 'CUSTOMER' },
+        },
+        tx,
+      );
+
       return user;
     });
 
@@ -86,7 +97,7 @@ export class AuthService {
     };
   }
 
-  async login(dto: LoginDto, deviceInfo?: string) {
+  async login(dto: LoginRequest, deviceInfo?: string) {
     const user = await this.prisma.user.findUnique({
       where: { whatsapp: dto.whatsapp },
     });
@@ -95,8 +106,8 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status !== 'VERIFIED') {
-      throw new UnauthorizedException('Account is not verified');
+    if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+      throw new UnauthorizedException('Account is not active');
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
@@ -146,7 +157,7 @@ export class AuthService {
     };
   }
 
-  async refresh(dto: RefreshDto) {
+  async refresh(dto: RefreshRequest) {
     // Extract selector from the refresh token (first 32 chars = 16 bytes hex)
     // Format: selector:secret
     const [selector, secret] = dto.refreshToken.split(':');
@@ -170,7 +181,7 @@ export class AuthService {
 
     const user = token.user;
 
-    if (user.isDeleted || user.status !== 'VERIFIED') {
+    if (user.isDeleted || user.status === 'REJECTED' || user.status === 'SUSPENDED') {
       throw new UnauthorizedException('Account is not active');
     }
 

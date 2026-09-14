@@ -1,3 +1,8 @@
+---
+name: rollback-plan
+description: "Require and document a rollback plan before any FAWRUN financial operation involving Ledger, Settlement, order fees, or financial state"
+---
+
 # Rollback Plan Skill
 
 ## Purpose
