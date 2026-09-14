@@ -31,7 +31,12 @@ export const IdParamSchema = z.object({
   id: z.string().trim().min(1, 'id cannot be empty'),
 });
 
+export const CuidParamSchema = z.object({
+  id: z.string().cuid(),
+});
+
 export type IdParamRequest = z.infer<typeof IdParamSchema>;
+export type CuidParamRequest = z.infer<typeof CuidParamSchema>;
 
 export const CustomerOrdersQuerySchema = z.object({
   page: z.coerce.number().int().min(1).default(1),

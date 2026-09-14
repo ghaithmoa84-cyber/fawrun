@@ -1,14 +1,15 @@
 import { Controller, Get, Param, Put, Query, UseGuards } from '@nestjs/common';
 import { UsersService } from './users.service.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { CONFIG } from '@fawrun/shared-constants';
+import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
+import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
 
 @Controller('admin/users')
-@UseGuards(VerifiedUserGuard, JwtAuthGuard, RolesGuard)
+@UseGuards(VerifiedUserGuard, RolesGuard)
 @Roles('ADMIN')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
@@ -27,31 +28,33 @@ export class UsersController {
   }
 
   @Get(':id')
-  async findOne(@Param('id') id: string) {
-    return this.usersService.findOne(id);
+  async findOne(
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
+  ) {
+    return this.usersService.findOne(params.id);
   }
 
   @Put(':id/verify')
   async verify(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.usersService.verify(id, user.userId);
+    return this.usersService.verify(params.id, user.userId);
   }
 
   @Put(':id/reject')
   async reject(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.usersService.reject(id, user.userId);
+    return this.usersService.reject(params.id, user.userId);
   }
 
   @Put(':id/suspend')
   async suspend(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.usersService.suspend(id, user.userId);
+    return this.usersService.suspend(params.id, user.userId);
   }
 }

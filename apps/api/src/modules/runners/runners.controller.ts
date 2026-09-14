@@ -1,6 +1,5 @@
 import { Body, Controller, Get, Post, Put, Param, Query, UseGuards } from '@nestjs/common';
 import { RunnersService } from './runners.service.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
@@ -15,9 +14,10 @@ import {
   type UpdateRunnerRequest,
   type UpdateVisibilityRequest,
 } from '@fawrun/shared-types';
+import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
 
 @Controller('admin/runners')
-@UseGuards(VerifiedUserGuard, JwtAuthGuard, RolesGuard)
+@UseGuards(VerifiedUserGuard, RolesGuard)
 @Roles('ADMIN')
 export class RunnersController {
   constructor(private readonly runnersService: RunnersService) {}
@@ -50,12 +50,12 @@ export class RunnersController {
 
   @Put(':id')
   async update(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @Body(new ZodValidationPipe(UpdateRunnerSchema)) body: UpdateRunnerRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.update({
-      id,
+      id: params.id,
       name: body.name,
       altPhone: body.altPhone,
       notes: body.notes,
@@ -65,12 +65,12 @@ export class RunnersController {
 
   @Put(':id/visibility')
   async updateVisibility(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @Body(new ZodValidationPipe(UpdateVisibilitySchema)) body: UpdateVisibilityRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.updateVisibility({
-      id,
+      id: params.id,
       isVisible: body.isVisible,
     }, user.userId);
   }
