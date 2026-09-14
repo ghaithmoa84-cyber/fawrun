@@ -36,6 +36,7 @@ export class AuthController {
   }
 
   @Post('logout')
+  @Public()
   logout(@Body(new ZodValidationPipe(LogoutSchema)) dto: LogoutDto) {
     return this.authService.logout(dto);
   }

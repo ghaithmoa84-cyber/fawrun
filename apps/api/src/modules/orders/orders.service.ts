@@ -1036,10 +1036,11 @@ export class OrdersService {
 
         const runner = await tx.runner.findUnique({
           where: { id: runnerId },
+          include: { user: true },
         });
 
-        if (!runner) {
-          throw new NotFoundException('Runner not found');
+        if (!runner || runner.status !== 'AVAILABLE' || runner.user?.status !== 'VERIFIED') {
+          throw new UnprocessableEntityException('Runner not available or not verified');
         }
 
         const transitionResult = this.orderStateMachine.transition(
@@ -1048,11 +1049,17 @@ export class OrdersService {
           'ADMIN',
         );
 
+        await tx.runner.update({
+          where: { id: runnerId },
+          data: { status: 'ON_MISSION' },
+        });
+
         const updatedOrder = await tx.order.update({
           where: { id: order.id },
           data: {
             status: transitionResult.to,
-            runnerId: runnerId,
+            runnerId,
+            assignedAt: new Date(),
           },
         });
 

@@ -1,4 +1,4 @@
-import { Injectable, UnprocessableEntityException } from '@nestjs/common';
+import { Injectable, UnprocessableEntityException, ConflictException } from '@nestjs/common';
 import { type OrderStatus } from '@fawrun/shared-constants';
 import {
   TERMINAL_ORDER_STATUSES,
@@ -105,6 +105,23 @@ export class OrderStateMachine {
       throw new UnprocessableEntityException(
         `Cannot transition from terminal state: ${from}`,
       );
+    }
+  }
+
+  /**
+   * Validates idempotency key for the DELIVERED transition.
+   * Should be called before allowing OUT_FOR_DELIVERY → DELIVERED transition.
+   *
+   * @param currentOrder - The current order with idempotencyKey field
+   * @param providedKey - The idempotency key provided in the request
+   * @throws ConflictException if idempotency key mismatch
+   */
+  validateIdempotencyKeyForDelivered(
+    currentOrder: { idempotencyKey: string | null },
+    providedKey: string,
+  ): void {
+    if (currentOrder.idempotencyKey && currentOrder.idempotencyKey !== providedKey) {
+      throw new ConflictException('Idempotency key mismatch');
     }
   }
 }

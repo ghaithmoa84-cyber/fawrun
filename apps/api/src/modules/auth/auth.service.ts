@@ -64,6 +64,19 @@ export class AuthService {
         },
       });
 
+      await this.auditService.log(
+        {
+          orderId: undefined,
+          actorId: user.id,
+          actorRole: 'CUSTOMER',
+          event: 'USER_REGISTERED',
+          fromStatus: undefined,
+          toStatus: 'PENDING_VERIFICATION',
+          meta: { userId: user.id, role: 'CUSTOMER' },
+        },
+        tx,
+      );
+
       return user;
     });
 

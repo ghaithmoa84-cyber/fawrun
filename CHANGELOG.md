@@ -23,6 +23,27 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-14 13:00 — Runner status validation + VerifiedUserGuard on Admin endpoints
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/orders/orders.service.ts` — `cancelOrder()` و`cancelOrderAdmin()`: إضافة تحقّق `!order.runner \|\| order.runner.status !== 'ON_MISSION'` قبل تعيين `AVAILABLE`، واستبدال `updateMany` بـ `update` (فردي)
+- `apps/api/src/modules/users/users.controller.ts` — `UsersController`: إضافة `VerifiedUserGuard` إلى `@UseGuards` (Admin يجب أن يكون VERIFIED)
+- `apps/api/src/modules/runners/runners.controller.ts` — `RunnersController`: إضافة `VerifiedUserGuard` إلى `@UseGuards` (Admin يجب أن يكون VERIFIED)
+
+**السبب:**
+منع تغيير حالة runner غير المصرّح به عند الإلغاء، وضمان أن المستخدمين المُدرجين كـ Admin هم حسابهم مُفعّل (VERIFIED).
+
+**الأوامر والنتائج:**
+- `pnpm build` → نجح، 3/3 حزم
+- `pnpm test` → نجح، 59/59 اختبار
+- `git commit -m "fix: Runner status validation + VerifiedUserGuard on Admin endpoints"` → نجح، commit `7a65a39`
+- `git push origin feature/sprint-2-order-core` → نجح
+
+**الأخطاء والحلول:**
+- `TS18047: 'order.runner' is possibly 'null'` — تم إضافة `!order.runner \|\|` في الشرط
+- `TS1206: Decorators are not valid here` في runners.controller.ts — بسبب تكرار في المحتوى أثناء التعديل، تم إعادة كتابة الملف بالكامل
+- خطأ LF/CRLF في runners.controller.ts — تحذير Git المعتاد، لا يؤثر على الوظيفة
+
 ### 2026-09-14 02:40 — Order state machine enhancements & admin review endpoint
 
 **الملفات والدوال المعدّلة:**

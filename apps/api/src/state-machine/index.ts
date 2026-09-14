@@ -21,3 +21,18 @@ export type {
   OrderStoreTransitionResult,
   OrderStoreTransitionContext,
 } from './order-store-state-machine.js';
+
+export {
+  RUNNER_TRANSITIONS,
+  RUNNER_STATUSES,
+  TERMINAL_RUNNER_STATUSES,
+  type RunnerActor,
+  type RunnerTransition,
+  type RunnerStatus,
+} from './runner-transitions.js';
+
+export { RunnerStateMachine } from './runner-state-machine.js';
+export type {
+  RunnerTransitionResult,
+  RunnerTransitionContext,
+} from './runner-state-machine.js';
