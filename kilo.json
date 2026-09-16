@@ -1,6 +1,14 @@
 {
   "$schema": "https://app.kilo.ai/config.json",
   "agent": {
+    "explore": {
+      "mode": "subagent",
+      "model": "kilo/kilo-auto/free",
+      "permissions": {
+        "deny": ["*"]
+      },
+      "hidden": true
+    },
     "code-architect": {
       "mode": "subagent",
       "model": "kilo/kilo-auto/free"

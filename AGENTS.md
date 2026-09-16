@@ -65,20 +65,16 @@ FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 - Zod input validation everywhere
 - See test-engineer agent for full security checklist
 
-### Rollback Plans
-Financial operations (Ledger, Settlement, Order fees) require a documented
-rollback plan BEFORE execution. Use /rollback-plan command to create one.
+2. Load each applicable skill once per active task context. When delegating to a subagent, pass the applicable skill requirement to that subagent.
+3. If multiple skills apply, load all of them. Use this order when applicable: `pre-sprint-checklist`, then `fawrun-domain-gate` and/or `api-contract-security`, then `rollback-plan`, then `coderabbit-workflow`.
+4. Do not load unrelated skills for a task. If a skill is already loaded in the active context, do not reload it.
+5. Automatic activation means reading and applying the skill checks. It does not bypass approval or automatically execute destructive or state-changing actions, including production migrations, financial operations, `git push`, merge, or PR creation.
+6. Preserve all existing `AGENTS.md` rules, agent responsibilities, commands, security requirements, and Sprint workflow. In particular, `/pre-sprint`, `/rollback-plan`, and `/pr` remain required where specified.
+7. If an explicit user instruction conflicts with a skill, follow the explicit user instruction, report the conflict, and do not silently ignore either constraint.
+8. If the task scope is ambiguous, load the potentially relevant safety skill and state why; do not skip a safety gate because of uncertainty.
+9. After loading a skill, report which skills were loaded and identify any blocking findings before proceeding.
+10. Do not disable or replace global, compatibility, or previously configured skills.
 
-## Agents
-- @code-architect — Sprint planning, schema design, state machine validation
-- @feature-dev — Endpoint implementation
-- @test-engineer — Tests, lint, typecheck, security checks
-- @debugger — Bug investigation (on-demand only)
-
-## Skills
-- pre-sprint-checklist — Pre-Sprint validation
-- rollback-plan — Financial rollback documentation
-- coderabbit-workflow — PR workflow with CodeRabbit review
 
 ## Commands
 - /pre-sprint — Run pre-sprint checklist
@@ -93,3 +89,6 @@ rollback plan BEFORE execution. Use /rollback-plan command to create one.
 - pnpm test — Run all tests
 - pnpm db:generate — Generate Prisma client
 - pnpm db:push — Push schema to DB
+
+## Validation Command
+pnpm build && pnpm --filter fawrun-api test
