@@ -113,22 +113,23 @@ export class OrdersService {
 
     const result = await this.prisma.$transaction(
       async (tx) => {
-         if (dto.preferredRunnerId) {
-           const preferredRunner = await tx.runner.findUnique({
-             where: { id: dto.preferredRunnerId },
-           });
-           if (!preferredRunner) {
-             throw new NotFoundException('Preferred runner not found');
-           }
-           if (
-             dto.waitForPreferred &&
-             preferredRunner.status !== 'AVAILABLE'
-           ) {
-             throw new UnprocessableEntityException(
-               'PREFERRED_RUNNER_NOT_AVAILABLE',
-             );
-           }
-         }
+        if (dto.preferredRunnerId) {
+          const preferredRunner = await tx.runner.findUnique({
+            where: { id: dto.preferredRunnerId },
+            include: { user: true },
+          });
+          if (!preferredRunner) {
+            throw new NotFoundException('Preferred runner not found');
+          }
+          const isPreferredRunnerActive =
+            String(preferredRunner.status) !== 'SUSPENDED' &&
+            preferredRunner.user.status === 'VERIFIED';
+          if (!isPreferredRunnerActive) {
+            throw new UnprocessableEntityException(
+              'PREFERRED_RUNNER_NOT_AVAILABLE',
+            );
+          }
+        }
 
         const order = await tx.order.create({
           data: {
@@ -1090,7 +1091,7 @@ export class OrdersService {
         // Validate the runner status change through RunnerStateMachine.
         // Only SYSTEM may move a runner AVAILABLE -> ON_MISSION when an order
         // is assigned; the atomic updateMany below enforces this concurrently.
-        const runnerTransitionResult = this.runnerStateMachine.transition(
+        this.runnerStateMachine.transition(
           runner.status,
           'ON_MISSION',
           'SYSTEM',
