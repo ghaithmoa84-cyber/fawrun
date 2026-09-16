@@ -3,10 +3,13 @@ import {
   Injectable,
   NotFoundException,
   ConflictException,
+  UnprocessableEntityException,
+  ForbiddenException,
 } from '@nestjs/common';
 import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
+import { RunnerStateMachine } from '../../state-machine/runner-state-machine.js';
 import { CONFIG } from '@fawrun/shared-constants';
 
 @Injectable()
@@ -14,6 +17,7 @@ export class RunnersService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
+    private readonly runnerStateMachine: RunnerStateMachine,
   ) {}
 
   async findAll(page: number, limit: number) {
@@ -47,6 +51,146 @@ export class RunnersService {
         limit,
         totalPages: Math.ceil(total / limit),
       },
+    };
+  }
+
+  async getMyProfile(userId: string) {
+    const runner = await this.prisma.runner.findUnique({
+      where: { userId },
+      include: { user: true },
+    });
+
+    if (!runner) {
+      throw new NotFoundException('Runner profile not found');
+    }
+
+    return {
+      id: runner.id,
+      name: runner.user.name,
+      whatsapp: runner.user.whatsapp,
+      status: runner.status,
+      isVisible: runner.isVisible,
+      avgRating: runner.avgRating ?? null,
+      totalRatings: runner.totalRatings,
+      notes: runner.notes ?? null,
+    };
+  }
+
+  async updateMyStatus(userId: string, newStatus: 'AVAILABLE' | 'UNAVAILABLE') {
+    const runner = await this.prisma.runner.findUnique({
+      where: { userId },
+      include: { user: true },
+    });
+
+    if (!runner) {
+      throw new NotFoundException('Runner profile not found');
+    }
+
+    if (runner.user.status !== 'VERIFIED') {
+      throw new ForbiddenException('Runner account is not verified');
+    }
+
+    const currentStatus = runner.status;
+    if (currentStatus === newStatus) {
+      return {
+        statusCode: 200,
+        message: `Runner is already ${newStatus.toLowerCase()}`,
+        status: currentStatus,
+      };
+    }
+
+    // Validate transition through RunnerStateMachine
+    // Runner can transition: UNAVAILABLE <-> AVAILABLE (RUNNER actor)
+    // SYSTEM handles AVAILABLE <-> ON_MISSION
+    const actor = 'RUNNER' as const;
+    let transitionResult;
+    try {
+      transitionResult = this.runnerStateMachine.transition(
+        currentStatus,
+        newStatus,
+        actor,
+        { actorId: userId },
+      );
+    } catch {
+      throw new UnprocessableEntityException(
+        `Invalid status transition: ${currentStatus} -> ${newStatus}`,
+      );
+    }
+
+    await this.prisma.$transaction(async (tx) => {
+      await tx.runner.update({
+        where: { userId },
+        data: { status: newStatus },
+      });
+
+      await this.auditService.log({
+        actorId: userId,
+        actorRole: 'RUNNER',
+        event: 'RUNNER_STATUS_CHANGED',
+        meta: {
+          runnerId: runner.id,
+          fromStatus: currentStatus,
+          toStatus: newStatus,
+        },
+      }, tx);
+    });
+
+    return {
+      statusCode: 200,
+      message: `Runner status changed to ${newStatus}`,
+      status: newStatus,
+      transition: transitionResult.description,
+    };
+  }
+
+  async getActiveOrder(userId: string) {
+    const runner = await this.prisma.runner.findUnique({
+      where: { userId },
+    });
+
+    if (!runner) {
+      throw new NotFoundException('Runner profile not found');
+    }
+
+    // Find active order where runner is assigned and order is not completed/cancelled
+    const activeOrder = await this.prisma.order.findFirst({
+      where: {
+        runnerId: runner.id,
+        status: {
+          in: ['ASSIGNED', 'IN_PROGRESS', 'OUT_FOR_DELIVERY'],
+        },
+      },
+      include: {
+        customer: { include: { user: true } },
+        items: true,
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!activeOrder) {
+      return null;
+    }
+
+    return {
+      id: activeOrder.id,
+      orderNumber: activeOrder.orderNumber!,
+      status: activeOrder.status,
+      customerName: activeOrder.customer.user.name,
+      customerWhatsapp: activeOrder.customer.user.whatsapp,
+      deliveryLat: activeOrder.deliveryLat,
+      deliveryLng: activeOrder.deliveryLng,
+      deliveryDesc: activeOrder.deliveryDesc,
+      totalFee: activeOrder.totalFee,
+      isPeripheral: activeOrder.isPeripheral,
+      createdAt: activeOrder.createdAt.toISOString(),
+      assignedAt: activeOrder.assignedAt?.toISOString() ?? null,
+      items: activeOrder.items.map((item) => ({
+        id: item.id,
+        itemName: item.itemName,
+        quantity: item.quantity,
+        customStoreName: item.customStoreName,
+        anyStore: item.anyStore,
+      })),
     };
   }
 

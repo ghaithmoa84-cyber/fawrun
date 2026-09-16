@@ -7,6 +7,7 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { PrismaService } from '../../database/prisma.service.js';
 import { SOCKET_SERVERS } from './socket-registry.js';
 import { getCorsOrigins } from './cors-origins.js';
 
@@ -26,6 +27,7 @@ export class OrdersGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly prisma: PrismaService,
   ) {
     SOCKET_SERVERS.orders = null;
   }
@@ -52,6 +54,16 @@ export class OrdersGateway
 
       client.data.userId = payload.sub;
       client.data.role = payload.role;
+
+      const user = await this.prisma.user.findUnique({
+        where: { id: payload.sub },
+        select: { status: true, isDeleted: true },
+      });
+
+      if (!user || user.isDeleted || user.status !== 'VERIFIED') {
+        client.disconnect(true);
+        return;
+      }
 
       if (payload.role === 'CUSTOMER') {
         client.join(`customer:${payload.sub}`);

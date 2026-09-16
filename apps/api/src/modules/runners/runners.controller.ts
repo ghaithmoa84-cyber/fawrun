@@ -1,7 +1,8 @@
 import { Body, Controller, Get, Post, Put, Param, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { RunnersService } from './runners.service.js';
-import { JwtAuthGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
+import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { CONFIG } from '@fawrun/shared-constants';
@@ -10,13 +11,16 @@ import {
   CreateRunnerSchema,
   UpdateRunnerSchema,
   UpdateVisibilitySchema,
+  RunnerStatusUpdateSchema,
   type CreateRunnerRequest,
   type UpdateRunnerRequest,
   type UpdateVisibilityRequest,
+  type RunnerStatusUpdate,
 } from '@fawrun/shared-types';
+import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
 
 @Controller('admin/runners')
-@UseGuards(JwtAuthGuard, RolesGuard)
+@UseGuards(VerifiedUserGuard, RolesGuard)
 @Roles('ADMIN')
 export class RunnersController {
   constructor(private readonly runnersService: RunnersService) {}
@@ -37,40 +41,72 @@ export class RunnersController {
   @Post()
   async create(
     @Body(new ZodValidationPipe(CreateRunnerSchema)) body: CreateRunnerRequest,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.create({
       name: body.name,
       whatsapp: body.whatsapp,
       password: body.password,
       altPhone: body.altPhone,
-    }, user.id);
+    }, user.userId);
   }
 
   @Put(':id')
   async update(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @Body(new ZodValidationPipe(UpdateRunnerSchema)) body: UpdateRunnerRequest,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.update({
-      id,
+      id: params.id,
       name: body.name,
       altPhone: body.altPhone,
       notes: body.notes,
       password: body.password,
-    }, user.id);
+    }, user.userId);
   }
 
   @Put(':id/visibility')
   async updateVisibility(
-    @Param('id') id: string,
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @Body(new ZodValidationPipe(UpdateVisibilitySchema)) body: UpdateVisibilityRequest,
-    @CurrentUser() user: { id: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnersService.updateVisibility({
-      id,
+      id: params.id,
       isVisible: body.isVisible,
-    }, user.id);
+    }, user.userId);
+  }
+}
+
+@Controller('runner')
+@UseGuards(VerifiedUserGuard, RolesGuard)
+@Roles('RUNNER')
+export class RunnerController {
+  constructor(private readonly runnersService: RunnersService) {}
+
+  @Get('me')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getMyProfile(
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.runnersService.getMyProfile(user.userId);
+  }
+
+  @Put('me/status')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  async updateMyStatus(
+    @Body(new ZodValidationPipe(RunnerStatusUpdateSchema)) body: RunnerStatusUpdate,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.runnersService.updateMyStatus(user.userId, body.status);
+  }
+
+  @Get('orders/active')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getActiveOrder(
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.runnersService.getActiveOrder(user.userId);
   }
 }
