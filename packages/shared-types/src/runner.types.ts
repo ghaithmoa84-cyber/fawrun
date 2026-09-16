@@ -1,6 +1,11 @@
 import { z } from "zod";
 import { passwordSchema, PhoneE164Schema } from "./auth.types.js";
 
+const nonEmptyString = z
+  .string()
+  .trim()
+  .min(1, "Field cannot be empty or whitespace");
+
 export const RunnerStatusUpdateSchema = z.object({
   status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
 });
@@ -45,7 +50,7 @@ export const ActiveOrderResponseSchema = z.object({
 export type ActiveOrderResponse = z.infer<typeof ActiveOrderResponseSchema>;
 
 export const CreateRunnerSchema = z.object({
-  name: z.string().min(2),
+  name: nonEmptyString.min(2, "Name must be at least 2 characters"),
   whatsapp: PhoneE164Schema,
   password: passwordSchema,
   altPhone: PhoneE164Schema.optional(),
@@ -54,7 +59,7 @@ export const CreateRunnerSchema = z.object({
 export type CreateRunnerRequest = z.infer<typeof CreateRunnerSchema>;
 
 export const UpdateRunnerSchema = z.object({
-  name: z.string().min(2).optional(),
+  name: nonEmptyString.min(2, "Name must be at least 2 characters").optional(),
   altPhone: PhoneE164Schema.optional(),
   notes: z.string().optional(),
   password: passwordSchema.optional(),

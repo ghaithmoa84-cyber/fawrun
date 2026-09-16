@@ -183,10 +183,19 @@ export class OrdersController {
   }
 
   @Put('runner/orders/:id/start')
-  @Put('runner/orders/:id/pickup')
   @Roles('RUNNER')
   @Throttle({ default: { limit: 20, ttl: 60000 } })
   async startOrder(
+    @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.startOrder(params.id, user.userId);
+  }
+
+  @Put('runner/orders/:id/pickup')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  async pickupOrder(
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {

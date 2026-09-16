@@ -100,7 +100,7 @@ model RefreshToken {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   selector    String   @unique
-  tokenHash   String
+  tokenHash   String   @unique
   deviceInfo  String?
   isRevoked   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -360,8 +360,8 @@ model LedgerEntry {
   meta        Json?
 
   createdAt   DateTime @default(now())
-  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only لا يُعدّل
-  // Database-level append-only protection via @@index and triggers (handled in migration)
+  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only: الإضافة فقط، لا حذف أو تعديل
+  // Append-only enforced at the application layer; no database-level triggers are active.
 
   @@index([orderId])
   @@index([runnerId, type])
@@ -422,8 +422,8 @@ model AuditLog {
   meta       Json?
 
   createdAt  DateTime @default(now())
-  // ⚠️ لا يوجد updatedAt — هذا الجدول لا يُعدّل أبداً
-  // Database-level append-only protection via @@index and triggers (handled in migration)
+  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only: الإضافة فقط، لا حذف أو تعديل
+  // Append-only enforced at the application layer; no database-level triggers are active.
 
   @@index([orderId, createdAt])
   @@index([event, createdAt])

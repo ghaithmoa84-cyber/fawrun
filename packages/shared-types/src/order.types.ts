@@ -20,7 +20,7 @@ export const CreateOrderItemSchema = z.object({
 export const DeliveryAddressSchema = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
-  description: z.string(),
+  description: nonEmptyString,
 });
 
 export const CreateOrderSchema = z.object({

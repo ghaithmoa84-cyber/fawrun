@@ -195,10 +195,14 @@ export class AuthService {
         throw new UnauthorizedException('Account is not active');
       }
 
-      await tx.refreshToken.update({
-        where: { id: token.id },
+      const updateResult = await tx.refreshToken.updateMany({
+        where: { id: token.id, isRevoked: false },
         data: { isRevoked: true, revokedAt: new Date() },
       });
+
+      if (updateResult.count !== 1) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
 
       const newSecret = randomBytes(32).toString('hex');
       const newSelector = generateSelector();
