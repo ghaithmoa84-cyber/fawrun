@@ -744,9 +744,7 @@ export class OrdersService {
 
         const newFee = this.pricingService.calculateFee({
           isPeripheral: dto.isPeripheral,
-          purchasedStoreCount: order.orderStores.filter(
-            (store) => store.status === 'PURCHASED',
-          ).length,
+          purchasedStoreCount: 0,
         });
         const oldFee = {
           baseFee: order.baseFee,
