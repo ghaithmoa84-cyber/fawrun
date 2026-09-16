@@ -100,7 +100,7 @@ model RefreshToken {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   selector    String   @unique
-  tokenHash   String   @unique
+  tokenHash   String
   deviceInfo  String?
   isRevoked   Boolean  @default(false)
   createdAt   DateTime @default(now())
