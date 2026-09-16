@@ -1705,7 +1705,9 @@ export class OrdersService {
   ): Promise<
     RunnerOrderActionResponse & {
       idempotent: boolean;
-      ledgerEntries?: unknown[];
+      ledgerEntries: unknown[];
+      runnerId: string | null;
+      customerId: string;
     }
   > {
     const result = await this.prisma.$transaction(
@@ -1734,7 +1736,13 @@ export class OrdersService {
           if (order.idempotencyKey !== dto.idempotencyKey) {
             throw new ConflictException('Idempotency key mismatch');
           }
-          return { order, idempotent: true };
+          return {
+        order,
+        idempotent: true,
+        ledgerEntries: [],
+        runnerId: order.runnerId,
+        customerId: order.customerId,
+      };
         }
 
         if (order.status !== 'OUT_FOR_DELIVERY') {
@@ -1771,7 +1779,13 @@ export class OrdersService {
               dto.idempotencyKey,
             );
             if (current.idempotencyKey === dto.idempotencyKey) {
-              return { order: current, idempotent: true };
+              return {
+            order: current,
+            idempotent: true,
+            ledgerEntries: [],
+            runnerId: current.runnerId,
+            customerId: current.customerId,
+          };
             }
           }
           throw new ConflictException('Delivery is already being processed');
@@ -1933,7 +1947,9 @@ export class OrdersService {
       orderNumber: result.order.orderNumber!,
       status: result.order.status,
       idempotent: result.idempotent,
-      ...(result.ledgerEntries ? { ledgerEntries: result.ledgerEntries } : {}),
+      ledgerEntries: result.ledgerEntries ?? [],
+      runnerId: result.order.runnerId,
+      customerId: result.order.customerId,
     };
   }
 

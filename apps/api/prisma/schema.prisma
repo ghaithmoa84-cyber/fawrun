@@ -105,6 +105,7 @@ model RefreshToken {
   isRevoked   Boolean  @default(false)
   createdAt   DateTime @default(now())
   revokedAt   DateTime?
+  expiresAt   DateTime
 
   @@index([userId, isRevoked])
 }

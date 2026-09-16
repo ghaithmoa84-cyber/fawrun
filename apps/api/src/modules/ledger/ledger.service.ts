@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import type { Prisma } from '@prisma/client';
+import { Prisma } from '@prisma/client';
 import type { LedgerEntry as PrismaLedgerEntry } from '@prisma/client';
 import {
   CreateLedgerEntryRequest,
@@ -38,7 +38,7 @@ export class LedgerService {
         type: data.type,
         amount: data.amount,
         description: data.description,
-        meta: (data.meta ?? null) as Prisma.InputJsonValue,
+        meta: (data.meta ?? Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
       },
     });
 
@@ -75,7 +75,7 @@ export class LedgerService {
           type: data.type,
           amount: data.amount,
           description: data.description,
-          meta: (data.meta ?? null) as Prisma.InputJsonValue,
+          meta: (data.meta ?? Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
         },
       });
       results.push(mapPrismaToLedgerEntry(entry));

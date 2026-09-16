@@ -7,6 +7,8 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { UnauthorizedException } from '@nestjs/common';
+import { UsersService } from '../../modules/users/users.service.js';
 import { SOCKET_SERVERS } from './socket-registry.js';
 import { getCorsOrigins } from './cors-origins.js';
 
@@ -26,6 +28,7 @@ export class AdminGateway
   constructor(
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
+    private readonly usersService: UsersService,
   ) {
     SOCKET_SERVERS.admin = null;
   }
@@ -42,6 +45,7 @@ export class AdminGateway
       return;
     }
 
+    let userId: string;
     try {
       const jwtConfig = this.configService.get('jwt');
       const publicKey = jwtConfig?.publicKey;
@@ -49,19 +53,32 @@ export class AdminGateway
         publicKey: publicKey || undefined,
         algorithms: ['RS256'],
       });
-
-      if (payload.role !== 'ADMIN') {
-        client.disconnect(true);
-        return;
-      }
-
-      client.data.userId = payload.sub;
-      client.data.role = payload.role;
-
-      client.join('admin:all');
+      userId = payload.sub;
     } catch {
       client.disconnect(true);
+      return;
     }
+
+    let user: { id: string; role: string; status: string; isDeleted: boolean } | null;
+    try {
+      user = await this.usersService.findLeanById(userId);
+    } catch {
+      throw new UnauthorizedException('User not found');
+    }
+
+    if (!user || user.isDeleted || user.status !== 'VERIFIED') {
+      throw new UnauthorizedException('Account is not active');
+    }
+
+    if (user.role !== 'ADMIN') {
+      client.disconnect(true);
+      return;
+    }
+
+    client.data.userId = user.id;
+    client.data.role = user.role;
+
+    client.join('admin:all');
   }
 
   handleDisconnect(_client: Socket) {

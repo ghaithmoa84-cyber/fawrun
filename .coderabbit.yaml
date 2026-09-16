@@ -20,7 +20,7 @@ reviews:
     enabled: true
   pre_merge_checks:
     enabled: false
-  path_filters:
+    path_filters:
     - "!node_modules/"
     - "!dist/"
     - "!build/"
@@ -31,6 +31,12 @@ reviews:
     - "!**/*.min.css"
     - "!**/*.map"
     - "!**/*.lock"
+    - "**/.kilo/**"
+    - "docs/sprints/**"
+    - "AGENTS.md"
+    - "CHANGELOG.md"
+    - "CURRENT_STATE.md"
+    - "PRE_SPRINT_CHECKLIST.md"
     - "!**/*.png"
     - "!**/*.jpg"
     - "!**/*.jpeg"

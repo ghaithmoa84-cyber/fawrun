@@ -5,6 +5,18 @@ export const passwordSchema = z.string().min(8).max(72).refine(
   'Password must not exceed 72 bytes'
 );
 
+// E.164 phone number format: a leading '+' followed by 1–15 digits
+// (country code + national number), e.g. +963912345678. Used for the
+// WhatsApp identity and alternate phone fields across registration/login.
+export const PhoneE164Schema = z
+  .string()
+  .trim()
+  .min(1, 'Phone number is required')
+  .regex(
+    /^\+[1-9]\d{0,14}$/,
+    'WhatsApp number must be in E.164 format (e.g. +963912345678)',
+  );
+
 export const AddressSchema = z.object({
   lat: z.number().min(-90).max(90),
   lng: z.number().min(-180).max(180),
@@ -13,8 +25,8 @@ export const AddressSchema = z.object({
 
 export const RegisterSchema = z.object({
   name: z.string().min(2),
-  whatsapp: z.string(),
-  altPhone: z.string().nullable(),
+  whatsapp: PhoneE164Schema,
+  altPhone: PhoneE164Schema.nullable(),
   password: passwordSchema,
   address: AddressSchema,
 });
@@ -22,7 +34,7 @@ export const RegisterSchema = z.object({
 export type RegisterRequest = z.infer<typeof RegisterSchema>;
 
 export const LoginSchema = z.object({
-  whatsapp: z.string(),
+  whatsapp: PhoneE164Schema,
   password: passwordSchema,
 });
 

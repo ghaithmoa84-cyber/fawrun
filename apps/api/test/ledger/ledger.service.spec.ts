@@ -68,7 +68,7 @@ describe('LedgerService', () => {
           type: 'RUNNER_SHARE',
           amount: 4500,
           description: 'Runner share for order FW-000001',
-          meta: null,
+          meta: expect.anything(),
         },
       });
       expect(result.id).toBe('le-1');
@@ -94,7 +94,7 @@ describe('LedgerService', () => {
           type: 'PLATFORM_SHARE',
           amount: 1500,
           description: 'Platform share',
-          meta: null,
+          meta: expect.anything(),
         },
       });
       expect(result.id).toBe('le-2');

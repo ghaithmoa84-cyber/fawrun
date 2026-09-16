@@ -211,29 +211,39 @@ export class RunnersService {
     const passwordHash = await bcrypt.hash(body.password, CONFIG.BCRYPT_ROUNDS);
 
     await this.prisma.$transaction(async (tx) => {
-      const user = await tx.user.create({
-        data: {
-          name: body.name,
-          whatsapp: body.whatsapp,
-          altPhone: body.altPhone || null,
-          passwordHash,
-          role: 'RUNNER',
-          status: 'VERIFIED',
-        },
-      });
+      try {
+        const user = await tx.user.create({
+          data: {
+            name: body.name,
+            whatsapp: body.whatsapp,
+            altPhone: body.altPhone || null,
+            passwordHash,
+            role: 'RUNNER',
+            status: 'VERIFIED',
+          },
+        });
 
-      await tx.runner.create({
-        data: {
-          userId: user.id,
-        },
-      });
+        await tx.runner.create({
+          data: {
+            userId: user.id,
+          },
+        });
 
-      await this.auditService.log({
-        actorId,
-        actorRole: 'ADMIN',
-        event: 'RUNNER_CREATED',
-        meta: { userId: user.id, runnerWhatsapp: body.whatsapp },
-      }, tx);
+        await this.auditService.log({
+          actorId,
+          actorRole: 'ADMIN',
+          event: 'RUNNER_CREATED',
+          meta: { userId: user.id, runnerWhatsapp: body.whatsapp },
+        }, tx);
+      } catch (err) {
+        if (
+          err instanceof Prisma.PrismaClientKnownRequestError &&
+          err.code === 'P2002'
+        ) {
+          throw new ConflictException('This WhatsApp number is already registered');
+        }
+        throw err;
+      }
     });
 
     return {

@@ -129,6 +129,9 @@ export class AuthService {
     const tokenHash = await bcrypt.hash(refreshTokenSecret, CONFIG.BCRYPT_ROUNDS);
 
     await this.prisma.$transaction(async (tx) => {
+      const expiresAt = new Date();
+      expiresAt.setDate(expiresAt.getDate() + 90);
+
       await tx.refreshToken.create({
         data: {
           userId: user.id,
@@ -136,6 +139,7 @@ export class AuthService {
           tokenHash,
           deviceInfo,
           isRevoked: false,
+          expiresAt,
         },
       });
 
@@ -172,7 +176,7 @@ export class AuthService {
 
     return await this.prisma.$transaction(async (tx) => {
       const token = await tx.refreshToken.findUnique({
-        where: { selector, isRevoked: false },
+        where: { selector, isRevoked: false, expiresAt: { gt: new Date() } },
         include: { user: true },
       });
 
@@ -199,6 +203,8 @@ export class AuthService {
       const newSecret = randomBytes(32).toString('hex');
       const newSelector = generateSelector();
       const newTokenHash = await bcrypt.hash(newSecret, CONFIG.BCRYPT_ROUNDS);
+      const newExpiresAt = new Date();
+      newExpiresAt.setDate(newExpiresAt.getDate() + 90);
 
       await tx.refreshToken.create({
         data: {
@@ -207,6 +213,7 @@ export class AuthService {
           tokenHash: newTokenHash,
           deviceInfo: token.deviceInfo,
           isRevoked: false,
+          expiresAt: newExpiresAt,
         },
       });
 
@@ -253,7 +260,7 @@ export class AuthService {
     }
 
     const token = await this.prisma.refreshToken.findUnique({
-      where: { selector, isRevoked: false },
+      where: { selector, isRevoked: false, expiresAt: { gt: new Date() } },
     });
 
     if (token) {

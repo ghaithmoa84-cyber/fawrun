@@ -1,13 +1,13 @@
 import { Module } from '@nestjs/common';
 import { RunnersService } from './runners.service.js';
 import { RunnersController, RunnerController } from './runners.controller.js';
-import { PrismaService } from '../../database/prisma.service.js';
+import { PrismaModule } from '../../database/prisma.module.js';
 import { AuditModule } from '../audit/audit.module.js';
 import { StateMachineModule } from '../../state-machine/state-machine.module.js';
 
 @Module({
-  imports: [AuditModule, StateMachineModule],
+  imports: [AuditModule, StateMachineModule, PrismaModule],
   controllers: [RunnersController, RunnerController],
-  providers: [RunnersService, PrismaService],
+  providers: [RunnersService],
 })
 export class RunnersModule {}
