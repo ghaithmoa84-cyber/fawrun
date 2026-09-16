@@ -1,4 +1,5 @@
 import { Body, Controller, Get, Post, Put, Param, Query, UseGuards } from '@nestjs/common';
+import { Throttle } from '@nestjs/throttler';
 import { RunnersService } from './runners.service.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
@@ -10,9 +11,11 @@ import {
   CreateRunnerSchema,
   UpdateRunnerSchema,
   UpdateVisibilitySchema,
+  RunnerStatusUpdateSchema,
   type CreateRunnerRequest,
   type UpdateRunnerRequest,
   type UpdateVisibilityRequest,
+  type RunnerStatusUpdate,
 } from '@fawrun/shared-types';
 import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
 
@@ -73,5 +76,37 @@ export class RunnersController {
       id: params.id,
       isVisible: body.isVisible,
     }, user.userId);
+  }
+}
+
+@Controller('runner')
+@UseGuards(VerifiedUserGuard, RolesGuard)
+@Roles('RUNNER')
+export class RunnerController {
+  constructor(private readonly runnersService: RunnersService) {}
+
+  @Get('me')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getMyProfile(
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.runnersService.getMyProfile(user.userId);
+  }
+
+  @Put('me/status')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  async updateMyStatus(
+    @Body(new ZodValidationPipe(RunnerStatusUpdateSchema)) body: RunnerStatusUpdate,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.runnersService.updateMyStatus(user.userId, body.status);
+  }
+
+  @Get('orders/active')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async getActiveOrder(
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.runnersService.getActiveOrder(user.userId);
   }
 }

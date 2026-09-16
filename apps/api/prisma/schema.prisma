@@ -209,7 +209,7 @@ model Order {
 
   // المندوب المفضل — ربط رسمي بجدول Runner
   preferredRunnerId   String?
-  preferredRunner     Runner? @relation("PreferredRunner", fields: [preferredRunnerId], references: [id])
+  preferredRunner     Runner? @relation("PreferredRunner", fields: [preferredRunnerId], references: [id], onDelete: SetNull)
   waitForPreferred    Boolean @default(false)
 
   notes             String?

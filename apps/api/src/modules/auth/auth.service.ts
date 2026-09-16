@@ -128,21 +128,26 @@ export class AuthService {
     const selector = generateSelector();
     const tokenHash = await bcrypt.hash(refreshTokenSecret, CONFIG.BCRYPT_ROUNDS);
 
-    await this.prisma.refreshToken.create({
-      data: {
-        userId: user.id,
-        selector,
-        tokenHash,
-        deviceInfo,
-        isRevoked: false,
-      },
-    });
+    await this.prisma.$transaction(async (tx) => {
+      await tx.refreshToken.create({
+        data: {
+          userId: user.id,
+          selector,
+          tokenHash,
+          deviceInfo,
+          isRevoked: false,
+        },
+      });
 
-    await this.auditService.log({
-      actorId: user.id,
-      actorRole: user.role,
-      event: 'TOKEN_ISSUED',
-      meta: { method: 'login' },
+      await this.auditService.log(
+        {
+          actorId: user.id,
+          actorRole: user.role,
+          event: 'TOKEN_ISSUED',
+          meta: { method: 'login' },
+        },
+        tx,
+      );
     });
 
     return {
@@ -165,44 +170,77 @@ export class AuthService {
       throw new UnauthorizedException('Invalid refresh token format');
     }
 
-    const token = await this.prisma.refreshToken.findUnique({
-      where: { selector, isRevoked: false },
-      include: { user: true },
+    return await this.prisma.$transaction(async (tx) => {
+      const token = await tx.refreshToken.findUnique({
+        where: { selector, isRevoked: false },
+        include: { user: true },
+      });
+
+      if (!token) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const isValid = await bcrypt.compare(secret, token.tokenHash);
+      if (!isValid) {
+        throw new UnauthorizedException('Invalid or expired refresh token');
+      }
+
+      const user = token.user;
+
+      if (user.isDeleted || user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+        throw new UnauthorizedException('Account is not active');
+      }
+
+      await tx.refreshToken.update({
+        where: { id: token.id },
+        data: { isRevoked: true, revokedAt: new Date() },
+      });
+
+      const newSecret = randomBytes(32).toString('hex');
+      const newSelector = generateSelector();
+      const newTokenHash = await bcrypt.hash(newSecret, CONFIG.BCRYPT_ROUNDS);
+
+      await tx.refreshToken.create({
+        data: {
+          userId: user.id,
+          selector: newSelector,
+          tokenHash: newTokenHash,
+          deviceInfo: token.deviceInfo,
+          isRevoked: false,
+        },
+      });
+
+      await this.auditService.log(
+        {
+          actorId: user.id,
+          actorRole: user.role,
+          event: 'TOKEN_REFRESHED',
+          fromStatus: 'ISSUED',
+          toStatus: 'ROTATED',
+          meta: { selector: newSelector },
+        },
+        tx,
+      );
+
+      const accessToken = this.jwtService.sign(
+        { sub: user.id, role: user.role, status: user.status },
+        {
+          algorithm: 'RS256',
+          expiresIn: CONFIG.ACCESS_TOKEN_EXPIRY,
+        },
+      );
+
+      return {
+        accessToken,
+        refreshToken: `${newSelector}:${newSecret}`,
+        user: {
+          id: user.id,
+          name: user.name,
+          role: user.role,
+          status: user.status,
+        },
+      };
     });
-
-    if (!token) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-
-    const isValid = await bcrypt.compare(secret, token.tokenHash);
-    if (!isValid) {
-      throw new UnauthorizedException('Invalid or expired refresh token');
-    }
-
-    const user = token.user;
-
-    if (user.isDeleted || user.status === 'REJECTED' || user.status === 'SUSPENDED') {
-      throw new UnauthorizedException('Account is not active');
-    }
-
-    const accessToken = this.jwtService.sign(
-      { sub: user.id, role: user.role, status: user.status },
-      {
-        algorithm: 'RS256',
-        expiresIn: CONFIG.ACCESS_TOKEN_EXPIRY,
-      },
-    );
-
-    return {
-      accessToken,
-      refreshToken: dto.refreshToken,
-      user: {
-        id: user.id,
-        name: user.name,
-        role: user.role,
-        status: user.status,
-      },
-    };
   }
 
   async logout(dto: LogoutDto) {

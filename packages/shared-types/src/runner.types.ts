@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { passwordSchema } from "./auth.types.js";
+import { passwordSchema, PhoneE164Schema } from "./auth.types.js";
 
 export const RunnerStatusUpdateSchema = z.object({
   status: z.enum(["AVAILABLE", "UNAVAILABLE"]),
@@ -7,18 +7,55 @@ export const RunnerStatusUpdateSchema = z.object({
 
 export type RunnerStatusUpdate = z.infer<typeof RunnerStatusUpdateSchema>;
 
+export const RunnerProfileResponseSchema = z.object({
+  id: z.string(),
+  name: z.string(),
+  whatsapp: z.string(),
+  status: z.enum(["UNAVAILABLE", "AVAILABLE", "ON_MISSION"]),
+  isVisible: z.boolean(),
+  avgRating: z.number().nullable(),
+  totalRatings: z.number(),
+  notes: z.string().nullable(),
+});
+
+export type RunnerProfileResponse = z.infer<typeof RunnerProfileResponseSchema>;
+
+export const ActiveOrderResponseSchema = z.object({
+  id: z.string(),
+  orderNumber: z.string(),
+  status: z.string(),
+  customerName: z.string(),
+  customerWhatsapp: z.string(),
+  deliveryLat: z.number(),
+  deliveryLng: z.number(),
+  deliveryDesc: z.string(),
+  totalFee: z.number(),
+  isPeripheral: z.boolean(),
+  createdAt: z.string(),
+  assignedAt: z.string().nullable(),
+  items: z.array(z.object({
+    id: z.string(),
+    itemName: z.string(),
+    quantity: z.string(),
+    customStoreName: z.string().nullable(),
+    anyStore: z.boolean(),
+  })),
+}).nullable();
+
+export type ActiveOrderResponse = z.infer<typeof ActiveOrderResponseSchema>;
+
 export const CreateRunnerSchema = z.object({
   name: z.string().min(2),
-  whatsapp: z.string(),
+  whatsapp: PhoneE164Schema,
   password: passwordSchema,
-  altPhone: z.string().optional(),
+  altPhone: PhoneE164Schema.optional(),
 });
 
 export type CreateRunnerRequest = z.infer<typeof CreateRunnerSchema>;
 
 export const UpdateRunnerSchema = z.object({
   name: z.string().min(2).optional(),
-  altPhone: z.string().optional(),
+  altPhone: PhoneE164Schema.optional(),
   notes: z.string().optional(),
   password: passwordSchema.optional(),
 });

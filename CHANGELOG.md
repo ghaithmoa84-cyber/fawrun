@@ -23,6 +23,86 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-15 21:40 — توثيق قرارات التدقيق والسقالات
+
+**الملفات والدوال المعدّلة:**
+- `.kilo/plans/1789453842444-fawrun-audit-decisions.md` — قرارات DC-1..DC-3 وAO-1..AO-5 وG-3 وE-13 وSF-1..SF-13
+
+**السبب:**
+تحديد ما يُنفّذ الآن وما يُؤجل بشكل صريح، مع توثيق أن SF-7 وSF-13 في التقرير الأصلي لم يعكسا حالة المستودع الحالية.
+
+**الأوامر والنتائج:**
+- مراجعة الخطة الفنية والملفات الحالية → اكتملت
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تنفيذية
+
+### 2026-09-15 21:35 — توثيق خطة التراجع وبقية التحقق المسبق
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/orders/ROLLBACK_PLAN_runner-delivery-ledger.md` — خطة rollback لعملية التسليم وإنشاء LedgerEntry
+- `PRE_SPRINT_CHECKLIST.md` — نتائج بوابات Prisma وState Machine والعمليات المالية والعقود
+
+**السبب:**
+تلبية متطلبات `rollback-plan` و`pre-sprint-checklist` قبل تنفيذ العمليات المالية وانتقالات التسليم.
+
+**الأوامر والنتائج:**
+- `git diff --check` → نجح
+- `pnpm --filter fawrun-api exec prisma validate` → نجح
+- `pnpm --filter fawrun-api db:generate` → نجح
+- `pnpm --filter @fawrun/shared-types lint` → نجح
+- `pnpm --filter fawrun-api lint` → نجح
+- `pnpm --filter fawrun-api exec tsc --noEmit -p tsconfig.json` → نجح
+- `pnpm --filter fawrun-api test` → 7 ملفات و148 اختبارًا ناجحًا
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء في التحقق الحالي
+
+### 2026-09-15 21:34 — مزامنة قيد preferredRunner مع قاعدة البيانات
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/prisma/schema.prisma` — إضافة `onDelete: SetNull` إلى علاقة `Order.preferredRunner`
+
+**السبب:**
+معالجة F-8 ومنع فشل FK عند حذف Runner، مع ملاحظة أن migration الأولية كانت تحتوي فعليًا على `ON DELETE SET NULL` وأن التعديل الحالي يزيل الانحراف بين schema وSQL.
+
+**الأوامر والنتائج:**
+- `pnpm --filter fawrun-api exec prisma validate` → نجح
+- `pnpm --filter fawrun-api db:generate` → نجح
+
+**الأخطاء والحلول:**
+- لا يلزم إنشاء migration جديدة لأن قيد قاعدة البيانات موجود بالفعل في migration الأولية
+
+### 2026-09-15 21:05 — بدء تنفيذ خطة التدقيق الفني الكامل
+
+**الملفات والدوال المعدّلة:**
+- `CHANGELOG.md` — توثيق بدء تنفيذ الخطة وبوابات السلامة
+
+**السبب:**
+بدء تنفيذ خطة `1789453842444-fawrun-audit-report.md` بعد فحص حالة المستودع، مع الحفاظ على التعديلات السابقة في `orders.gateway.ts` و`kilo.json`.
+
+**الأوامر والنتائج:**
+- `git status --short --branch` → الفرع `feature/sprint-2-order-core`، مع تعديلات سابقة غير تابعة لهذه الخطة
+- `git diff -- apps/api/src/websocket/gateways/orders.gateway.ts kilo.json` → تم فحص التعديلات السابقة قبل أي تغيير جديد
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تنفيذية حتى هذه المرحلة
+
+### 2026-09-15 21:04 — تفعيل بوابات سلامة نطاق التدقيق
+
+**الملفات والدوال المعدّلة:**
+- لا توجد تعديلات ملفات
+
+**السبب:**
+تحميل وتطبيق `pre-sprint-checklist` و`fawrun-domain-gate` و`api-contract-security` و`rollback-plan` و`auto-changelog` قبل التخطيط أو تنفيذ تغييرات الحالات والعمليات المالية والعقود.
+
+**الأوامر والنتائج:**
+- مهارات FAWRUN المطلوبة → تم تحميلها بنجاح
+
+**الأخطاء والحلول:**
+- لا توجد نتائج حاسمة أو معوقات في مرحلة التحميل
+
+
 ### 2026-09-14 13:00 — Runner status validation + VerifiedUserGuard on Admin endpoints
 
 **الملفات والدوال المعدّلة:**

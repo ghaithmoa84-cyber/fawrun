@@ -15,8 +15,12 @@ import {
   AdminOrdersQuerySchema,
   ApproveOrderSchema,
   CreateOrderSchema,
+  CuidParamSchema,
   CustomerOrdersQuerySchema,
+  DeliverOrderSchema,
   IdParamSchema,
+  MarkStoreSkippedSchema,
+  RunnerOrderStoreParamSchema,
   RejectOrderSchema,
   StartOrderReviewSchema,
 } from '@fawrun/shared-types';
@@ -24,9 +28,13 @@ import type {
   AdminOrdersQuery,
   ApproveOrderRequest,
   CreateOrderRequest,
+  CuidParamRequest,
   CustomerOrdersQuery,
+  DeliverOrderRequest,
   IdParamRequest,
+  MarkStoreSkippedRequest,
   RejectOrderRequest,
+  RunnerOrderStoreParamRequest,
   StartOrderReviewRequest,
 } from '@fawrun/shared-types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
@@ -162,6 +170,82 @@ export class OrdersController {
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.ordersService.assignRunner(params.id, user.userId, dto.runnerId);
+  }
+
+  @Get('runner/orders/:id/stores')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async listRunnerOrderStores(
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.listRunnerOrderStores(params.id, user.userId);
+  }
+
+  @Put('runner/orders/:id/start')
+  @Put('runner/orders/:id/pickup')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  async startOrder(
+    @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.startOrder(params.id, user.userId);
+  }
+
+  @Put('runner/orders/:id/stores/:storeId/purchase')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async purchaseStore(
+    @Param(new ZodValidationPipe(RunnerOrderStoreParamSchema))
+    params: RunnerOrderStoreParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.purchaseStore(
+      params.id,
+      params.storeId,
+      user.userId,
+    );
+  }
+
+  @Put('runner/orders/:id/stores/:storeId/skip')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async skipStore(
+    @Param(new ZodValidationPipe(RunnerOrderStoreParamSchema))
+    params: RunnerOrderStoreParamRequest,
+    @Body(new ZodValidationPipe(MarkStoreSkippedSchema))
+    dto: MarkStoreSkippedRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.skipStore(
+      params.id,
+      params.storeId,
+      user.userId,
+      dto,
+    );
+  }
+
+  @Put('runner/orders/:id/proceed-to-delivery')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 20, ttl: 60000 } })
+  async proceedToDelivery(
+    @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.proceedToDelivery(params.id, user.userId);
+  }
+
+  @Put('runner/orders/:id/deliver')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 10, ttl: 60000 } })
+  async deliverOrder(
+    @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
+    @Body(new ZodValidationPipe(DeliverOrderSchema))
+    dto: DeliverOrderRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.ordersService.deliverOrder(params.id, user.userId, dto);
   }
 
   @Put('admin/orders/:id/cancel')

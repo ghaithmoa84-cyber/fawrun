@@ -210,3 +210,88 @@ export type AdminOrderRejectionResult = {
   };
   customerId: string;
 };
+
+// ─────────────────────────────────────────────────────────────
+// Runner Order Actions (shared contracts)
+// ─────────────────────────────────────────────────────────────
+
+export const RunnerOrderStoreParamSchema = z.object({
+  id: z.string().cuid(),
+  storeId: z.string().cuid(),
+});
+
+export type RunnerOrderStoreParamRequest = z.infer<
+  typeof RunnerOrderStoreParamSchema
+>;
+
+export const MarkStoreSkippedSchema = z.object({
+  reason: z.string().trim().min(1).optional(),
+});
+
+export type MarkStoreSkippedRequest = z.infer<typeof MarkStoreSkippedSchema>;
+
+export const DeliverOrderSchema = z.object({
+  idempotencyKey: z.string().uuid(),
+});
+
+export type DeliverOrderRequest = z.infer<typeof DeliverOrderSchema>;
+
+export type RunnerOrderActionResponse = {
+  orderId: string;
+  orderNumber: string;
+  status: string;
+};
+
+export const RunnerOrderStoreItemSchema = z.object({
+  id: z.string(),
+  itemName: z.string(),
+  quantity: z.string(),
+  customStoreName: z.string().nullable(),
+  anyStore: z.boolean(),
+});
+
+export const RunnerOrderStoreSchema = z.object({
+  id: z.string(),
+  storeName: z.string(),
+  isAnyStore: z.boolean(),
+  status: z.enum(['PENDING', 'PURCHASED', 'SKIPPED']),
+  isExtra: z.boolean(),
+  addedBy: z.string().nullable(),
+  purchasedAt: z.date().nullable(),
+  items: z.array(RunnerOrderStoreItemSchema),
+});
+
+export type RunnerOrderStore = z.infer<typeof RunnerOrderStoreSchema>;
+
+export const RunnerOrderStoresResponseSchema = z.object({
+  orderId: z.string(),
+  orderNumber: z.string(),
+  status: z.string(),
+  stores: z.array(RunnerOrderStoreSchema),
+});
+
+export type RunnerOrderStoresResponse = z.infer<
+  typeof RunnerOrderStoresResponseSchema
+>;
+
+export const PurchaseStoreResponseSchema = z.object({
+  orderId: z.string(),
+  orderNumber: z.string(),
+  orderStore: z.object({
+    id: z.string(),
+    status: z.enum(['PURCHASED']),
+  }),
+  updatedFee: z.object({
+    baseFee: z.number(),
+    peripheralFee: z.number(),
+    extraStoresFee: z.number(),
+    totalFee: z.number(),
+    runnerShare: z.number(),
+    platformShare: z.number(),
+  }),
+  customerNotified: z.boolean(),
+});
+
+export type PurchaseStoreResponse = z.infer<
+  typeof PurchaseStoreResponseSchema
+>;
