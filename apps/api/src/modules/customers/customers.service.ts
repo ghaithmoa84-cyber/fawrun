@@ -77,6 +77,13 @@ export class CustomersService {
         data: updateData,
       });
 
+      if (dto.password !== undefined) {
+        await tx.refreshToken.updateMany({
+          where: { userId: customer.userId, isRevoked: false },
+          data: { isRevoked: true },
+        });
+      }
+
       await this.auditService.log(
         {
           actorId: customer.userId,
