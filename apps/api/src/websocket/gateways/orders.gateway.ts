@@ -57,7 +57,7 @@ export class OrdersGateway
 
       const user = await this.prisma.user.findUnique({
         where: { id: payload.sub },
-        select: { status: true, isDeleted: true },
+        select: { status: true, isDeleted: true, role: true },
       });
 
       if (!user || user.isDeleted || user.status !== 'VERIFIED') {
@@ -65,11 +65,11 @@ export class OrdersGateway
         return;
       }
 
-      if (payload.role === 'CUSTOMER') {
+      if (user.role === 'CUSTOMER') {
         client.join(`customer:${payload.sub}`);
-      } else if (payload.role === 'RUNNER') {
+      } else if (user.role === 'RUNNER') {
         client.join(`runner:${payload.sub}`);
-      } else if (payload.role === 'ADMIN') {
+      } else if (user.role === 'ADMIN') {
         client.join(`admin:all`);
       }
     } catch {

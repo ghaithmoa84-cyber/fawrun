@@ -118,10 +118,13 @@ export class RunnersService {
     }
 
     await this.prisma.$transaction(async (tx) => {
-      await tx.runner.update({
-        where: { userId },
+      const updated = await tx.runner.updateMany({
+        where: { userId, status: currentStatus },
         data: { status: newStatus },
       });
+      if (updated.count === 0) {
+        throw new ConflictException('RUNNER_STATUS_CHANGED_CONCURRENTLY');
+      }
 
       await this.auditService.log({
         actorId: userId,

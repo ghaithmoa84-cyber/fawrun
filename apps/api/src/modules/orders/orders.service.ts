@@ -153,14 +153,20 @@ export class OrdersService {
           'CUSTOMER',
         );
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             orderNumber: `${CONFIG.ORDER_NUMBER_PREFIX}-${String(
               order.seqNumber,
             ).padStart(CONFIG.ORDER_NUMBER_PAD_LENGTH, '0')}`,
             status: transitionResult.to,
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         for (const store of orderStoresData) {
@@ -429,13 +435,19 @@ export class OrdersService {
           'CUSTOMER',
         );
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             status: transitionResult.to,
             cancelledByUserId: userId,
             cancelledAt: new Date(),
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         if (order.runnerId) {
@@ -759,8 +771,8 @@ export class OrdersService {
           oldFee.extraStoresFee !== newFee.extraStoresFee ||
           oldFee.totalFee !== newFee.totalFee;
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             isPeripheral: dto.isPeripheral,
             status: transitionResult.to,
@@ -774,6 +786,12 @@ export class OrdersService {
                 }
               : {}),
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         await this.auditService.log(
@@ -915,14 +933,20 @@ export class OrdersService {
           'ADMIN',
         );
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             status: transitionResult.to,
             cancelledByUserId: adminId,
             cancelledAt: new Date(),
             cancelReason: dto.cancelReason ?? null,
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         await this.auditService.log(
@@ -1001,12 +1025,18 @@ export class OrdersService {
           'ADMIN',
         );
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             status: transitionResult.to,
             reviewedAt: new Date(),
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         await this.auditService.log(
@@ -1103,13 +1133,19 @@ export class OrdersService {
           throw new UnprocessableEntityException('RUNNER_NOT_AVAILABLE');
         }
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updatedOrder = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             status: transitionResult.to,
             runnerId,
             assignedAt: new Date(),
           },
+        });
+        if (updatedOrder.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const orderRecord = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         await this.auditService.log(
@@ -1129,7 +1165,7 @@ export class OrdersService {
           tx,
         );
 
-        return { order: updatedOrder };
+        return { order: orderRecord };
       },
       { timeout: 15000 },
     );
@@ -1187,14 +1223,20 @@ export class OrdersService {
           'ADMIN',
         );
 
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             status: transitionResult.to,
             cancelledByUserId: adminId,
             cancelledAt: new Date(),
             cancelReason: cancelReason ?? null,
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         if (order.runnerId) {
@@ -1348,9 +1390,15 @@ export class OrdersService {
           'RUNNER',
           { actorId: runnerUserId },
         );
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: { status: transitionResult.to, startedAt: new Date() },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         await this.auditService.log(
@@ -1446,16 +1494,19 @@ export class OrdersService {
           'RUNNER',
           { actorId: runnerUserId },
         );
-        await tx.orderStore.update({
-          where: { id: store.id },
+        const updated = await tx.orderStore.updateMany({
+          where: { id: store.id, status: store.status },
           data: { status: transitionResult.to, purchasedAt: new Date() },
         });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
 
         const feeResult = await this.pricingService.recalculateFee(order.id, tx);
-        const updatedOrder = await tx.order.findUnique({
+        const updatedOrder = await tx.order.findUniqueOrThrow({
           where: { id: order.id },
         });
-        const updatedStore = await tx.orderStore.findUnique({
+        const updatedStore = await tx.orderStore.findUniqueOrThrow({
           where: { id: store.id },
         });
         if (!updatedOrder || !updatedStore) {
@@ -1565,9 +1616,15 @@ export class OrdersService {
           'RUNNER',
           { actorId: runnerUserId },
         );
-        const updatedStore = await tx.orderStore.update({
-          where: { id: store.id },
+        const updated = await tx.orderStore.updateMany({
+          where: { id: store.id, status: store.status },
           data: { status: transitionResult.to },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedStore = await tx.orderStore.findUniqueOrThrow({
+          where: { id: store.id },
         });
         await this.auditService.log(
           {
@@ -1654,10 +1711,17 @@ export class OrdersService {
           'RUNNER',
           { actorId: runnerUserId },
         );
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: { status: transitionResult.to },
         });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
+        });
+
         await this.auditService.log(
           {
             orderId: order.id,
@@ -1780,7 +1844,7 @@ export class OrdersService {
             );
             if (current.idempotencyKey === dto.idempotencyKey) {
               return {
-            order: current,
+            order: current!,
             idempotent: true,
             ledgerEntries: [],
             runnerId: current.runnerId,
@@ -1799,12 +1863,18 @@ export class OrdersService {
         );
         const feeResult: RecalculateFeeResult =
           await this.pricingService.recalculateFee(order.id, tx);
-        const updatedOrder = await tx.order.update({
-          where: { id: order.id },
+        const updated = await tx.order.updateMany({
+          where: { id: order.id, status: order.status },
           data: {
             status: transitionResult.to,
             deliveredAt: new Date(),
           },
+        });
+        if (updated.count === 0) {
+          throw new ConflictException('ORDER_STATUS_CHANGED_CONCURRENTLY');
+        }
+        const updatedOrder = await tx.order.findUniqueOrThrow({
+          where: { id: order.id },
         });
 
         if (!order.runnerId || !order.runner) {
@@ -1923,19 +1993,19 @@ export class OrdersService {
           result.customerId!,
           'order:delivered',
           {
-            orderId: result.order.id,
-            deliveredAt: result.order.deliveredAt,
+            orderId: result.order!.id,
+            deliveredAt: result.order!.deliveredAt,
           },
         );
         await this.notificationsService.emitToRunner(
           result.runnerId!,
           'order:delivered',
-          { orderId: result.order.id },
+          { orderId: result.order!.id },
         );
         await this.notificationsService.emitToAdmin('order:status_changed', {
-          orderId: result.order.id,
-          orderNumber: result.order.orderNumber,
-          status: result.order.status,
+          orderId: result.order!.id,
+          orderNumber: result.order!.orderNumber,
+          status: result.order!.status,
         });
       } catch {
         void 0;
@@ -1943,13 +2013,13 @@ export class OrdersService {
     }
 
     return {
-      orderId: result.order.id,
-      orderNumber: result.order.orderNumber!,
-      status: result.order.status,
+      orderId: result.order!.id,
+      orderNumber: result.order!.orderNumber!,
+      status: result.order!.status,
       idempotent: result.idempotent,
       ledgerEntries: result.ledgerEntries ?? [],
-      runnerId: result.order.runnerId,
-      customerId: result.order.customerId,
+      runnerId: result.order!.runnerId,
+      customerId: result.order!.customerId,
     };
   }
 
