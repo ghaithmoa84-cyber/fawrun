@@ -66,3 +66,9 @@ export const ErrorResponseSchema = z.object({
 });
 
 export type ErrorResponse = z.infer<typeof ErrorResponseSchema>;
+
+export const LogoutSchema = z.object({
+  refreshToken: z.string().min(1),
+});
+
+export type LogoutDto = z.infer<typeof LogoutSchema>;

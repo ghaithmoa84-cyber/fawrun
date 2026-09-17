@@ -100,7 +100,7 @@ model RefreshToken {
   userId      String
   user        User     @relation(fields: [userId], references: [id])
   selector    String   @unique
-  tokenHash   String
+  tokenHash   String   @unique
   deviceInfo  String?
   isRevoked   Boolean  @default(false)
   createdAt   DateTime @default(now())
@@ -341,6 +341,7 @@ model Rating {
   isFinal   Boolean  @default(false)
 
   @@unique([orderId, customerId])
+  @@unique([orderId, runnerId])
   @@index([orderId])
 }
 

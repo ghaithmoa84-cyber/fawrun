@@ -10,12 +10,13 @@ import {
   type LedgerQuery,
 } from '@fawrun/shared-types';
 import { Roles } from '../../common/decorators/roles.decorator.js';
+import { VerifiedUserGuard } from '../../common/guards/jwt-auth.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { LedgerService } from './ledger.service.js';
 
 @Controller()
-@UseGuards(RolesGuard)
+@UseGuards(VerifiedUserGuard, RolesGuard)
 export class LedgerController {
   constructor(private readonly ledgerService: LedgerService) {}
 
