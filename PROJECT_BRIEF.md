@@ -415,7 +415,7 @@ Sprint 5 - Frontends (3 weeks)
   - Order details: status tracking, stores, items, runner
   - Rating: send/edit runner rating (stars + note)
   - Account: profile, change password, address
-  Uses the same /customer/* endpoints from section 9.2.
+  Uses the same /customer/* endpoints from section 8.
   No online payments, no store catalog - stores are free text.
 
 Sprint 6 - QA + Launch (1 week)
