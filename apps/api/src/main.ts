@@ -35,6 +35,8 @@ async function bootstrap(): Promise<void> {
 
   app.useGlobalFilters(new AllExceptionsFilter());
 
+  app.enableShutdownHooks();
+
   const port = process.env.PORT ?? 3000;
   await app.listen(port);
   console.log(`FAWRUN API listening on http://localhost:${port}/api/v1`);

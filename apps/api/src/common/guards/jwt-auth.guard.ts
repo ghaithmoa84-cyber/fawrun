@@ -8,6 +8,7 @@ import { Reflector } from '@nestjs/core';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
+import { UsersService } from '../../modules/users/users.service.js';
 
 export interface JwtPayload {
   sub: string;
@@ -28,9 +29,10 @@ export class JwtAuthGuard implements CanActivate {
   constructor(
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
+    private readonly usersService: UsersService,
   ) {}
 
-  canActivate(context: ExecutionContext): boolean {
+  async canActivate(context: ExecutionContext): Promise<boolean> {
     const isPublic = this.reflector.getAllAndOverride<boolean>(IS_PUBLIC_KEY, [
       context.getHandler(),
       context.getClass(),
@@ -48,16 +50,23 @@ export class JwtAuthGuard implements CanActivate {
 
     const token = authHeader.substring(7);
 
+    let payload: JwtPayload;
     try {
-      const payload = this.jwtService.verify<JwtPayload>(token);
-      request.user = {
-        userId: payload.sub,
-        role: payload.role,
-        status: payload.status,
-      };
+      payload = this.jwtService.verify<JwtPayload>(token);
     } catch {
       throw new UnauthorizedException('Invalid or expired token');
     }
+
+    const user = await this.usersService.findLeanById(payload.sub);
+    if (!user || user.isDeleted) {
+      throw new UnauthorizedException('User not found or deleted');
+    }
+
+    request.user = {
+      userId: user.id,
+      role: user.role,
+      status: user.status,
+    };
 
     return true;
   }

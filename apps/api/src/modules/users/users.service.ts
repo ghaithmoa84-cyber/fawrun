@@ -15,6 +15,13 @@ export class UsersService {
     private readonly notificationsService: NotificationsService,
   ) {}
 
+  async findLeanById(id: string): Promise<{ id: string; role: string; status: string; isDeleted: boolean } | null> {
+    return this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, status: true, isDeleted: true },
+    });
+  }
+
   async findAll(page: number, limit: number) {
     const [total, data] = await Promise.all([
       this.prisma.user.count({

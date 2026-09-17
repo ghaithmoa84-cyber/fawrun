@@ -105,6 +105,7 @@ model RefreshToken {
   isRevoked   Boolean  @default(false)
   createdAt   DateTime @default(now())
   revokedAt   DateTime?
+  expiresAt   DateTime
 
   @@index([userId, isRevoked])
 }
@@ -209,7 +210,7 @@ model Order {
 
   // المندوب المفضل — ربط رسمي بجدول Runner
   preferredRunnerId   String?
-  preferredRunner     Runner? @relation("PreferredRunner", fields: [preferredRunnerId], references: [id])
+  preferredRunner     Runner? @relation("PreferredRunner", fields: [preferredRunnerId], references: [id], onDelete: SetNull)
   waitForPreferred    Boolean @default(false)
 
   notes             String?
@@ -226,6 +227,8 @@ model Order {
   startedAt    DateTime?
   deliveredAt  DateTime?
   cancelledAt  DateTime?
+
+  idempotencyKey String? @unique
 
   items          OrderItem[]
   orderStores    OrderStore[]
@@ -357,8 +360,8 @@ model LedgerEntry {
   meta        Json?
 
   createdAt   DateTime @default(now())
-  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only لا يُعدّل
-  // Database-level append-only protection via @@index and triggers (handled in migration)
+  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only: الإضافة فقط، لا حذف أو تعديل
+  // Append-only enforced at the application layer; no database-level triggers are active.
 
   @@index([orderId])
   @@index([runnerId, type])
@@ -419,8 +422,8 @@ model AuditLog {
   meta       Json?
 
   createdAt  DateTime @default(now())
-  // ⚠️ لا يوجد updatedAt — هذا الجدول لا يُعدّل أبداً
-  // Database-level append-only protection via @@index and triggers (handled in migration)
+  // ⚠️ لا يوجد updatedAt — هذا الجدول Append-Only: الإضافة فقط، لا حذف أو تعديل
+  // Append-only enforced at the application layer; no database-level triggers are active.
 
   @@index([orderId, createdAt])
   @@index([event, createdAt])

@@ -28,11 +28,13 @@ export type OrderStatusChangedPayload = {
   orderNumber: string;
   newStatus: string;
   oldStatus: string;
+  sound?: SoundType;
 };
 
 export type OrderRunnerAssignedPayload = {
   orderId: string;
   runnerName: string;
+  sound?: SoundType;
 };
 
 export type OrderFeeUpdatedPayload = {
@@ -40,30 +42,36 @@ export type OrderFeeUpdatedPayload = {
   oldFee: number;
   newFee: number;
   reason: string;
+  sound?: SoundType;
 };
 
 export type OrderStorePurchasedPayload = {
   orderId: string;
   storeName: string;
+  sound?: SoundType;
 };
 
 export type OrderOutForDeliveryPayload = {
   orderId: string;
+  sound?: SoundType;
 };
 
 export type OrderDeliveredPayload = {
   orderId: string;
   deliveredAt: string;
+  sound?: SoundType;
 };
 
 export type OrderCancelledPayload = {
   orderId: string;
   reason: string;
   cancelledBy: string;
+  sound?: SoundType;
 };
 
 export type AccountVerifiedPayload = {
   message: string;
+  sound?: SoundType;
 };
 
 export type OrderAssignedPayload = {
@@ -88,15 +96,18 @@ export type OrderAssignedPayload = {
     totalFee: number;
     note: string;
   };
+  sound?: SoundType;
 };
 
 export type OrderReassignedPayload = {
   orderId: string;
+  sound?: SoundType;
 };
 
 export type OrderAssignmentCancelledPayload = {
   orderId: string;
   reason: string;
+  sound?: SoundType;
 };
 
 export type OrderNewPayload = {
@@ -104,22 +115,26 @@ export type OrderNewPayload = {
   orderNumber: string;
   customerName: string;
   itemCount: number;
+  sound?: SoundType;
 };
 
 export type OrderNeedsAttentionPayload = {
   orderId: string;
   reason: string;
+  sound?: SoundType;
 };
 
 export type UserNewRegistrationPayload = {
   userId: string;
   userName: string;
   whatsapp: string;
+  sound?: SoundType;
 };
 
 export type SettlementReminderPayload = {
   date: string;
   pendingRunnerCount: number;
+  sound?: SoundType;
 };
 
 export type SoundType = 'new_order' | 'status_update' | 'urgent' | 'success';
