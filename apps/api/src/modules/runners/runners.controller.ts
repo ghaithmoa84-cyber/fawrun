@@ -5,7 +5,6 @@ import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
-import { CONFIG } from '@fawrun/shared-constants';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import {
   CreateRunnerSchema,
@@ -18,6 +17,13 @@ import {
   type RunnerStatusUpdate,
 } from '@fawrun/shared-types';
 import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
+import { z } from 'zod';
+
+const PaginationQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).default(1),
+  limit: z.coerce.number().int().min(1).max(100).default(20),
+});
+type PaginationQueryRequest = z.infer<typeof PaginationQuerySchema>;
 
 @Controller('admin/runners')
 @UseGuards(VerifiedUserGuard, RolesGuard)
@@ -27,15 +33,9 @@ export class RunnersController {
 
   @Get()
   async findAll(
-    @Query('page') page: number = 1,
-    @Query('limit') limit: number = CONFIG.PAGINATION_DEFAULT_LIMIT,
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQueryRequest,
   ) {
-    const pageNum = Math.max(1, Number(page) || 1);
-    const limitNum = Math.min(
-      CONFIG.PAGINATION_MAX_LIMIT,
-      Math.max(1, Number(limit) || CONFIG.PAGINATION_DEFAULT_LIMIT),
-    );
-    return this.runnersService.findAll(pageNum, limitNum);
+    return this.runnersService.findAll(query.page, query.limit);
   }
 
   @Post()

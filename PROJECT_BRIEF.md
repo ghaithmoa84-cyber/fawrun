@@ -99,7 +99,7 @@ From OUT_FOR_DELIVERY:
   - [runner taps delivered] -> DELIVERED (final)
 
 Strict rules:
-- Customer can cancel only until ASSIGNED.
+- Customer can cancel from PENDING_REVIEW and ASSIGNED only.
 - After IN_PROGRESS, cancellation is admin-only.
 - DELIVERED is final - no reversal in the app.
 - Every transition is logged to AuditLog with actor + timestamp.
@@ -133,7 +133,7 @@ ON_MISSION -> [order reaches DELIVERED or CANCELLED] -> AVAILABLE (automatic)
 | Create order | Yes (own account only) | No | Yes |
 | View order details | own orders only | own orders only | all |
 | Change order status | limited | limited | Yes |
-| Cancel order | Yes (before IN_PROGRESS) | No | Yes |
+| Cancel order | Yes (PENDING_REVIEW, ASSIGNED) | No | Yes |
 | Activate customer account | No | No | Yes |
 | Create runner account | No | No | Yes |
 | View Ledger | No | limited (own share) | Yes |
@@ -444,7 +444,7 @@ Sprint 6 - QA + Launch (1 week)
 ## 16. Current Status (as of 2026-09-11)
 
 - Sprint 1 is COMPLETE - all 13 sub-tasks done.
-- 15 endpoints implemented (auth + admin users/runners).
+- 13 endpoints implemented (auth + admin users/runners).
 - Prisma schema, WebSocket gateway, rate limiting, CORS all in place.
 - No blockers.
 - Next: start Sprint 2 (Order State Machine, order creation, Pricing Engine).

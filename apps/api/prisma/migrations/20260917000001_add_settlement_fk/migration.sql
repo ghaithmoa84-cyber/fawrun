@@ -12,13 +12,13 @@ DO $$ BEGIN
   END IF;
 END $$;
 
-DO $$ BEGIN
-  IF NOT EXISTS (
-    SELECT 1 FROM pg_constraint
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM pg_constraint 
     WHERE conname = 'Settlement_closedByAdminId_fkey'
-    AND NOT convalidated
   ) THEN
-    ALTER TABLE "Settlement"
-    VALIDATE CONSTRAINT "Settlement_closedByAdminId_fkey";
+    ALTER TABLE "Settlement" 
+      VALIDATE CONSTRAINT "Settlement_closedByAdminId_fkey";
   END IF;
 END $$;
