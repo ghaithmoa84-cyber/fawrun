@@ -262,31 +262,20 @@ export class RunnerOrdersService {
       { timeout: 15000 },
     );
 
+    let customerNotified = false;
     try {
       await this.notificationsService.emitToCustomer(
         result.order.customerId,
         'order:store_purchased',
-        {
-          orderId: result.order.id,
-          storeName: result.orderStore.storeName,
-        },
+        { orderId: result.order.id, storeName: result.orderStore.storeName },
       );
-      if (result.fee.runnerShare || result.fee.platformShare) {
-        await this.notificationsService.emitToCustomer(
-          result.order.customerId,
-          'order:fee_updated',
-          {
-            orderId: result.order.id,
-            orderNumber: result.order.orderNumber,
-            newFee: result.fee,
-            reason: 'STORE_PURCHASED',
-          },
-        );
-      }
+      customerNotified = true;
     } catch (error) {
-      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
+      this.logger.warn('Customer notification failed', {
+        error,
+        orderId: result.order.id,
+      });
     }
-
     return {
       orderId: result.order.id,
       orderNumber: result.order.orderNumber!,
@@ -295,7 +284,7 @@ export class RunnerOrdersService {
         status: 'PURCHASED' as const,
       },
       updatedFee: result.fee,
-      customerNotified: true,
+      customerNotified,
     };
   }
 

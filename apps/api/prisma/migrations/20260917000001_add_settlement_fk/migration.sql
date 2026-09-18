@@ -3,7 +3,7 @@ DO $$ BEGIN
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conname = 'Settlement_closedByAdminId_fkey'
-      AND conrelid = 'Settlement'::regclass
+      AND conrelid = '"Settlement"'::regclass
   ) THEN
     ALTER TABLE "Settlement"
     ADD CONSTRAINT "Settlement_closedByAdminId_fkey"
@@ -18,7 +18,7 @@ BEGIN
   IF EXISTS (
     SELECT 1 FROM pg_constraint 
     WHERE conname = 'Settlement_closedByAdminId_fkey'
-      AND conrelid = 'Settlement'::regclass
+      AND conrelid = '"Settlement"'::regclass
   ) THEN
     ALTER TABLE "Settlement" 
       VALIDATE CONSTRAINT "Settlement_closedByAdminId_fkey";

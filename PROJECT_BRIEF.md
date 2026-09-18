@@ -306,6 +306,7 @@ closeSettlementDay(date, adminId):
      (RUNNER_SHARE 75%, PLATFORM_SHARE 25%)
   4. Log AuditLog
   5. Notify admin via WebSocket
+  ⚠️ TODO (Sprint 4): قبل early return للـ Settlement الموجود، تحقق من DELIVERED orders التي لا تملك SettlementItems وأضفها قبل تخطي الـ runner.
   Idempotent: if a Settlement already exists for this runner + date, skip.
 
 operationalDate (the business day):
