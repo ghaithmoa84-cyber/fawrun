@@ -6,7 +6,10 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
 import { PricingModule } from '../pricing/pricing.module.js';
 import { StateMachineModule } from '../../state-machine/state-machine.module.js';
 import { OrdersController } from './orders.controller.js';
-import { OrdersService } from './orders.service.js';
+import { CustomerOrdersService } from './services/customer-orders.service.js';
+import { AdminOrderQueryService } from './services/admin-order-query.service.js';
+import { AdminOrderCommandService } from './services/admin-order-command.service.js';
+import { RunnerOrdersService } from './services/runner-orders.service.js';
 
 @Module({
   imports: [
@@ -18,6 +21,11 @@ import { OrdersService } from './orders.service.js';
     StateMachineModule,
   ],
   controllers: [OrdersController],
-  providers: [OrdersService],
+  providers: [
+    CustomerOrdersService,
+    AdminOrderQueryService,
+    AdminOrderCommandService,
+    RunnerOrdersService,
+  ],
 })
 export class OrdersModule {}

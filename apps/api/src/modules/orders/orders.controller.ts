@@ -42,7 +42,10 @@ import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';
 import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
-import { OrdersService } from './orders.service.js';
+import { CustomerOrdersService } from './services/customer-orders.service.js';
+import { AdminOrderQueryService } from './services/admin-order-query.service.js';
+import { AdminOrderCommandService } from './services/admin-order-command.service.js';
+import { RunnerOrdersService } from './services/runner-orders.service.js';
 
 const AssignRunnerSchema = z.object({
   runnerId: z.string().min(1, 'Runner ID is required'),
@@ -58,7 +61,12 @@ type CancelOrderRequest = z.infer<typeof CancelOrderSchema>;
 @Controller()
 @UseGuards(VerifiedUserGuard, RolesGuard)
 export class OrdersController {
-  constructor(private readonly ordersService: OrdersService) {}
+  constructor(
+    private readonly customerOrdersService: CustomerOrdersService,
+    private readonly adminOrderQueryService: AdminOrderQueryService,
+    private readonly adminOrderCommandService: AdminOrderCommandService,
+    private readonly runnerOrdersService: RunnerOrdersService,
+  ) {}
 
   @Post('customer/orders')
   @Roles('CUSTOMER')
@@ -67,7 +75,7 @@ export class OrdersController {
     @Body(new ZodValidationPipe(CreateOrderSchema)) dto: CreateOrderRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.createOrder(user.userId, dto);
+    return this.customerOrdersService.createOrder(user.userId, dto);
   }
 
   @Get('customer/orders')
@@ -77,7 +85,7 @@ export class OrdersController {
     query: CustomerOrdersQuery,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.listCustomerOrders(
+    return this.customerOrdersService.listCustomerOrders(
       user.userId,
       query.page,
       query.limit,
@@ -91,7 +99,7 @@ export class OrdersController {
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.getOrderDetails(params.id, user.userId);
+    return this.customerOrdersService.getOrderDetails(params.id, user.userId);
   }
 
   @Delete('customer/orders/:id')
@@ -100,7 +108,7 @@ export class OrdersController {
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.cancelOrder(params.id, user.userId);
+    return this.customerOrdersService.cancelOrder(params.id, user.userId);
   }
 
   @Get('admin/orders')
@@ -109,7 +117,7 @@ export class OrdersController {
     @Query(new ZodValidationPipe(AdminOrdersQuerySchema))
     query: AdminOrdersQuery,
   ) {
-    return this.ordersService.listAdminOrders(query);
+    return this.adminOrderQueryService.listAdminOrders(query);
   }
 
   @Get('admin/orders/:id/audit')
@@ -117,7 +125,7 @@ export class OrdersController {
   async getAdminOrderAudit(
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
   ) {
-    return this.ordersService.getAdminOrderAudit(params.id);
+    return this.adminOrderQueryService.getAdminOrderAudit(params.id);
   }
 
   @Get('admin/orders/:id')
@@ -125,7 +133,7 @@ export class OrdersController {
   async getAdminOrderDetails(
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
   ) {
-    return this.ordersService.getAdminOrderDetails(params.id);
+    return this.adminOrderQueryService.getAdminOrderDetails(params.id);
   }
 
   @Put('admin/orders/:id/approve')
@@ -136,7 +144,7 @@ export class OrdersController {
     dto: ApproveOrderRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.approveOrder(params.id, user.userId, dto);
+    return this.adminOrderCommandService.approveOrder(params.id, user.userId, dto);
   }
 
   @Put('admin/orders/:id/reject')
@@ -147,7 +155,7 @@ export class OrdersController {
     dto: RejectOrderRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.rejectOrder(params.id, user.userId, dto);
+    return this.adminOrderCommandService.rejectOrder(params.id, user.userId, dto);
   }
 
   @Put('admin/orders/:id/start-review')
@@ -158,7 +166,7 @@ export class OrdersController {
     dto: StartOrderReviewRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.startOrderReview(params.id, user.userId, dto);
+    return this.adminOrderCommandService.startOrderReview(params.id, user.userId, dto);
   }
 
   @Put('admin/orders/:id/assign-runner')
@@ -169,7 +177,7 @@ export class OrdersController {
     dto: AssignRunnerRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.assignRunner(params.id, user.userId, dto.runnerId);
+    return this.adminOrderCommandService.assignRunner(params.id, user.userId, dto.runnerId);
   }
 
   @Get('runner/orders/:id/stores')
@@ -179,7 +187,7 @@ export class OrdersController {
     @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.listRunnerOrderStores(params.id, user.userId);
+    return this.runnerOrdersService.listRunnerOrderStores(params.id, user.userId);
   }
 
   @Put('runner/orders/:id/start')
@@ -189,7 +197,7 @@ export class OrdersController {
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.startOrder(params.id, user.userId);
+    return this.runnerOrdersService.startOrder(params.id, user.userId);
   }
 
   @Put('runner/orders/:id/stores/:storeId/purchase')
@@ -200,7 +208,7 @@ export class OrdersController {
     params: RunnerOrderStoreParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.purchaseStore(
+    return this.runnerOrdersService.purchaseStore(
       params.id,
       params.storeId,
       user.userId,
@@ -217,7 +225,7 @@ export class OrdersController {
     dto: MarkStoreSkippedRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.skipStore(
+    return this.runnerOrdersService.skipStore(
       params.id,
       params.storeId,
       user.userId,
@@ -232,7 +240,7 @@ export class OrdersController {
     @Param(new ZodValidationPipe(IdParamSchema)) params: IdParamRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.proceedToDelivery(params.id, user.userId);
+    return this.runnerOrdersService.proceedToDelivery(params.id, user.userId);
   }
 
   @Put('runner/orders/:id/deliver')
@@ -244,7 +252,7 @@ export class OrdersController {
     dto: DeliverOrderRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.deliverOrder(params.id, user.userId, dto);
+    return this.runnerOrdersService.deliverOrder(params.id, user.userId, dto);
   }
 
   @Put('admin/orders/:id/cancel')
@@ -255,7 +263,7 @@ export class OrdersController {
     dto: CancelOrderRequest,
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
-    return this.ordersService.cancelOrderAdmin(
+    return this.adminOrderCommandService.cancelOrderAdmin(
       params.id,
       user.userId,
       dto.cancelReason,
