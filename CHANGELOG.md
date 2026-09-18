@@ -48,6 +48,22 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-18 16:12 — Sprint 3 PR Created
+
+**السبب:**
+إنهاء موسم Sprint 3 وإنشاء PR على GitHub للمراجعة.
+
+**الأوامر والنتائج:**
+- `git add -A && git commit -m "feat: Sprint 3 - Runner execution flow..."` → نجح (53 files changed, commit 9134fda)
+- `git push origin feature/sprint-3-runner-endpoints` → نجح
+- `gh pr create --title "feat: Sprint 3 — Runner Execution Flow"` → نجح
+- PR URL: https://github.com/ghaithmoa84-cyber/fawrun/pull/5
+- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test` → All passed (4/4 packages build, 0 type errors, 0 lint errors, 148/148 tests)
+
+**الأخطاء والحلول:**
+- `App.css` was re-added by `git add -A` after being untracked; deleted from filesystem and committed removal
+- `.gitignore` updated to exclude `dev-dist/` build artifacts
+
 ### 2026-09-18 15:52 — Runner PWA scaffold: install + build fixes
 
 **الملفات والدوال المعدّلة:**
