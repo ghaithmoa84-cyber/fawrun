@@ -1,7 +1,8 @@
 import {
-  Injectable,
-  NotFoundException,
   ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import type { OrderStatus, OrderStoreStatus } from '@fawrun/shared-constants';
@@ -32,6 +33,8 @@ export class RunnerOrdersService {
     private readonly orderStoreStateMachine: OrderStoreStateMachine,
     private readonly runnerStateMachine: RunnerStateMachine,
   ) {}
+
+  private readonly logger = new Logger(RunnerOrdersService.name);
 
   async listRunnerOrderStores(
     orderId: string,
@@ -164,8 +167,8 @@ export class RunnerOrdersService {
         orderNumber: result.order.orderNumber,
         status: result.order.status,
       });
-    } catch {
-      void 0;
+    } catch (error) {
+      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
 
     return {
@@ -280,8 +283,8 @@ export class RunnerOrdersService {
           },
         );
       }
-    } catch {
-      void 0;
+    } catch (error) {
+      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
 
     return {
@@ -378,8 +381,8 @@ export class RunnerOrdersService {
           storeName: result.orderStore.storeName,
         },
       );
-    } catch {
-      void 0;
+    } catch (error) {
+      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
 
     return {
@@ -471,8 +474,8 @@ export class RunnerOrdersService {
         orderNumber: result.order.orderNumber,
         status: result.order.status,
       });
-    } catch {
-      void 0;
+    } catch (error) {
+      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
 
     return {
@@ -727,8 +730,8 @@ export class RunnerOrdersService {
           orderNumber: result.order!.orderNumber,
           status: result.order!.status,
         });
-      } catch {
-        void 0;
+      } catch (error) {
+        this.logger.warn('Notification emit failed', { error, orderId: result.order!.id });
       }
     }
 

@@ -1,8 +1,9 @@
 import {
-  Injectable,
-  NotFoundException,
-  ForbiddenException,
+  BadRequestException,
   ConflictException,
+  Injectable,
+  Logger,
+  NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import type { OrderStatus } from '@fawrun/shared-constants';
@@ -40,6 +41,8 @@ export class CustomerOrdersService {
     private readonly runnerStateMachine: RunnerStateMachine,
   ) {}
 
+  private readonly logger = new Logger(CustomerOrdersService.name);
+
   async createOrder(
     userId: string,
     dto: CreateOrderRequest,
@@ -58,7 +61,7 @@ export class CustomerOrdersService {
         ? '__any_store__'
         : (item.customStoreName ?? '').trim();
       if (!key) {
-        throw new ForbiddenException(
+        throw new BadRequestException(
           'Item customStoreName is required when anyStore is false',
         );
       }
@@ -212,8 +215,8 @@ export class CustomerOrdersService {
         status: result.order.status,
         totalFee: result.fee.totalFee,
       });
-    } catch {
-      void 0;
+    } catch (error) {
+      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
 
     return {
@@ -467,8 +470,8 @@ export class CustomerOrdersService {
         orderNumber: result.order.orderNumber,
         status: result.order.status,
       });
-    } catch {
-      void 0;
+    } catch (error) {
+      this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
 
     return {

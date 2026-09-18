@@ -8,8 +8,8 @@ DO $$ BEGIN
     ALTER TABLE "Settlement"
     ADD CONSTRAINT "Settlement_closedByAdminId_fkey"
     FOREIGN KEY ("closedByAdminId") REFERENCES "Admin"("id")
-    NOT VALID
-    ON DELETE SET NULL ON UPDATE CASCADE;
+    ON DELETE SET NULL ON UPDATE CASCADE
+    NOT VALID;
   END IF;
 END $$;
 

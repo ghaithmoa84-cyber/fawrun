@@ -113,6 +113,20 @@ export type AdminOrderListItem = {
   cancelledAt: Date | null;
 };
 
+export interface AdminOrderStoreReceipt {
+  id: string;
+  orderStoreId: string;
+  imageUrl: string;
+  r2Key: string;
+  isDeleted: boolean;
+  deletedAt: Date | null;
+  uploadedAt: Date;
+}
+
+export interface AdminOrderStore extends CustomerOrderStore {
+  receipts: AdminOrderStoreReceipt[];
+}
+
 export type AdminOrderDetails = {
   id: string;
   orderNumber: string;
@@ -151,7 +165,7 @@ export type AdminOrderDetails = {
     notes: string | null;
   } | null;
   items: CustomerOrderItem[];
-  orderStores: CustomerOrderStore[];
+   orderStores: AdminOrderStore[];
   ratings: Array<{
     id: string;
     orderId: string;

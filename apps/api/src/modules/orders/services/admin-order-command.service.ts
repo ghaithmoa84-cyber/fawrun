@@ -67,7 +67,7 @@ export class AdminOrderCommandService {
 
         const newFee = this.pricingService.calculateFee({
           isPeripheral: dto.isPeripheral,
-          purchasedStoreCount: 0,
+          purchasedStoreCount: order.orderStores.length,
         });
         const oldFee = {
           baseFee: order.baseFee,

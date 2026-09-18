@@ -55,12 +55,13 @@ Package manager: pnpm 9 + Turborepo 2
 - LedgerEntryType: ORDER_FEE_TOTAL, RUNNER_SHARE, PLATFORM_SHARE, SETTLEMENT_PAID, ADMIN_ADJUSTMENT
 - SettlementStatus: PENDING, SETTLED
 
-### Key Models (16 total)
+### Key Models (15 total)
 - User - base for all roles (whatsapp unique, passwordHash, role, status, soft-delete isDeleted)
 - RefreshToken - tokenHash (bcrypt), deviceInfo, isRevoked
 - Customer - completedOrders, totalFeesPaid, address (lat/lng/description)
 - Runner - status, isVisible (hidden from customer lists), avgRating
 - Admin - simple role marker
+- CustomerAddress - customer delivery address (lat/lng/description)
 - Order - seqNumber (autoincrement), orderNumber (FW-XXXXXX), status, pricing fields (baseFee/peripheralFee/extraStoresFee/totalFee), delivery snapshot, preferredRunner, timestamps
 - OrderItem - itemName, quantity (free text), customStoreName, anyStore flag, isCancelled
 - OrderStore - storeName (free text), isAnyStore, status, isExtra (+20 fee), purchasedAt
@@ -175,7 +176,7 @@ Customer is notified via WebSocket on every fee change.
 - Base URL: /api/v1
 - Format: JSON
 - Auth: Authorization: Bearer (accessToken) (except /auth/*)
-- Input validation: Zod on every request body
+- Input validation: Zod validation on every input (query, path, body)
 - Standardized error format: { statusCode, error, message }
   - 400 VALIDATION_ERROR - invalid request data
   - 401 UNAUTHORIZED - session expired or no token
@@ -322,7 +323,7 @@ Cron reminder: runs daily at 23:00 Damascus time. If there are pending orders fo
    - /auth/login: 10 attempts / 15 min per IP
    - /auth/register: 3 attempts / hour per IP
    - all other endpoints: 100 requests / minute
-3. Input validation: Zod on every request body
+   3. Input validation: Zod validation on every input (query, path, body)
 4. SQL injection: fully protected via Prisma
 5. Passwords: bcrypt (12 rounds)
 6. JWT: RS256 (private/public key pair) - Access Token valid 2 hours only
@@ -448,6 +449,8 @@ Sprint 6 - QA + Launch (1 week)
 - Prisma schema, WebSocket gateway, rate limiting, CORS all in place.
 - No blockers.
 - Next: start Sprint 2 (Order State Machine, order creation, Pricing Engine).
+Note: R09 review (2026-09-17) identified 15 P0 and 21 P1 issues. 
+See CHANGELOG.md for the full remediation status.
 
 ## 17. Development Workflow
 
