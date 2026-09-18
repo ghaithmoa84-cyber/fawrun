@@ -10,10 +10,10 @@ import type { OrderStatus } from '@fawrun/shared-constants';
 import { CONFIG } from '@fawrun/shared-constants';
 import { CreateOrderRequest } from '@fawrun/shared-types';
 import type {
+  CreateOrderResponse,
   CustomerOrderDetails,
   CustomerOrderListItem,
   CustomerOrdersQuery,
-  EstimatedFee,
 } from '@fawrun/shared-types';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
@@ -22,13 +22,6 @@ import { PricingService } from '../../pricing/pricing.service.js';
 import { OrderStateMachine } from '../../../state-machine/order-state-machine.js';
 import { RunnerStateMachine } from '../../../state-machine/runner-state-machine.js';
 import { mapOrderItem } from './order-mapper.js';
-
-export interface CreateOrderResult {
-  id: string;
-  orderNumber: string;
-  status: string;
-  estimatedFee: EstimatedFee;
-}
 
 @Injectable()
 export class CustomerOrdersService {
@@ -46,7 +39,7 @@ export class CustomerOrdersService {
   async createOrder(
     userId: string,
     dto: CreateOrderRequest,
-  ): Promise<CreateOrderResult> {
+  ): Promise<CreateOrderResponse> {
     const customer = await this.prisma.customer.findUnique({
       where: { userId },
     });
