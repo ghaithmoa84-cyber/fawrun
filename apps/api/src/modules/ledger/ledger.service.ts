@@ -132,4 +132,22 @@ export class LedgerService {
 
     return mapPrismaToLedgerEntry(entry);
   }
+
+  async getEntriesByOrder(orderId: string): Promise<LedgerEntry[]> {
+    const entries = await this.prisma.ledgerEntry.findMany({
+      where: { orderId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return entries.map(mapPrismaToLedgerEntry);
+  }
+
+  async getEntriesByRunner(runnerId: string): Promise<LedgerEntry[]> {
+    const entries = await this.prisma.ledgerEntry.findMany({
+      where: { runnerId, type: 'RUNNER_SHARE' },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return entries.map(mapPrismaToLedgerEntry);
+  }
 }

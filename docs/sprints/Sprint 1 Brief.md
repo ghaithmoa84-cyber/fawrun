@@ -795,23 +795,25 @@ export const CONFIG = {
 
 ## معايير الإنجاز (Definition of Done) — Sprint 1
 
-- [ ] جميع الحزم تبني بنجاح عبر `pnpm build` من الجذر (Turborepo pipeline يعمل)، ويمكن تشغيل `pnpm install` بنجاح
-- [ ] حزمة `@fawrun/shared-constants` تبني بنجاح وتحتوي على ثوابت التسعير وحالات الطلب
-- [ ] حزمة `@fawrun/shared-types` تبني بنجاح وتحتوي على DTOs وZod Schemas
-- [ ] Prisma Schema كامل (جميع الـ models والـ enums والعلاقات والفهارس) ومطابق للقسم 5
-- [ ] أول Migration ناجحة وقاعدة البيانات تُنشأ بدون أخطاء
-- [ ] `POST /api/v1/auth/register` يُنشئ حساباً بحالة `PENDING_VERIFICATION`
-- [ ] `POST /api/v1/auth/login` يُرجع Access Token (JWT RS256، ساعتان) و Refresh Token (64-byte، دائم)
-- [ ] `POST /api/v1/auth/refresh` يُجدد Access Token صامتاً
-- [ ] `POST /api/v1/auth/logout` يُلغي Refresh Token في DB
-- [ ] JWT Auth Guard و Role Guard يعملان على الـ endpoints المحمية
-- [ ] `VerifiedUserGuard` يمنع المستخدمين غير المفعّلين من العمليات
-- [ ] Admin يستطيع: عرض المستخدمين، تفعيل/رفض/تعليق حساب، إنشاء مندوب
-- [ ] كل عملية تغيير حالة تُسجَّل في AuditLog
-- [ ] WebSocket Gateway يعمل مع المصادقة وإدارة الـ Rooms
-- [ ] حدث `account:verified` يصل للعميل عند التفعيل
-- [ ] Rate Limiting مُفعّل بالحدود المحددة
-- [ ] CORS مُعدّ ومحدود
-- [ ] Helmet مُفعّل
-- [ ] التطبيق يبدأ على Port 3000 مع prefix `/api/v1`
-- [ ] Global Exception Filter يُرجع أخطاء بالشكل الموحد
+- [x] جميع الحزم تبني بنجاح عبر `pnpm build` من الجذر (Turborepo pipeline يعمل)،都可以 تشغيل `pnpm install` بنجاح
+- [x] حزمته `@fawrun/shared-constants` تبني بنجاح وتحتوي على ثوابت التسعير وحالات الطلب
+- [x] حزمته `@fawrun/shared-types` تبني بنجاح وتحتوي على DTOs وZod Schemas
+- [x] Prisma Schema كامل (جميع الـ models والـ enums والعلاقاتالفهارس) ومطابق للقسم 5
+- [x] أول Migration ناجحة وقاعدة البيانات تُنشأ بدون أخطاء
+- [x] `POST /api/v1/auth/register` يُنشئ حساباً بحالة `PENDING_VERIFICATION`
+- [x] `POST /api/v1/auth/login` يُرجع Access Token (JWT RS256، ساعتان) و Refresh Token (64-byte، دائم)
+- [x] `POST /api/v1/auth/refresh` يُحدث Access Token صمتاً
+- [x] `POST /api/v1/auth/logout` يُلغي Refresh Token في DB
+- [x] JWT Auth Guard و Role Guard يعملان على الـ endpoints المحمية
+- [x] `VerifiedUserGuard` يمنع المستخدمين غير المفعّلات من العمليات
+- [x] Adminiqued: عرض المستخدمين، تفعيل/ reject/ تعليق حساب، إنشاء مندوب
+- [x] كل عملية تغيير حالة تُسجَّل في AuditLog
+- [x] WebSocket Gateway يعمل مع المصادقة وإدارة الـ Rooms
+- [x] حدث `account:verified` يصل للعميل عند التفعيل
+- [x] Rate Limiting مُفعّل بالحدود المحددة
+- [x] CORS مُعدّ ومحدود
+- [x] Helmet مُفعّل
+- [x] التطبيق يبدأ على Port 3000 مع prefix `/api/v1`
+- [x] Global Exception Filter يُرجع أخطاء بالشكل الموحد
+
+**Sprint 1 Complete — 2026-09-11**

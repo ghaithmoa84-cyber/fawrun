@@ -16,6 +16,7 @@ export const RunnerProfileResponseSchema = z.object({
   id: z.string(),
   name: z.string(),
   whatsapp: z.string(),
+  altPhone: z.string().nullable(),
   status: z.enum(["UNAVAILABLE", "AVAILABLE", "ON_MISSION"]),
   isVisible: z.boolean(),
   avgRating: z.number().nullable(),
@@ -25,15 +26,52 @@ export const RunnerProfileResponseSchema = z.object({
 
 export type RunnerProfileResponse = z.infer<typeof RunnerProfileResponseSchema>;
 
+export const ActiveOrderDeliveryAddressSchema = z.object({
+  lat: z.number(),
+  lng: z.number(),
+  description: z.string(),
+});
+
+export const ActiveOrderPricingSchema = z.object({
+  baseFee: z.number(),
+  peripheralFee: z.number(),
+  extraStoresFee: z.number(),
+  totalFee: z.number(),
+});
+
+export const ActiveOrderStoreItemSchema = z.object({
+  id: z.string(),
+  itemName: z.string(),
+  quantity: z.string(),
+  customStoreName: z.string().nullable(),
+  anyStore: z.boolean(),
+});
+
+export const ActiveOrderStoreSchema = z.object({
+  id: z.string(),
+  storeName: z.string(),
+  isAnyStore: z.boolean(),
+  status: z.string(),
+  isExtra: z.boolean(),
+  addedBy: z.string().nullable(),
+  purchasedAt: z.string().nullable(),
+  items: z.array(ActiveOrderStoreItemSchema),
+  receipts: z.array(z.object({
+    id: z.string(),
+    imageUrl: z.string(),
+    isDeleted: z.boolean(),
+    uploadedAt: z.string(),
+  })),
+});
+
 export const ActiveOrderResponseSchema = z.object({
   id: z.string(),
   orderNumber: z.string(),
   status: z.string(),
   customerName: z.string(),
   customerWhatsapp: z.string(),
-  deliveryLat: z.number(),
-  deliveryLng: z.number(),
-  deliveryDesc: z.string(),
+  deliveryAddress: ActiveOrderDeliveryAddressSchema,
+  pricing: ActiveOrderPricingSchema,
   totalFee: z.number(),
   isPeripheral: z.boolean(),
   createdAt: z.string(),
@@ -45,6 +83,7 @@ export const ActiveOrderResponseSchema = z.object({
     customStoreName: z.string().nullable(),
     anyStore: z.boolean(),
   })),
+  orderStores: z.array(ActiveOrderStoreSchema),
 }).nullable();
 
 export type ActiveOrderResponse = z.infer<typeof ActiveOrderResponseSchema>;

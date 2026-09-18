@@ -68,6 +68,7 @@ export class RunnersService {
       id: runner.id,
       name: runner.user.name,
       whatsapp: runner.user.whatsapp,
+      altPhone: runner.user.altPhone ?? null,
       status: runner.status,
       isVisible: runner.isVisible,
       avgRating: runner.avgRating ?? null,
@@ -99,9 +100,21 @@ export class RunnersService {
       };
     }
 
-    // Validate transition through RunnerStateMachine
-    // Runner can transition: UNAVAILABLE <-> AVAILABLE (RUNNER actor)
-    // SYSTEM handles AVAILABLE <-> ON_MISSION
+    if (currentStatus === 'AVAILABLE' && newStatus === 'UNAVAILABLE') {
+      const activeOrder = await this.prisma.order.findFirst({
+        where: {
+          runnerId: runner.id,
+          status: { in: ['ASSIGNED', 'IN_PROGRESS', 'OUT_FOR_DELIVERY'] },
+        },
+        select: { id: true, orderNumber: true, status: true },
+      });
+      if (activeOrder) {
+        throw new UnprocessableEntityException(
+          `Cannot go UNAVAILABLE: order ${activeOrder.orderNumber} is ${activeOrder.status}`,
+        );
+      }
+    }
+
     const actor = 'RUNNER' as const;
     let transitionResult;
     try {
@@ -155,7 +168,6 @@ export class RunnersService {
       throw new NotFoundException('Runner profile not found');
     }
 
-    // Find active order where runner is assigned and order is not completed/cancelled
     const activeOrder = await this.prisma.order.findFirst({
       where: {
         runnerId: runner.id,
@@ -166,6 +178,7 @@ export class RunnersService {
       include: {
         customer: { include: { user: true } },
         items: true,
+        orderStores: { include: { items: true, receipts: true } },
       },
       orderBy: { createdAt: 'desc' },
     });
@@ -180,10 +193,17 @@ export class RunnersService {
       status: activeOrder.status,
       customerName: activeOrder.customer.user.name,
       customerWhatsapp: activeOrder.customer.user.whatsapp,
-      deliveryLat: activeOrder.deliveryLat,
-      deliveryLng: activeOrder.deliveryLng,
-      deliveryDesc: activeOrder.deliveryDesc,
-      totalFee: activeOrder.totalFee,
+      deliveryAddress: {
+        lat: activeOrder.deliveryLat,
+        lng: activeOrder.deliveryLng,
+        description: activeOrder.deliveryDesc,
+      },
+      pricing: {
+        baseFee: activeOrder.baseFee,
+        peripheralFee: activeOrder.peripheralFee,
+        extraStoresFee: activeOrder.extraStoresFee,
+        totalFee: activeOrder.totalFee,
+      },
       isPeripheral: activeOrder.isPeripheral,
       createdAt: activeOrder.createdAt.toISOString(),
       assignedAt: activeOrder.assignedAt?.toISOString() ?? null,
@@ -193,6 +213,28 @@ export class RunnersService {
         quantity: item.quantity,
         customStoreName: item.customStoreName,
         anyStore: item.anyStore,
+      })),
+      orderStores: activeOrder.orderStores.map((store) => ({
+        id: store.id,
+        storeName: store.storeName,
+        isAnyStore: store.isAnyStore,
+        status: store.status,
+        isExtra: store.isExtra,
+        addedBy: store.addedBy,
+        purchasedAt: store.purchasedAt?.toISOString() ?? null,
+        items: store.items.map((item) => ({
+          id: item.id,
+          itemName: item.itemName,
+          quantity: item.quantity,
+          customStoreName: item.customStoreName,
+          anyStore: item.anyStore,
+        })),
+        receipts: store.receipts.map((receipt) => ({
+          id: receipt.id,
+          imageUrl: receipt.imageUrl,
+          isDeleted: receipt.isDeleted,
+          uploadedAt: receipt.uploadedAt.toISOString(),
+        })),
       })),
     };
   }

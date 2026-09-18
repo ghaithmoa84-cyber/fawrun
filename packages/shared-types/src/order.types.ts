@@ -238,6 +238,16 @@ export type RunnerOrderStoreParamRequest = z.infer<
   typeof RunnerOrderStoreParamSchema
 >;
 
+export const RunnerReceiptParamSchema = z.object({
+  id: z.string().cuid(),
+  storeId: z.string().cuid(),
+  receiptId: z.string().cuid(),
+});
+
+export type RunnerReceiptParamRequest = z.infer<
+  typeof RunnerReceiptParamSchema
+>;
+
 export const MarkStoreSkippedSchema = z.object({
   reason: z.string().trim().min(1).optional(),
 });
@@ -264,6 +274,20 @@ export const RunnerOrderStoreItemSchema = z.object({
   anyStore: z.boolean(),
 });
 
+export const RunnerOrderStoreReceiptSchema = z.object({
+  id: z.string(),
+  orderStoreId: z.string(),
+  imageUrl: z.string(),
+  r2Key: z.string(),
+  isDeleted: z.boolean(),
+  deletedAt: z.date().nullable(),
+  uploadedAt: z.date(),
+});
+
+export type RunnerOrderStoreReceipt = z.infer<
+  typeof RunnerOrderStoreReceiptSchema
+>;
+
 export const RunnerOrderStoreSchema = z.object({
   id: z.string(),
   storeName: z.string(),
@@ -272,7 +296,10 @@ export const RunnerOrderStoreSchema = z.object({
   isExtra: z.boolean(),
   addedBy: z.string().nullable(),
   purchasedAt: z.date().nullable(),
+  isDeleted: z.boolean(),
+  deletedAt: z.date().nullable(),
   items: z.array(RunnerOrderStoreItemSchema),
+  receipts: z.array(RunnerOrderStoreReceiptSchema),
 });
 
 export type RunnerOrderStore = z.infer<typeof RunnerOrderStoreSchema>;
@@ -308,4 +335,141 @@ export const PurchaseStoreResponseSchema = z.object({
 
 export type PurchaseStoreResponse = z.infer<
   typeof PurchaseStoreResponseSchema
+>;
+
+// ─────────────────────────────────────────────────────────────
+// Runner Order Store management (create / delete)
+// ─────────────────────────────────────────────────────────────
+
+export const CreateOrderStoreSchema = z.object({
+  storeName: z.string().trim().min(1, 'storeName cannot be empty'),
+});
+
+export type CreateOrderStoreRequest = z.infer<
+  typeof CreateOrderStoreSchema
+>;
+
+export const CreateOrderStoreResponseSchema = z.object({
+  orderId: z.string(),
+  orderNumber: z.string(),
+  orderStore: z.object({
+    id: z.string(),
+    storeName: z.string(),
+    isExtra: z.boolean(),
+    status: z.enum(['PENDING']),
+    addedBy: z.enum(['RUNNER']),
+  }),
+});
+
+export type CreateOrderStoreResponse = z.infer<
+  typeof CreateOrderStoreResponseSchema
+>;
+
+export const DeleteOrderStoreResponseSchema = z.object({
+  orderId: z.string(),
+  orderNumber: z.string(),
+  orderStore: z.object({
+    id: z.string(),
+    storeName: z.string(),
+    isDeleted: z.boolean(),
+  }),
+});
+
+export type DeleteOrderStoreResponse = z.infer<
+  typeof DeleteOrderStoreResponseSchema
+>;
+
+// ─────────────────────────────────────────────────────────────
+// Runner Order Item creation
+// ─────────────────────────────────────────────────────────────
+
+export const CreateRunnerOrderItemSchema = z.object({
+  itemName: z.string().trim().min(1, 'itemName cannot be empty'),
+  quantity: z.string().trim().min(1, 'quantity cannot be empty'),
+  orderStoreId: z.string().cuid('orderStoreId must be a valid cuid'),
+});
+
+export type CreateRunnerOrderItemRequest = z.infer<
+  typeof CreateRunnerOrderItemSchema
+>;
+
+export const CreateRunnerOrderItemResponseSchema = z.object({
+  id: z.string(),
+  itemName: z.string(),
+  quantity: z.string(),
+  orderStoreId: z.string(),
+  orderId: z.string(),
+});
+
+export type CreateRunnerOrderItemResponse = z.infer<
+  typeof CreateRunnerOrderItemResponseSchema
+>;
+
+// ─────────────────────────────────────────────────────────────
+// Receipts (Cloudflare R2)
+// ─────────────────────────────────────────────────────────────
+
+export const ReceiptSchema = z.object({
+  id: z.string(),
+  orderStoreId: z.string(),
+  imageUrl: z.string(),
+  r2Key: z.string(),
+  isDeleted: z.boolean(),
+  deletedAt: z.date().nullable(),
+  uploadedAt: z.date(),
+});
+
+export type Receipt = z.infer<typeof ReceiptSchema>;
+
+export const PresignedUrlRequestSchema = z.object({
+  fileType: z.enum(['jpg', 'png'], {
+    message: 'fileType must be jpg or png',
+  }),
+  fileSize: z.number().int().min(1, 'fileSize must be a positive integer'),
+});
+
+export type PresignedUrlRequest = z.infer<
+  typeof PresignedUrlRequestSchema
+>;
+
+export const PresignedUrlResponseSchema = z.object({
+  presignedUrl: z.string(),
+  r2Key: z.string(),
+  expiresIn: z.number(),
+});
+
+export type PresignedUrlResponse = z.infer<
+  typeof PresignedUrlResponseSchema
+>;
+
+export const CreateReceiptRequestSchema = z.object({
+  r2Key: z.string().trim().min(1, 'r2Key cannot be empty'),
+});
+
+export type CreateReceiptRequest = z.infer<
+  typeof CreateReceiptRequestSchema
+>;
+
+export const CreateReceiptResponseSchema = z.object({
+  id: z.string(),
+  orderStoreId: z.string(),
+  imageUrl: z.string(),
+  r2Key: z.string(),
+  isDeleted: z.boolean(),
+  uploadedAt: z.date(),
+});
+
+export type CreateReceiptResponse = z.infer<
+  typeof CreateReceiptResponseSchema
+>;
+
+export const DeleteReceiptResponseSchema = z.object({
+  id: z.string(),
+  orderStoreId: z.string(),
+  isDeleted: z.boolean(),
+  fileDeletedFromR2: z.boolean(),
+});
+
+export type DeleteReceiptResponse = z.infer<
+  typeof DeleteReceiptResponseSchema
 >;

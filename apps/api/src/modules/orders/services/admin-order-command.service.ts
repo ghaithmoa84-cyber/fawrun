@@ -160,9 +160,11 @@ export class AdminOrderCommandService {
         return {
           order: updatedOrder,
           customerId: order.customerId,
+          customerUserId: order.customer.userId,
           feeChanged,
           oldFee,
           newFee,
+          oldStatus: order.status,
         };
       },
       { timeout: 15000 },
@@ -170,39 +172,42 @@ export class AdminOrderCommandService {
 
     try {
       await this.notificationsService.emitToCustomer(
-        result.customerId,
+        result.customerUserId,
         'order:status_changed',
         {
           orderId: result.order.id,
           orderNumber: result.order.orderNumber,
-          status: result.order.status,
+          newStatus: result.order.status,
+          oldStatus: result.oldStatus,
         },
+        'status_update',
       );
 
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
 
       if (result.feeChanged) {
         const feePayload = {
           orderId: result.order.id,
-          orderNumber: result.order.orderNumber,
-          oldFee: result.oldFee,
-          newFee: result.newFee,
+          oldFee: result.oldFee.totalFee,
+          newFee: result.newFee.totalFee,
           reason: 'ADMIN_APPROVAL',
         };
 
         await this.notificationsService.emitToCustomer(
-          result.customerId,
+          result.customerUserId,
           'order:fee_updated',
           feePayload,
+          'status_update',
         );
 
         await this.notificationsService.emitToAdmin(
           'order:fee_updated',
           feePayload,
+          'status_update',
         );
       }
     } catch {
@@ -279,6 +284,7 @@ export class AdminOrderCommandService {
         return {
           order: updatedOrder,
           customerId: order.customerId,
+          customerUserId: order.customer.userId,
         };
       },
       { timeout: 15000 },
@@ -286,20 +292,21 @@ export class AdminOrderCommandService {
 
     try {
       await this.notificationsService.emitToCustomer(
-        result.customerId,
+        result.customerUserId,
         'order:cancelled',
         {
           orderId: result.order.id,
-          orderNumber: result.order.orderNumber,
-          status: result.order.status,
+          reason: dto.cancelReason ?? 'Order rejected by admin',
+          cancelledBy: adminId,
         },
+        'status_update',
       );
 
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch {
       void 0;
     }
@@ -324,6 +331,7 @@ export class AdminOrderCommandService {
       async (tx) => {
         const order = await tx.order.findUnique({
           where: { id: orderId },
+          include: { customer: true },
         });
 
         if (!order) {
@@ -366,17 +374,29 @@ export class AdminOrderCommandService {
           tx,
         );
 
-        return { order: updatedOrder };
+        return { order: updatedOrder, customerId: order.customerId, customerUserId: order.customer.userId, oldStatus: order.status };
       },
       { timeout: 15000 },
     );
 
     try {
+      await this.notificationsService.emitToCustomer(
+        result.customerUserId,
+        'order:status_changed',
+        {
+          orderId: result.order.id,
+          orderNumber: result.order.orderNumber,
+          newStatus: result.order.status,
+          oldStatus: result.oldStatus,
+        },
+        'status_update',
+      );
+
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch {
       void 0;
     }
@@ -454,6 +474,15 @@ export class AdminOrderCommandService {
         }
         const orderRecord = await tx.order.findUniqueOrThrow({
           where: { id: order.id },
+          include: {
+            customer: {
+              include: { user: true },
+            },
+            items: {
+              orderBy: { createdAt: 'asc' },
+            },
+            orderStores: true,
+          },
         });
 
         await this.auditService.log(
@@ -473,26 +502,73 @@ export class AdminOrderCommandService {
           tx,
         );
 
-        return { order: orderRecord };
+        return {
+          order: orderRecord,
+          oldStatus: order.status,
+          oldRunnerUserId: order.runner?.userId ?? null,
+          runnerUserId: runner.user.id,
+          runnerName: runner.user.name,
+        };
       },
       { timeout: 15000 },
     );
 
     try {
+      const assignedPayload = {
+        orderId: result.order.id,
+        orderNumber: result.order.orderNumber,
+        customerName: result.order.customer?.user?.name ?? '',
+        deliveryAddress: {
+          lat: result.order.deliveryLat,
+          lng: result.order.deliveryLng,
+          description: result.order.deliveryDesc,
+        },
+        items: result.order.items.map((item) => ({
+          itemName: item.itemName,
+          quantity: item.quantity,
+          customStoreName: item.customStoreName,
+          anyStore: item.anyStore,
+        })),
+        estimatedFee: {
+          baseFee: result.order.baseFee,
+          peripheralFee: result.order.peripheralFee,
+          extraStoresFee: result.order.extraStoresFee,
+          totalFee: result.order.totalFee,
+          note: 'الرسم النهائي يُحدد بعد المراجعة',
+        },
+      };
+
+      if (result.oldRunnerUserId) {
+        await this.notificationsService.emitToRunner(
+          result.oldRunnerUserId,
+          'order:reassigned',
+          { orderId: result.order.id },
+          'status_update',
+        );
+      }
+
       await this.notificationsService.emitToRunner(
-        runnerId,
+        result.runnerUserId,
         'order:assigned',
+        assignedPayload,
+        'new_order',
+      );
+
+      await this.notificationsService.emitToCustomer(
+        result.order.customer.userId,
+        'order:runner_assigned',
         {
           orderId: result.order.id,
-          orderNumber: result.order.orderNumber,
+          runnerName: result.runnerName,
         },
+        'status_update',
       );
 
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch {
       void 0;
     }
@@ -518,7 +594,7 @@ export class AdminOrderCommandService {
       async (tx) => {
         const order = await tx.order.findUnique({
           where: { id: orderId },
-          include: { runner: true },
+          include: { runner: true, customer: true },
         });
 
         if (!order) {
@@ -584,29 +660,43 @@ export class AdminOrderCommandService {
 
         return {
           order: updatedOrder,
-          runnerId: order.runnerId,
+          oldRunnerUserId: order.runner?.userId ?? null,
+          customerId: order.customerId,
+          customerUserId: order.customer.userId,
         };
       },
       { timeout: 15000 },
     );
 
     try {
-      if (result.runnerId) {
+      if (result.oldRunnerUserId) {
         await this.notificationsService.emitToRunner(
-          result.runnerId,
-          'order:cancelled',
+          result.oldRunnerUserId,
+          'order:assignment_cancelled',
           {
             orderId: result.order.id,
-            orderNumber: result.order.orderNumber,
+            reason: cancelReason ?? 'Order cancelled by admin',
           },
+          'status_update',
         );
       }
+
+      await this.notificationsService.emitToCustomer(
+        result.customerUserId,
+        'order:cancelled',
+        {
+          orderId: result.order.id,
+          reason: cancelReason ?? 'Order cancelled by admin',
+          cancelledBy: adminId,
+        },
+        'status_update',
+      );
 
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch {
       void 0;
     }
@@ -620,4 +710,11 @@ export class AdminOrderCommandService {
       cancelledAt: result.order.cancelledAt,
     };
   }
+
+  // TODO: order:needs_attention — emit to admin when an order stays in
+  // AWAITING_RUNNER (or AWAITING_PREFERRED_RUNNER) for more than 10 minutes,
+  // or when any state requires manual intervention (e.g. pricing dispute,
+  // runner no-show).  Not yet implemented in MVP — needs a scheduled cron job
+  // (e.g. @nestjs/schedule @Cron) that queries stale orders and calls
+  // notificationsService.emitToAdmin('order:needs_attention', { orderId, reason }, 'urgent').
 }

@@ -33,6 +33,16 @@ Before each Sprint, Kilo verifies that the foundation is ready for development. 
 - [ ] Settlement logic accounts for new fee types
 - [ ] Rollback plan documented (see rollback-plan skill)
 
+### 5. Code Quality Gates
+- [ ] Full verification command succeeds:
+  `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test`
+- [ ] No `findUnique` without null handling
+- [ ] No `catch { void 0 }` — every catch logs via Logger
+- [ ] Every status change uses `updateMany` with `where: { status: currentStatus }`
+  and verifies `count === 1` after update
+- [ ] No hardcoded values in fee calculations
+- [ ] Every WebSocket room assignment relies on role from DB, not from JWT
+
 ## Usage
 Run this check by invoking the skill at Sprint start. Kilo will report pass/fail for each item and block work until all pass.
 

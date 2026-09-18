@@ -14,6 +14,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { WebsocketModule } from './websocket/websocket.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
+import { ReceiptsModule } from './modules/receipts/receipts.module.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { jwtConfig } from './config/jwt.config.js';
@@ -120,6 +121,7 @@ import { jwtConfig } from './config/jwt.config.js';
     RunnersModule,
     OrdersModule,
     CustomersModule,
+    ReceiptsModule,
   ],
   providers: [
     {
