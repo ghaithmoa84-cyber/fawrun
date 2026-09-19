@@ -32,6 +32,7 @@ export const ADMIN_EVENTS = {
   ORDER_NEEDS_ATTENTION: 'order:needs_attention',
   USER_NEW_REGISTRATION: 'user:new_registration',
   SETTLEMENT_REMINDER: 'settlement:reminder',
+  SETTLEMENT_CLOSED: 'settlement:closed',
 } as const;
 
 export type OrderStatusChangedPayload = {
