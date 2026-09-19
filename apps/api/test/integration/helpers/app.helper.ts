@@ -1,0 +1,26 @@
+import { INestApplication, ValidationPipe } from '@nestjs/common';
+import { Test } from '@nestjs/testing';
+import { AppModule } from '../../../src/app.module';
+import * as supertest from 'supertest';
+
+let app: INestApplication;
+
+export async function createTestApp(): Promise<INestApplication> {
+  const moduleRef = await Test.createTestingModule({
+    imports: [AppModule],
+  }).compile();
+
+  app = moduleRef.createNestApplication();
+  app.useGlobalPipes(new ValidationPipe({ whitelist: true }));
+  app.setGlobalPrefix('api/v1');
+  await app.init();
+  return app;
+}
+
+export async function closeTestApp(): Promise<void> {
+  await app?.close();
+}
+
+export function getRequest() {
+  return supertest(app.getHttpServer());
+}

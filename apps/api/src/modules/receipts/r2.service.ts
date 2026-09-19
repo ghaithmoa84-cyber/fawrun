@@ -83,23 +83,19 @@ export class R2Service {
 
   /**
    * Permanently delete an object from R2.
-   * Returns true if the object existed and was deleted, false otherwise.
+   * Throws if the deletion fails.
    */
-  async deleteObject(r2Key: string): Promise<boolean> {
+  async deleteObject(key: string): Promise<void> {
     try {
       await this.client.send(
         new DeleteObjectCommand({
           Bucket: this.bucket,
-          Key: r2Key,
+          Key: key,
         }),
       );
-      return true;
-    } catch (error) {
-      this.logger.error('Failed to delete object from R2', {
-        error,
-        r2Key,
-      });
-      return false;
+    } catch (err) {
+      this.logger.error(`R2 delete failed for key ${key}`, err);
+      throw err;
     }
   }
 

@@ -178,7 +178,7 @@ export class RunnersService {
       include: {
         customer: { include: { user: true } },
         items: true,
-        orderStores: { include: { items: true, receipts: true } },
+        orderStores: { where: { isDeleted: false }, include: { items: true, receipts: { where: { isDeleted: false } } } },
       },
       orderBy: { createdAt: 'desc' },
     });

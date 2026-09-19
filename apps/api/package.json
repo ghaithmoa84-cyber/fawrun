@@ -21,6 +21,8 @@
     "test:watch": "vitest",
     "test:cov": "vitest run --coverage",
     "test:e2e": "vitest run --config ./vitest.config.e2e.ts",
+    "test:integration": "vitest run --config vitest.config.integration.ts",
+    "db:setup:test": "DATABASE_URL=$DATABASE_URL_TEST prisma migrate deploy && DATABASE_URL=$DATABASE_URL_TEST prisma db seed",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {

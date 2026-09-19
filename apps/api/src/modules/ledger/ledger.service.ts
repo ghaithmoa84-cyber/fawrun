@@ -38,7 +38,7 @@ export class LedgerService {
         type: data.type,
         amount: data.amount,
         description: data.description,
-        meta: (data.meta ?? Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
+        meta: (data.meta ? data.meta : Prisma.JsonNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
       },
     });
 
@@ -75,7 +75,7 @@ export class LedgerService {
           type: data.type,
           amount: data.amount,
           description: data.description,
-          meta: (data.meta ?? Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
+          meta: (data.meta ? data.meta : Prisma.JsonNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
         },
       });
       results.push(mapPrismaToLedgerEntry(entry));

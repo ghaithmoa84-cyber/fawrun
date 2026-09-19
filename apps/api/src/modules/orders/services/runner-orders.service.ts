@@ -25,6 +25,7 @@ import { PricingService, type RecalculateFeeResult } from '../../pricing/pricing
 import { OrderStateMachine } from '../../../state-machine/order-state-machine.js';
 import { OrderStoreStateMachine } from '../../../state-machine/order-store-state-machine.js';
 import { RunnerStateMachine } from '../../../state-machine/runner-state-machine.js';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class RunnerOrdersService {
@@ -56,6 +57,7 @@ export class RunnerOrdersService {
       where: { id: orderId, runnerId: runner.id },
       include: {
         orderStores: {
+          where: { isDeleted: false },
           orderBy: { createdAt: 'asc' },
           include: {
             items: { orderBy: { createdAt: 'asc' } },
@@ -439,7 +441,7 @@ export class RunnerOrdersService {
         }
 
         const store = await tx.orderStore.findFirst({
-          where: { id: storeId, orderId: order.id },
+          where: { id: storeId, orderId: order.id, includeDeleted: true } as Prisma.OrderStoreWhereInput,
         });
         if (!store) {
           throw new NotFoundException('Order store not found');

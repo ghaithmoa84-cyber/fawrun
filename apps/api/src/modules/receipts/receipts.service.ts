@@ -128,9 +128,8 @@ export class ReceiptsService {
 
         let fileDeletedFromR2 = false;
         if (orderStore.status === 'PENDING') {
-          fileDeletedFromR2 = await this.r2Service.deleteObject(
-            receipt.r2Key,
-          );
+          await this.r2Service.deleteObject(receipt.r2Key);
+          fileDeletedFromR2 = true;
         }
 
         const updated = await tx.receipt.update({

@@ -132,10 +132,17 @@ api.interceptors.request.use(
 
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
-  (error: AxiosError) => {
+  async (error: AxiosError) => {
     if (error.response?.status === 401 && !isAuthEndpoint(error.config?.url)) {
-      clearAuth();
-      redirectToLogin();
+      try {
+        await refreshAccessToken();
+        if (error.config) {
+          return api(error.config);
+        }
+      } catch {
+        clearAuth();
+        redirectToLogin();
+      }
     }
     return Promise.reject(error);
   },

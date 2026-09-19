@@ -48,6 +48,54 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 ## [Unreleased]
 
+### 2026-09-19 11:13 — تصحيح تسلسل مراجعة الطلب في اختبارات integration
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/integration/orders/deliver-order.integration.spec.ts` — إضافة طلب `PUT /api/v1/admin/orders/:id/start-review` قبل `approve` في `prepareOrderForDelivery()`.
+- `apps/api/test/integration/orders/create-order.integration.spec.ts` — تغيير assertion حالة الطلب من `DRAFT` إلى `PENDING_REVIEW`.
+
+**السبب:**
+مطابقة تسلسل State Machine الفعلي: `DRAFT → PENDING_REVIEW → UNDER_REVIEW → AWAITING_RUNNER → ASSIGNED`، ومطابقة الحالة التي يُرجعها API بعد إنشاء الطلب.
+
+**الأوامر والنتائج:**
+- `pnpm typecheck --filter fawrun-api` → نجح، مهمة واحدة ناجحة من مهمة واحدة.
+- `git diff --check -- apps/api/test/integration/orders/deliver-order.integration.spec.ts apps/api/test/integration/orders/create-order.integration.spec.ts` → نجح بدون أخطاء.
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تشغيل.
+
+### 2026-09-19 03:15 — إضافة اختبار integration لأولوية P0: deliverOrder
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/integration/orders/deliver-order.integration.spec.ts` — إضافة سيناريوهات التدفق الكامل للتسليم، وIdempotency، ومحاولة runner خاطئ؛ مع إنشاء الطلب ومراجعته وتعيين runner والشراء والانتقال للتوصيل ثم التسليم.
+- `apps/api/test/integration/helpers/seed.helper.ts` — دالة `seedRunner()`: إضافة رقم Whatsapp اختياري لتمكين إنشاء runner ثانٍ داخل الاختبار.
+
+**السبب:**
+تغطية سلوك `deliverOrder` ضد API وPostgreSQL فعليين بدون mocks، والتحقق من حالة الطلب، و3 سجلات Ledger، وتوزيع الرسوم، وإحصاءات العميل، وحالة runner، وAuditLog، وIdempotency، وفحص الملكية.
+
+**الأوامر والنتائج:**
+- `pnpm typecheck --filter fawrun-api` → نجح.
+- `pnpm exec prettier --write "apps/api/test/integration/orders/deliver-order.integration.spec.ts" "apps/api/test/integration/helpers/seed.helper.ts"` → نجح.
+- `git diff --check` على ملفي الاختبار وhelper → نجح.
+- لم تُشغّل الاختبارات حسب الطلب؛ لا توجد قاعدة بيانات اختبار فعلية بعد.
+
+**الأخطاء والحلول:**
+- فحص TypeScript المباشر الأول كشف أن `test/` مستثنى من `apps/api/tsconfig.json` وأن imports/إعدادات Vitest تحتاج مشروع فحص مؤقت؛ تم التحقق بنجاح عبر temporary tsconfig.
+- المراجعة الثابتة أظهرت أن `approveOrder` ينتقل من `PENDING_REVIEW` إلى `AWAITING_RUNNER` بينما `order-transitions.ts` لا يحتوي على هذا الانتقال؛ لم يتم تعديل الـ endpoint وحسب التعليمات يُبلّغ عن المشكلة بدل معالجتها ذاتيًا.
+
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/integration/helpers/seed.helper.ts` — دالة `seedCustomer()`: تغيير علاقة `CustomerAddress` من `addresses` إلى `address` وفق `schema.prisma`، وإزالة الحقل غير الموجود `isDefault`؛ ودالة `loginAs()`: قراءة `accessToken` مباشرة من `res.body.accessToken` لأن استجابة `/auth/login` لا تستخدم wrapper باسم `data`.
+
+**السبب:**
+مطابقة اسم حقل العلاقة الفعلي في Prisma ومسار الـ access token الفعلي في استجابة خدمة المصادقة قبل تشغيل الاختبارات.
+
+**الأوامر والنتائج:**
+- `pnpm build && pnpm typecheck && pnpm lint` → نجحت المراحل الثلاث؛ البناء 4/4، وفحص الأنواع 4/4، والـ lint 4/4 مع 5 تحذيرات و0 أخطاء.
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تشغيل.
+
 ### 2026-09-18 16:12 — Sprint 3 PR Created
 
 **السبب:**

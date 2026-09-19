@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
+import { useWebSocket } from '../hooks/useWebSocket';
 import { MapView } from '../components/MapView';
 import { StoreCard } from '../components/StoreCard';
 import type { ActiveOrderResponse } from '@fawrun/shared-types';
@@ -36,9 +37,26 @@ export function ActiveOrderPage() {
     }
   }, []);
 
+  const { on } = useWebSocket();
+
   useEffect(() => {
     void fetchActiveOrder();
   }, [fetchActiveOrder]);
+
+  useEffect(() => {
+    on('order:status_changed', () => {
+      fetchActiveOrder();
+    });
+    on('order:fee_updated', () => {
+      fetchActiveOrder();
+    });
+    on('order:store_purchased', () => {
+      fetchActiveOrder();
+    });
+    on('order:delivered', () => {
+      navigate('/available');
+    });
+  }, []);
 
   const handleStartOrder = async () => {
     if (!order) return;
