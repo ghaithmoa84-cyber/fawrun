@@ -1,3 +1,14 @@
+import { z } from 'zod';
+
+export const SoundTypeSchema = z.enum([
+  'new_order',
+  'status_update',
+  'urgent',
+  'success',
+]);
+
+export type SoundType = z.infer<typeof SoundTypeSchema>;
+
 export const CLIENT_EVENTS = {
   ORDER_STATUS_CHANGED: 'order:status_changed',
   ORDER_RUNNER_ASSIGNED: 'order:runner_assigned',
@@ -136,5 +147,3 @@ export type SettlementReminderPayload = {
   pendingRunnerCount: number;
   sound?: SoundType;
 };
-
-export type SoundType = 'new_order' | 'status_update' | 'urgent' | 'success';

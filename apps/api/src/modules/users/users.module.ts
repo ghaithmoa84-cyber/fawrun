@@ -9,5 +9,6 @@ import { NotificationsModule } from '../notifications/notifications.module.js';
   imports: [AuditModule, NotificationsModule, PrismaModule],
   controllers: [UsersController],
   providers: [UsersService],
+  exports: [UsersService],
 })
 export class UsersModule {}

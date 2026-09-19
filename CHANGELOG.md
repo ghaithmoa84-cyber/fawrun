@@ -21,7 +21,140 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 **الأخطاء والحلول:**
 - خطأ `oldString not found` في Fix 2 و Fix 4 بسبب عدم تطابق المسافات/الفواصل → تم إصلاح بتطابق دقيق للنص بعد قراءة الأسطر الحالية
 
+### 2026-09-18 10:40 — Sprint 3 Task 3.1: Runner endpoints implementation and fixes
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/runners/runners.service.ts` — دالة `getMyProfile`: إضافة `altPhone` للاستجابة؛ دالة `updateMyStatus`: إضافة فحص الطلبات النشطة قبل السماح بالانتقال AVAILABLE→UNAVAILABLE (يرفض بـ 422 عند وجود طلب نشط)؛ دالة `getActiveOrder`: إضافة `orderStores` مع `items` و `receipts`، و `pricing` (baseFee/peripheralFee/extraStoresFee/totalFee)، و `deliveryAddress` (lat/lng/description)
+- `apps/api/src/modules/orders/services\runner-orders.service.ts` — دالة `startOrder`: إضافة `sound: 'status_update'` إلى جميع إرساليات WebSocket (customer, runner, admin)
+- `packages/shared-types/src/runner.types.ts` — تحديث `RunnerProfileResponseSchema` بإضافة `altPhone`؛ إضافة `ActiveOrderDeliveryAddressSchema`، `ActiveOrderPricingSchema`، `ActiveOrderStoreItemSchema`، `ActiveOrderStoreSchema`؛ تحديث `ActiveOrderResponseSchema` ليشمل `deliveryAddress`، `pricing`، `orderStores`
+- `CHANGELOG.md` — تسجيل التغييرات
+
+**السبب:**
+تطبيق Sprint 3 المهمة 3.1 (Runner endpoints) مع تصحيح الفجوات المكتشفة في المراجعة:
+1. `PUT /api/v1/runner/me/status` يجب أن يرفض 422 عند محاولة التحول UNAVAILABLE مع طلب نشط (ASSIGNED/IN_PROGRESS/OUT_FOR_DELIVERY)
+2. `GET /api/v1/runner/orders/active` يجب أن يشمل OrderStores + Receipts + Pricing + Delivery Address
+3. `GET /api/v1/runner/me` يجب أن يُرجع altPhone
+4. `PUT /api/v1/runner/orders/:id/start` WebSocket يجب أن يتضمن sound: 'status_update'
+
+**الأوامر والنتائج:**
+- `git checkout -b feature/sprint-3-runner-endpoints` → نجح
+- `pnpm build` → نجح، 3/3 حزم
+- `pnpm typecheck` → نجح، 3/3 حزم
+- `pnpm lint` → نجح، 3/3 حزم
+- `pnpm --filter fawrun-api test` → نجح، 7 ملفات و148 اختبارًا
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تشغيل
+
 ## [Unreleased]
+
+### 2026-09-19 11:13 — تصحيح تسلسل مراجعة الطلب في اختبارات integration
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/integration/orders/deliver-order.integration.spec.ts` — إضافة طلب `PUT /api/v1/admin/orders/:id/start-review` قبل `approve` في `prepareOrderForDelivery()`.
+- `apps/api/test/integration/orders/create-order.integration.spec.ts` — تغيير assertion حالة الطلب من `DRAFT` إلى `PENDING_REVIEW`.
+
+**السبب:**
+مطابقة تسلسل State Machine الفعلي: `DRAFT → PENDING_REVIEW → UNDER_REVIEW → AWAITING_RUNNER → ASSIGNED`، ومطابقة الحالة التي يُرجعها API بعد إنشاء الطلب.
+
+**الأوامر والنتائج:**
+- `pnpm typecheck --filter fawrun-api` → نجح، مهمة واحدة ناجحة من مهمة واحدة.
+- `git diff --check -- apps/api/test/integration/orders/deliver-order.integration.spec.ts apps/api/test/integration/orders/create-order.integration.spec.ts` → نجح بدون أخطاء.
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تشغيل.
+
+### 2026-09-19 03:15 — إضافة اختبار integration لأولوية P0: deliverOrder
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/integration/orders/deliver-order.integration.spec.ts` — إضافة سيناريوهات التدفق الكامل للتسليم، وIdempotency، ومحاولة runner خاطئ؛ مع إنشاء الطلب ومراجعته وتعيين runner والشراء والانتقال للتوصيل ثم التسليم.
+- `apps/api/test/integration/helpers/seed.helper.ts` — دالة `seedRunner()`: إضافة رقم Whatsapp اختياري لتمكين إنشاء runner ثانٍ داخل الاختبار.
+
+**السبب:**
+تغطية سلوك `deliverOrder` ضد API وPostgreSQL فعليين بدون mocks، والتحقق من حالة الطلب، و3 سجلات Ledger، وتوزيع الرسوم، وإحصاءات العميل، وحالة runner، وAuditLog، وIdempotency، وفحص الملكية.
+
+**الأوامر والنتائج:**
+- `pnpm typecheck --filter fawrun-api` → نجح.
+- `pnpm exec prettier --write "apps/api/test/integration/orders/deliver-order.integration.spec.ts" "apps/api/test/integration/helpers/seed.helper.ts"` → نجح.
+- `git diff --check` على ملفي الاختبار وhelper → نجح.
+- لم تُشغّل الاختبارات حسب الطلب؛ لا توجد قاعدة بيانات اختبار فعلية بعد.
+
+**الأخطاء والحلول:**
+- فحص TypeScript المباشر الأول كشف أن `test/` مستثنى من `apps/api/tsconfig.json` وأن imports/إعدادات Vitest تحتاج مشروع فحص مؤقت؛ تم التحقق بنجاح عبر temporary tsconfig.
+- المراجعة الثابتة أظهرت أن `approveOrder` ينتقل من `PENDING_REVIEW` إلى `AWAITING_RUNNER` بينما `order-transitions.ts` لا يحتوي على هذا الانتقال؛ لم يتم تعديل الـ endpoint وحسب التعليمات يُبلّغ عن المشكلة بدل معالجتها ذاتيًا.
+
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/integration/helpers/seed.helper.ts` — دالة `seedCustomer()`: تغيير علاقة `CustomerAddress` من `addresses` إلى `address` وفق `schema.prisma`، وإزالة الحقل غير الموجود `isDefault`؛ ودالة `loginAs()`: قراءة `accessToken` مباشرة من `res.body.accessToken` لأن استجابة `/auth/login` لا تستخدم wrapper باسم `data`.
+
+**السبب:**
+مطابقة اسم حقل العلاقة الفعلي في Prisma ومسار الـ access token الفعلي في استجابة خدمة المصادقة قبل تشغيل الاختبارات.
+
+**الأوامر والنتائج:**
+- `pnpm build && pnpm typecheck && pnpm lint` → نجحت المراحل الثلاث؛ البناء 4/4، وفحص الأنواع 4/4، والـ lint 4/4 مع 5 تحذيرات و0 أخطاء.
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تشغيل.
+
+### 2026-09-18 16:12 — Sprint 3 PR Created
+
+**السبب:**
+إنهاء موسم Sprint 3 وإنشاء PR على GitHub للمراجعة.
+
+**الأوامر والنتائج:**
+- `git add -A && git commit -m "feat: Sprint 3 - Runner execution flow..."` → نجح (53 files changed, commit 9134fda)
+- `git push origin feature/sprint-3-runner-endpoints` → نجح
+- `gh pr create --title "feat: Sprint 3 — Runner Execution Flow"` → نجح
+- PR URL: https://github.com/ghaithmoa84-cyber/fawrun/pull/5
+- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test` → All passed (4/4 packages build, 0 type errors, 0 lint errors, 148/148 tests)
+
+**الأخطاء والحلول:**
+- `App.css` was re-added by `git add -A` after being untracked; deleted from filesystem and committed removal
+- `.gitignore` updated to exclude `dev-dist/` build artifacts
+
+### 2026-09-18 15:52 — Runner PWA scaffold: install + build fixes
+
+**الملفات والدوال المعدّلة:**
+- `apps/runner-pwa/package.json` — Fix `@types/react-dom` version `^19.3.7` → `^19.3.0` (19.3.7 doesn't exist on npm)
+- `apps/runner-pwa/.oxlintrc.json` — Fix `ignores` → `ignorePatterns` (invalid oxlint config field); added `dev-dist/` to ignore patterns
+- `apps/runner-pwa/src/hooks/useAuth.ts` → `useAuth.tsx` — Renamed from `.ts` to `.tsx` (file contains JSX; TypeScript couldn't parse JSX in `.ts` files)
+- `apps/runner-pwa/src/main.tsx` — Fix import `./App.tsx` → `./App` (TS5097: `.tsx` extension requires `allowImportingTsExtensions`)
+- `apps/runner-pwa/src/api/client.ts` — Fix axios config: `credentials: 'include'` → `withCredentials: true` (correct Axios property name)
+- `apps/runner-pwa/src/components/StoreCard.tsx` — Add `ActiveOrderStoreReceipt` type and annotate `receipt` callback param
+- `apps/runner-pwa/src/pages/AvailablePage.tsx` — Remove unused `useAuth` import; annotate `prev` param in `setProfile` callback; cast `response.data.status` to `RunnerProfileResponse['status']`
+- `apps/runner-pwa/src/pages/ActiveOrderPage.tsx` — Remove unused `error` state + `setError` calls; annotate `.every`/`.some` callback params; remove unused `ItemsList` import
+- `apps/runner-pwa/src/hooks/useWebSocket.ts` — Refactor from `useRef` to `useState` for socket (fixes React ref-during-render warning); remove unused `useRef` import
+
+**السبب:**
+Runner PWA scaffold had blocking errors preventing typecheck, lint, and build from passing. Root causes: missing `@types/react-dom` install (blocked `pnpm install`), incorrect file extension for JSX-containing file, wrong axios property name, invalid oxlint config schema, and missing type annotations for implicit-any callback params.
+
+**الأوامر والنتائج:**
+- `pnpm install` → Fixed by correcting `@types/react-dom` version
+- `pnpm typecheck --filter runner-pwa` → نجح (0 errors)
+- `pnpm lint --filter runner-pwa` → نجح (0 errors, 4 warnings for standard data-fetching patterns)
+- `pnpm build --filter runner-pwa` → نجح (161 modules transformed, PWA manifest + service worker generated)
+
+**الأخطاء والحلول:**
+- `Cannot find module '@fawrun/shared-types'` → Resolved by `pnpm install` (pnpm workspace symlinks not yet linked)
+- `TS1005: '>' expected` in `useAuth.ts:102` → JSX syntax in `.ts` file; renamed to `.tsx`
+- `TS5097: An import path can only end with '.tsx'` → Removed explicit `.tsx` extension from import
+- `TS2353: 'credentials' does not exist` → Changed to `withCredentials: true`
+- `TS7006: Parameter implicitly has 'any' type` → Added explicit type annotations
+- `oxlint: unknown field 'ignores'` → Changed to `ignorePatterns`
+
+### 2026-09-18 17:04 — تصحيح إشعارات إعادة تعيين المندوب
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/orders/services/admin-order-command.service.ts` — دالة `assignRunner`: إرسال `order:reassigned` إلى `result.oldRunnerUserId` عند إعادة التعيين، ثم إرسال `order:assigned` مع `assignedPayload` و`sound: 'new_order'` إلى `result.runnerUserId`؛ إزالة إرسال `order:assignment_cancelled` أثناء إعادة التعيين.
+
+**السبب:**
+مطابقة spec: المندوب القديم يتلقى إشعار نقل الطلب، والمندوب الجديد يتلقى الطلب كاملًا، بينما يُ保留 `order:assignment_cancelled` لحالات إلغاء التعيين كليًا.
+
+**الأوامر والنتائج:**
+- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test` → نجح؛ البناء وفحص الأنواع وlint نجحت، و7 ملفات اختبار و148 اختبارًا نجحت.
+
+**الأخطاء والحلول:**
+- لا توجد أخطاء تشغيل.
 
 ### 2026-09-17 21:20 — إكمال المرحلة R09 والتجميع النهائي وقرار الجاهزية الشامل
 

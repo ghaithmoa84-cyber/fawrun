@@ -42,6 +42,7 @@ export class CustomerOrdersService {
   ): Promise<CreateOrderResponse> {
     const customer = await this.prisma.customer.findUnique({
       where: { userId },
+      include: { user: { select: { name: true } } },
     });
     if (!customer) {
       throw new NotFoundException('Customer not found');
@@ -203,11 +204,9 @@ export class CustomerOrdersService {
       await this.notificationsService.emitToAdmin('order:new', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        customerId: customer.id,
+        customerName: customer.user?.name ?? '',
         itemCount: dto.items.length,
-        status: result.order.status,
-        totalFee: result.fee.totalFee,
-      });
+      }, 'new_order');
     } catch (error) {
       this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
@@ -370,7 +369,7 @@ export class CustomerOrdersService {
       async (tx) => {
         const order = await tx.order.findUnique({
           where: { id: orderId },
-          include: { runner: true },
+          include: { runner: true, customer: true },
         });
 
         const customer = await tx.customer.findUnique({
@@ -440,29 +439,42 @@ export class CustomerOrdersService {
 
         return {
           order: updatedOrder,
-          runnerId: order.runnerId,
+          oldRunnerUserId: order.runner?.userId ?? null,
+          customerUserId: order.customer.userId,
         };
       },
       { timeout: 15000 },
     );
 
     try {
-      if (result.runnerId) {
+      if (result.oldRunnerUserId) {
         await this.notificationsService.emitToRunner(
-          result.runnerId,
-          'order:cancelled',
+          result.oldRunnerUserId,
+          'order:assignment_cancelled',
           {
             orderId: result.order.id,
-            orderNumber: result.order.orderNumber,
+            reason: 'Order cancelled by customer',
           },
+          'status_update',
         );
       }
+
+      await this.notificationsService.emitToCustomer(
+        result.customerUserId,
+        'order:cancelled',
+        {
+          orderId: result.order.id,
+          reason: 'Order cancelled by customer',
+          cancelledBy: userId,
+        },
+        'status_update',
+      );
 
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch (error) {
       this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }

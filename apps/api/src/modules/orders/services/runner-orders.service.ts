@@ -8,6 +8,11 @@ import {
 import type { OrderStatus, OrderStoreStatus } from '@fawrun/shared-constants';
 import { MarkStoreSkippedRequest, DeliverOrderRequest } from '@fawrun/shared-types';
 import type {
+  CreateRunnerOrderItemRequest,
+  CreateRunnerOrderItemResponse,
+  CreateOrderStoreRequest,
+  CreateOrderStoreResponse,
+  DeleteOrderStoreResponse,
   RunnerOrderActionResponse,
   RunnerOrderStoresResponse,
   PurchaseStoreResponse,
@@ -20,6 +25,7 @@ import { PricingService, type RecalculateFeeResult } from '../../pricing/pricing
 import { OrderStateMachine } from '../../../state-machine/order-state-machine.js';
 import { OrderStoreStateMachine } from '../../../state-machine/order-store-state-machine.js';
 import { RunnerStateMachine } from '../../../state-machine/runner-state-machine.js';
+import type { Prisma } from '@prisma/client';
 
 @Injectable()
 export class RunnerOrdersService {
@@ -51,8 +57,15 @@ export class RunnerOrdersService {
       where: { id: orderId, runnerId: runner.id },
       include: {
         orderStores: {
+          where: { isDeleted: false },
           orderBy: { createdAt: 'asc' },
-          include: { items: { orderBy: { createdAt: 'asc' } } },
+          include: {
+            items: { orderBy: { createdAt: 'asc' } },
+            receipts: {
+              where: { isDeleted: false },
+              orderBy: { uploadedAt: 'asc' },
+            },
+          },
         },
       },
     });
@@ -72,12 +85,23 @@ export class RunnerOrdersService {
         isExtra: store.isExtra,
         addedBy: store.addedBy,
         purchasedAt: store.purchasedAt,
+        isDeleted: store.isDeleted,
+        deletedAt: store.deletedAt,
         items: store.items.map((item) => ({
           id: item.id,
           itemName: item.itemName,
           quantity: item.quantity,
           customStoreName: item.customStoreName,
           anyStore: item.anyStore,
+        })),
+        receipts: store.receipts.map((receipt) => ({
+          id: receipt.id,
+          orderStoreId: receipt.orderStoreId,
+          imageUrl: receipt.imageUrl,
+          r2Key: receipt.r2Key,
+          isDeleted: receipt.isDeleted,
+          deletedAt: receipt.deletedAt,
+          uploadedAt: receipt.uploadedAt,
         })),
       })),
     };
@@ -102,6 +126,7 @@ export class RunnerOrdersService {
 
         const order = await tx.order.findFirst({
           where: { id: orderId, runnerId: runner.id },
+          include: { orderStores: true, customer: true },
         });
         if (!order) {
           throw new NotFoundException('Order not found');
@@ -137,14 +162,14 @@ export class RunnerOrdersService {
           tx,
         );
 
-        return { order: updatedOrder, runnerId: runner.id };
+        return { order: updatedOrder, customerUserId: order.customer.userId };
       },
       { timeout: 15000 },
     );
 
     try {
       await this.notificationsService.emitToCustomer(
-        result.order.customerId,
+        result.customerUserId,
         'order:status_changed',
         {
           orderId: result.order.id,
@@ -152,21 +177,23 @@ export class RunnerOrdersService {
           oldStatus: 'ASSIGNED',
           newStatus: result.order.status,
         },
+        'status_update',
       );
       await this.notificationsService.emitToRunner(
-        result.runnerId,
+        runnerUserId,
         'order:status_changed',
         {
           orderId: result.order.id,
           orderNumber: result.order.orderNumber,
           newStatus: result.order.status,
         },
+        'status_update',
       );
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch (error) {
       this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
@@ -198,7 +225,7 @@ export class RunnerOrdersService {
 
         const order = await tx.order.findFirst({
           where: { id: orderId, runnerId: runner.id },
-          include: { orderStores: true },
+          include: { orderStores: true, customer: true },
         });
         if (!order) {
           throw new NotFoundException('Order not found');
@@ -257,6 +284,10 @@ export class RunnerOrdersService {
           order: updatedOrder,
           orderStore: updatedStore,
           fee: feeResult.newFee,
+          feeChanged: feeResult.feeChanged,
+          oldFee: feeResult.oldFee,
+          feeReason: 'EXTRA_STORE',
+          customerUserId: order.customer.userId,
         };
       },
       { timeout: 15000 },
@@ -265,7 +296,7 @@ export class RunnerOrdersService {
     let customerNotified = false;
     try {
       await this.notificationsService.emitToCustomer(
-        result.order.customerId,
+        result.customerUserId,
         'order:store_purchased',
         { orderId: result.order.id, storeName: result.orderStore.storeName },
       );
@@ -276,6 +307,27 @@ export class RunnerOrdersService {
         orderId: result.order.id,
       });
     }
+
+    if (result.feeChanged && result.oldFee) {
+      try {
+        await this.notificationsService.emitToCustomer(
+          result.customerUserId,
+          'order:fee_updated',
+          {
+            orderId: result.order.id,
+            oldFee: result.oldFee.totalFee,
+            newFee: result.fee.totalFee,
+            reason: result.feeReason,
+          },
+          'status_update',
+        );
+      } catch (error) {
+        this.logger.warn('Fee update notification failed', {
+          error,
+          orderId: result.order.id,
+        });
+      }
+    }
     return {
       orderId: result.order.id,
       orderNumber: result.order.orderNumber!,
@@ -285,6 +337,218 @@ export class RunnerOrdersService {
       },
       updatedFee: result.fee,
       customerNotified,
+    };
+  }
+
+  async createOrderStore(
+    orderId: string,
+    runnerUserId: string,
+    dto: CreateOrderStoreRequest,
+  ): Promise<CreateOrderStoreResponse> {
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const runner = await tx.runner.findUnique({
+          where: { userId: runnerUserId },
+          include: { user: true },
+        });
+        if (!runner || runner.user.status !== 'VERIFIED') {
+          throw new UnprocessableEntityException('Runner is not verified');
+        }
+        if (runner.status !== 'ON_MISSION') {
+          throw new UnprocessableEntityException('Runner is not on mission');
+        }
+
+        const order = await tx.order.findFirst({
+          where: { id: orderId, runnerId: runner.id },
+        });
+        if (!order) {
+          throw new NotFoundException('Order not found');
+        }
+        if (order.status !== 'IN_PROGRESS') {
+          throw new UnprocessableEntityException('Order is not in progress');
+        }
+
+        const orderStore = await tx.orderStore.create({
+          data: {
+            orderId: order.id,
+            storeName: dto.storeName,
+            status: 'PENDING',
+            isExtra: true,
+            addedBy: 'RUNNER',
+          },
+        });
+
+        await this.auditService.log(
+          {
+            orderId: order.id,
+            actorId: runnerUserId,
+            actorRole: 'RUNNER',
+            event: 'STORE_ADDED',
+            meta: {
+              orderNumber: order.orderNumber,
+              storeId: orderStore.id,
+              storeName: orderStore.storeName,
+              addedBy: 'RUNNER',
+            },
+          },
+          tx,
+        );
+
+        return { order, orderStore };
+      },
+      { timeout: 15000 },
+    );
+
+    return {
+      orderId: result.order.id,
+      orderNumber: result.order.orderNumber!,
+      orderStore: {
+        id: result.orderStore.id,
+        storeName: result.orderStore.storeName,
+        isExtra: true,
+        status: 'PENDING' as const,
+        addedBy: 'RUNNER' as const,
+      },
+    };
+  }
+
+  async deleteOrderStore(
+    orderId: string,
+    storeId: string,
+    runnerUserId: string,
+  ): Promise<DeleteOrderStoreResponse> {
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const runner = await tx.runner.findUnique({
+          where: { userId: runnerUserId },
+          include: { user: true },
+        });
+        if (!runner || runner.user.status !== 'VERIFIED') {
+          throw new UnprocessableEntityException('Runner is not verified');
+        }
+        if (runner.status !== 'ON_MISSION') {
+          throw new UnprocessableEntityException('Runner is not on mission');
+        }
+
+        const order = await tx.order.findFirst({
+          where: { id: orderId, runnerId: runner.id },
+        });
+        if (!order) {
+          throw new NotFoundException('Order not found');
+        }
+        if (order.status !== 'IN_PROGRESS') {
+          throw new UnprocessableEntityException('Order is not in progress');
+        }
+
+        const store = await tx.orderStore.findFirst({
+          where: { id: storeId, orderId: order.id, includeDeleted: true } as Prisma.OrderStoreWhereInput,
+        });
+        if (!store) {
+          throw new NotFoundException('Order store not found');
+        }
+        if (store.isDeleted) {
+          throw new UnprocessableEntityException('Order store already deleted');
+        }
+        if (store.status !== 'PENDING') {
+          throw new UnprocessableEntityException(
+            'Only pending stores can be removed',
+          );
+        }
+
+        const updatedStore = await tx.orderStore.update({
+          where: { id: store.id },
+          data: { isDeleted: true, deletedAt: new Date() },
+        });
+
+        await this.auditService.log(
+          {
+            orderId: order.id,
+            actorId: runnerUserId,
+            actorRole: 'RUNNER',
+            event: 'STORE_REMOVED',
+            meta: {
+              orderNumber: order.orderNumber,
+              storeId: store.id,
+              storeName: store.storeName,
+            },
+          },
+          tx,
+        );
+
+        return { order, orderStore: updatedStore };
+      },
+      { timeout: 15000 },
+    );
+
+    return {
+      orderId: result.order.id,
+      orderNumber: result.order.orderNumber!,
+      orderStore: {
+        id: result.orderStore.id,
+        storeName: result.orderStore.storeName,
+        isDeleted: true,
+      },
+    };
+  }
+
+  async createOrderItem(
+    orderId: string,
+    runnerUserId: string,
+    dto: CreateRunnerOrderItemRequest,
+  ): Promise<CreateRunnerOrderItemResponse> {
+    const result = await this.prisma.$transaction(
+      async (tx) => {
+        const runner = await tx.runner.findUnique({
+          where: { userId: runnerUserId },
+          include: { user: true },
+        });
+        if (!runner || runner.user.status !== 'VERIFIED') {
+          throw new UnprocessableEntityException('Runner is not verified');
+        }
+        if (runner.status !== 'ON_MISSION') {
+          throw new UnprocessableEntityException('Runner is not on mission');
+        }
+
+        const order = await tx.order.findFirst({
+          where: { id: orderId, runnerId: runner.id },
+        });
+        if (!order) {
+          throw new NotFoundException('Order not found');
+        }
+        if (order.status !== 'IN_PROGRESS') {
+          throw new UnprocessableEntityException('Order is not in progress');
+        }
+
+        const orderStore = await tx.orderStore.findFirst({
+          where: { id: dto.orderStoreId, orderId: order.id },
+        });
+        if (!orderStore) {
+          throw new NotFoundException(
+            'Order store not found for this order',
+          );
+        }
+
+        const orderItem = await tx.orderItem.create({
+          data: {
+            orderId: order.id,
+            orderStoreId: orderStore.id,
+            itemName: dto.itemName,
+            quantity: dto.quantity,
+            anyStore: false,
+          },
+        });
+
+        return { order, orderItem };
+      },
+      { timeout: 15000 },
+    );
+
+    return {
+      id: result.orderItem.id,
+      itemName: result.orderItem.itemName,
+      quantity: result.orderItem.quantity,
+      orderStoreId: result.orderItem.orderStoreId!,
+      orderId: result.order.id,
     };
   }
 
@@ -309,7 +573,7 @@ export class RunnerOrdersService {
 
         const order = await tx.order.findFirst({
           where: { id: orderId, runnerId: runner.id },
-          include: { orderStores: true },
+          include: { orderStores: true, customer: true },
         });
         if (!order) {
           throw new NotFoundException('Order not found');
@@ -356,14 +620,14 @@ export class RunnerOrdersService {
           tx,
         );
 
-        return { order, orderStore: updatedStore };
+        return { order, orderStore: updatedStore, customerUserId: order.customer.userId };
       },
       { timeout: 15000 },
     );
 
     try {
       await this.notificationsService.emitToCustomer(
-        result.order.customerId,
+        result.customerUserId,
         'order:store_skipped',
         {
           orderId: result.order.id,
@@ -400,7 +664,7 @@ export class RunnerOrdersService {
 
         const order = await tx.order.findFirst({
           where: { id: orderId, runnerId: runner.id },
-          include: { orderStores: true },
+          include: { orderStores: true, customer: true },
         });
         if (!order) {
           throw new NotFoundException('Order not found');
@@ -447,22 +711,23 @@ export class RunnerOrdersService {
           tx,
         );
 
-        return { order: updatedOrder, runnerId: runner.id };
+        return { order: updatedOrder, customerUserId: order.customer.userId };
       },
       { timeout: 15000 },
     );
 
     try {
       await this.notificationsService.emitToCustomer(
-        result.order.customerId,
+        result.customerUserId,
         'order:out_for_delivery',
         { orderId: result.order.id },
+        'status_update',
       );
       await this.notificationsService.emitToAdmin('order:status_changed', {
         orderId: result.order.id,
         orderNumber: result.order.orderNumber,
-        status: result.order.status,
-      });
+        newStatus: result.order.status,
+      }, 'status_update');
     } catch (error) {
       this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
     }
@@ -486,6 +751,14 @@ export class RunnerOrdersService {
       customerId: string;
     }
   > {
+    // Pre-transaction 409 check: if already DELIVERED, return immediately without any action
+    const preCheckOrder = await this.prisma.order.findFirst({
+      where: { id: orderId },
+    });
+    if (preCheckOrder?.status === 'DELIVERED') {
+      throw new ConflictException('ORDER_ALREADY_DELIVERED');
+    }
+
     const result = await this.prisma.$transaction(
       async (tx) => {
         const runner = await tx.runner.findUnique({
@@ -518,6 +791,7 @@ export class RunnerOrdersService {
             ledgerEntries: [],
             runnerId: order.runnerId,
             customerId: order.customerId,
+            customerUserId: order.customer.userId,
           };
         }
 
@@ -561,6 +835,7 @@ export class RunnerOrdersService {
                 ledgerEntries: [],
                 runnerId: current.runnerId,
                 customerId: current.customerId,
+                customerUserId: order.customer.userId,
               };
             }
           }
@@ -694,6 +969,7 @@ export class RunnerOrdersService {
           ledgerEntries,
           runnerId: order.runnerId,
           customerId: order.customerId,
+          customerUserId: order.customer.userId,
         };
       },
       { timeout: 15000 },
@@ -702,23 +978,25 @@ export class RunnerOrdersService {
     if (!result.idempotent) {
       try {
         await this.notificationsService.emitToCustomer(
-          result.customerId!,
+          result.customerUserId,
           'order:delivered',
           {
             orderId: result.order!.id,
             deliveredAt: result.order!.deliveredAt,
           },
+          'success',
         );
         await this.notificationsService.emitToRunner(
-          result.runnerId!,
+          runnerUserId,
           'order:delivered',
           { orderId: result.order!.id },
+          'success',
         );
         await this.notificationsService.emitToAdmin('order:status_changed', {
           orderId: result.order!.id,
           orderNumber: result.order!.orderNumber,
-          status: result.order!.status,
-        });
+          newStatus: result.order!.status,
+        }, 'status_update');
       } catch (error) {
         this.logger.warn('Notification emit failed', { error, orderId: result.order!.id });
       }

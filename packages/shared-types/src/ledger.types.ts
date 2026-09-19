@@ -33,23 +33,27 @@ export const CreateLedgerEntrySchema = z.object({
 
 export type CreateLedgerEntryRequest = z.infer<typeof CreateLedgerEntrySchema>;
 
-export type LedgerEntry = {
-  id: string;
-  orderId: string | null;
-  runnerId: string | null;
-  type: LedgerEntryType;
-  amount: number;
-  description: string;
-  meta: Record<string, unknown> | null;
-  createdAt: Date;
-};
+export const LedgerEntrySchema = z.object({
+  id: z.string(),
+  orderId: z.string().nullable(),
+  runnerId: z.string().nullable(),
+  type: z.enum(LEDGER_ENTRY_TYPES),
+  amount: z.number().int(),
+  description: z.string(),
+  meta: z.record(z.unknown()).nullable(),
+  createdAt: z.date(),
+});
 
-export type LedgerEntryListResult = {
-  data: LedgerEntry[];
-  meta: {
-    total: number;
-    page: number;
-    limit: number;
-    totalPages: number;
-  };
-};
+export type LedgerEntry = z.infer<typeof LedgerEntrySchema>;
+
+export const LedgerListResponseSchema = z.object({
+  data: z.array(LedgerEntrySchema),
+  meta: z.object({
+    total: z.number(),
+    page: z.number(),
+    limit: z.number(),
+    totalPages: z.number(),
+  }),
+});
+
+export type LedgerEntryListResult = z.infer<typeof LedgerListResponseSchema>;

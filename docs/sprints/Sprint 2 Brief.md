@@ -615,18 +615,18 @@ const result = await prisma.$transaction(async (tx) => {
 
 ## معايير الإنجاز (Definition of Done) — Sprint 2
 
-- [ ] Order State Machine مبنية وتغطي كل الانتقالات من القسم 6.1
-- [ ] OrderStore State Machine مبنية وتغطي القسم 6.2
-- [ ] Unit Tests للـ State Machines تمر بنجاح
-- [ ] `POST /api/v1/customer/orders` يُنشئ طلباً مع `orderNumber` بشكل `FW-XXXXXX`
-- [ ] المواد تُجمَّع في OrderStores حسب اسم المتجر (نص حر)
-- [ ] `GET /api/v1/customer/orders` يعمل مع Pagination
-- [ ] `DELETE /api/v1/customer/orders/:id` يعمل حتى حالة `ASSIGNED` فقط
-- [ ] `GET /api/v1/customer/me`, `/me/address`, `/runners` تعمل
-- [ ] Admin يستطيع: عرض الطلبات، اعتماد مع `isPeripheral`، رفض، تعيين مندوب، إلغاء
-- [ ] Pricing Engine يحسب الرسم بشكل صحيح ويُعيد الحساب عند كل تغيير
-- [ ] كل انتقال حالة يمر عبر State Machine
-- [ ] كل عملية تُسجّل في AuditLog
-- [ ] WebSocket events تُرسل للعميل والإدارة عند كل تغيير
-- [ ] خرائط Leaflet + OpenStreetMap مدمجة في Frontends
-- [ ] Admin Dashboard (Next.js) يعرض الطلبات والمستخدمين مع العمليات الأساسية
+- [x] Order State Machine مبنية وتغطي كل الانتقالات من القسم 6.1
+- [x] OrderStore State Machine مبنية وتغطي القسم 6.2
+- [x] Unit Tests للـ State Machines تمر بنجاح
+- [x] `POST /api/v1/customer/orders` يُنشئ طلباً مع `orderNumber` بشكل `FW-XXXXXX`
+- [x] المواد تُجمَّع في OrderStores حسب اسم المتجر (نص حر)
+- [x] `GET /api/v1/customer/orders` يعمل مع Pagination
+- [x] `DELETE /api/v1/customer/orders/:id` يعمل حتى حالة `ASSIGNED` فقط
+- [x] `GET /api/v1/customer/me`, `/me/address`, `/runners` تعمل
+- [x] Admin يستطيع: عرض الطلبات، اعتماد مع `isPeripheral`، رفض، تعيين مندوب، إلغاء
+- [x] Pricing Engine يحسب الرسم بشكل صحيح ويُعيد الحساب عند كل تغيير
+- [x] كل انتقال حالة يمر عبر State Machine
+- [x] كل عملية تُسجّل في AuditLog
+- [x] WebSocket events تُرسل للعميل والإدارة عند كل تغيير
+- [x] خرائط Leaflet + OpenStreetMap مدمجة في Frontends
+- [x] Admin Dashboard (Next.js) يعرض الطلبات والمستخدمين مع العمليات الأساسية

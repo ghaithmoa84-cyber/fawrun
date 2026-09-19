@@ -9,7 +9,11 @@ export class NotificationsService {
 
   private emit(server: Server | null, room: string, event: string, data: unknown, sound?: SoundType): void {
     if (server) {
-      const payload = typeof data === 'object' && data !== null ? { ...(data as Record<string, unknown>), sound } : { data, sound };
+      const base =
+        typeof data === 'object' && data !== null
+          ? { ...(data as Record<string, unknown>) }
+          : { data };
+      const payload = sound !== undefined ? { ...base, sound } : base;
       if (room) {
         server.to(room).emit(event, payload);
       } else {
@@ -20,12 +24,12 @@ export class NotificationsService {
     }
   }
 
-  emitToCustomer(customerId: string, event: string, data: unknown, sound?: SoundType): void {
-    this.emit(SOCKET_SERVERS.orders, `customer:${customerId}`, event, data, sound);
+  emitToCustomer(customerUserId: string, event: string, data: unknown, sound?: SoundType): void {
+    this.emit(SOCKET_SERVERS.orders, `customer:${customerUserId}`, event, data, sound);
   }
 
-  emitToRunner(runnerId: string, event: string, data: unknown, sound?: SoundType): void {
-    this.emit(SOCKET_SERVERS.orders, `runner:${runnerId}`, event, data, sound);
+  emitToRunner(runnerUserId: string, event: string, data: unknown, sound?: SoundType): void {
+    this.emit(SOCKET_SERVERS.orders, `runner:${runnerUserId}`, event, data, sound);
   }
 
   emitToAdmin(event: string, data: unknown, sound?: SoundType): void {

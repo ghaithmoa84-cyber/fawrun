@@ -38,7 +38,7 @@ export class LedgerService {
         type: data.type,
         amount: data.amount,
         description: data.description,
-        meta: (data.meta ?? Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
+        meta: (data.meta ? data.meta : Prisma.JsonNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
       },
     });
 
@@ -75,7 +75,7 @@ export class LedgerService {
           type: data.type,
           amount: data.amount,
           description: data.description,
-          meta: (data.meta ?? Prisma.DbNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
+          meta: (data.meta ? data.meta : Prisma.JsonNull) as Prisma.NullableJsonNullValueInput | Prisma.InputJsonValue,
         },
       });
       results.push(mapPrismaToLedgerEntry(entry));
@@ -131,5 +131,23 @@ export class LedgerService {
     }
 
     return mapPrismaToLedgerEntry(entry);
+  }
+
+  async getEntriesByOrder(orderId: string): Promise<LedgerEntry[]> {
+    const entries = await this.prisma.ledgerEntry.findMany({
+      where: { orderId },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return entries.map(mapPrismaToLedgerEntry);
+  }
+
+  async getEntriesByRunner(runnerId: string): Promise<LedgerEntry[]> {
+    const entries = await this.prisma.ledgerEntry.findMany({
+      where: { runnerId, type: 'RUNNER_SHARE' },
+      orderBy: { createdAt: 'asc' },
+    });
+
+    return entries.map(mapPrismaToLedgerEntry);
   }
 }

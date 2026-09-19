@@ -1,5 +1,6 @@
 generator client {
   provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
 }
 
 datasource db {
@@ -290,6 +291,10 @@ model OrderStore {
   purchasedAt DateTime?
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
+
+  // Soft delete: المتجر يُ وضع علامة محذوفة هنا، لا حذف حقيقي
+  isDeleted  Boolean  @default(false)
+  deletedAt  DateTime?
 
   items    OrderItem[]
   receipts Receipt[]

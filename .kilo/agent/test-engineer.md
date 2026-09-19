@@ -12,7 +12,11 @@ Runs comprehensive testing and security validation after each module. Mandatory 
 ## Primary Responsibilities
 
 ### 1. Local Code Review Checklist (Before Push)
-- Lint passes, typecheck passes, all tests pass
+Mandatory command before every push:
+```
+pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test
+```
+All four must succeed — no exceptions.
 - Prisma client generates without errors
 
 ### 2. Security Checks (Integrated)
@@ -37,6 +41,16 @@ Runs comprehensive testing and security validation after each module. Mandatory 
 - Settlement idempotency verified
 - Transaction boundaries correct
 - No negative balances
+
+### 5. Dead Ends & Edge Cases
+- [ ] Every async function returns an explicit result or throws — no silent return
+- [ ] Every catch logs the error via Logger — never `void 0`
+- [ ] Every `findUnique` guarantees null handling (`findUniqueOrThrow` or null check)
+- [ ] Every status change: `updateMany` with `where: { status: currentStatus }` + verify `count === 1`
+- [ ] Concurrent operations protected from Race Conditions
+- [ ] Operations that can be sent twice are safe (Idempotency)
+- [ ] No hardcoded values in financial operations
+- [ ] WebSocket rooms depend on role from DB, not from JWT
 
 ## When to Invoke
 - After each module completion

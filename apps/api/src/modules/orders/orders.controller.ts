@@ -12,6 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import {
+  CreateRunnerOrderItemSchema,
+  CreateOrderStoreSchema,
   AdminOrdersQuerySchema,
   ApproveOrderSchema,
   CreateOrderSchema,
@@ -25,6 +27,11 @@ import {
   StartOrderReviewSchema,
 } from '@fawrun/shared-types';
 import type {
+  CreateRunnerOrderItemRequest,
+  CreateRunnerOrderItemResponse,
+  CreateOrderStoreRequest,
+  CreateOrderStoreResponse,
+  DeleteOrderStoreResponse,
   AdminOrdersQuery,
   ApproveOrderRequest,
   CreateOrderRequest,
@@ -188,6 +195,53 @@ export class OrdersController {
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
     return this.runnerOrdersService.listRunnerOrderStores(params.id, user.userId);
+  }
+
+  @Post('runner/orders/:id/stores')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async createOrderStore(
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
+    @Body(new ZodValidationPipe(CreateOrderStoreSchema))
+    dto: CreateOrderStoreRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ): Promise<CreateOrderStoreResponse> {
+    return this.runnerOrdersService.createOrderStore(
+      params.id,
+      user.userId,
+      dto,
+    );
+  }
+
+  @Delete('runner/orders/:id/stores/:storeId')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async deleteOrderStore(
+    @Param(new ZodValidationPipe(RunnerOrderStoreParamSchema))
+    params: RunnerOrderStoreParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ): Promise<DeleteOrderStoreResponse> {
+    return this.runnerOrdersService.deleteOrderStore(
+      params.id,
+      params.storeId,
+      user.userId,
+    );
+  }
+
+  @Post('runner/orders/:id/items')
+  @Roles('RUNNER')
+  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  async createOrderItem(
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
+    @Body(new ZodValidationPipe(CreateRunnerOrderItemSchema))
+    dto: CreateRunnerOrderItemRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ): Promise<CreateRunnerOrderItemResponse> {
+    return this.runnerOrdersService.createOrderItem(
+      params.id,
+      user.userId,
+      dto,
+    );
   }
 
   @Put('runner/orders/:id/start')

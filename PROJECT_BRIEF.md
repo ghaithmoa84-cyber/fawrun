@@ -443,14 +443,21 @@ Sprint 6 - QA + Launch (1 week)
 12. Zod on every input - never trust any incoming data, no matter the source.
 13. Environment variables only for secrets - no keys in code or in Git.
 
-## 16. Current Status (as of 2026-09-11)
+## 16. Current Status (as of 2026-09-18)
 
 - Sprint 1 is COMPLETE - all 13 sub-tasks done.
-- 13 endpoints implemented (auth + admin users/runners).
+- Sprint 2 (Order Core) is COMPLETE - PR #3 merged.
+- 40+ endpoints implemented (auth + admin users/runners + customer/runner/admin orders).
 - Prisma schema, WebSocket gateway, rate limiting, CORS all in place.
-- No blockers.
-- Next: start Sprint 2 (Order State Machine, order creation, Pricing Engine).
-Note: R09 review (2026-09-17) identified 15 P0 and 21 P1 issues. 
+- State Machines (Order, OrderStore, Runner) implemented and enforced.
+- Pricing Engine implemented with recalculateFee().
+- Audit Log integrated across all state transitions.
+- Ledger module implemented (GET /api/v1/admin/ledger).
+- Admin Dashboard (Next.js) basic structure in place.
+- Post-review fixes in progress on branch feature/sprint-2-post-review-fixes.
+- Frontends (admin-web, runner-pwa, android) not yet implemented (Sprints 3-5).
+- Settlement, Ratings, Receipts modules not yet implemented (Sprints 3-4).
+Note: R09 review (2026-09-17) identified 15 P0 and 21 P1 issues.
 See CHANGELOG.md for the full remediation status.
 
 ## 17. Development Workflow
