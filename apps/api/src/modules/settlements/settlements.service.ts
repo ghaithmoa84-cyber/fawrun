@@ -67,7 +67,7 @@ export class SettlementsService {
     notes: string | null,
     adminId: string,
   ): Promise<CloseDayResult> {
-    return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
+    const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const { start, end } = getUtcRangeForOperationalDate(operationalDate);
 
       const orders = await tx.order.findMany({
@@ -179,13 +179,15 @@ export class SettlementsService {
         tx,
       );
 
-      this.notificationsService.emitToAdmin('settlement:closed', {
-        date: operationalDate,
-        runnerCount: settlements.length,
-      });
-
       return { settlements, runnerCount: settlements.length };
     });
+
+    this.notificationsService.emitToAdmin('settlement:closed', {
+      date: operationalDate,
+      runnerCount: result.runnerCount,
+    });
+
+    return result;
   }
 
   async markSettled(id: string, adminId: string) {
@@ -206,14 +208,22 @@ export class SettlementsService {
         throw new BadRequestException('Settlement is not pending');
       }
 
-      await tx.settlement.update({
-        where: { id },
+      const closedAt = new Date();
+
+      const updated = await tx.settlement.updateMany({
+        where: { id, status: 'PENDING' },
         data: {
           status: 'SETTLED',
-          closedAt: new Date(),
+          closedAt,
           closedByAdminId: adminId,
         },
       });
+
+      if (updated.count === 0) {
+        throw new ConflictException(
+          'Settlement already settled or not found',
+        );
+      }
 
       await tx.ledgerEntry.create({
         data: {
@@ -237,7 +247,7 @@ export class SettlementsService {
       );
 
       return {
-        settlement: { ...settlement, status: 'SETTLED', closedAt: new Date(), closedByAdminId: adminId },
+        settlement: { ...settlement, status: 'SETTLED', closedAt, closedByAdminId: adminId },
       };
     });
   }

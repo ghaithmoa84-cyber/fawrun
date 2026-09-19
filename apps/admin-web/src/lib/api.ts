@@ -94,16 +94,6 @@ function redirectToLogin(): void {
   }
 }
 
-function isAuthEndpoint(url?: string): boolean {
-  if (!url) return false;
-  const normalized = url.includes('?') ? url.split('?')[0]! : url;
-  return (
-    normalized === '/auth/login' ||
-    normalized === '/auth/refresh' ||
-    normalized === '/auth/logout'
-  );
-}
-
 let isRefreshing = false;
 let pendingRefresh: Promise<string | null> | null = null;
 
@@ -138,11 +128,17 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401 && !isAuthEndpoint(error.config?.url)) {
+    const originalRequest = error.config as InternalAxiosRequestConfig & {
+      _retry?: boolean;
+    };
+
+    if (error.response?.status === 401 && !originalRequest._retry) {
+      originalRequest._retry = true;
       try {
-        await refreshAccessToken();
-        if (error.config) {
-          return api(error.config);
+        const token = await refreshAccessToken();
+        if (token) {
+          originalRequest.headers.set('Authorization', `Bearer ${token}`);
+          return api(originalRequest);
         }
       } catch {
         clearAuth();

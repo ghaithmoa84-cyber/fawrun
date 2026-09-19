@@ -70,6 +70,7 @@ describe('RatingsService', () => {
         id: 'order-1',
         customerId: 'cust-1',
         status: 'DELIVERED',
+        deliveredAt: new Date(),
         runnerId: 'runner-1',
       });
       prisma.rating.findUnique.mockResolvedValue(null);
@@ -120,6 +121,7 @@ describe('RatingsService', () => {
         id: 'order-1',
         customerId: 'cust-1',
         status: 'DELIVERED',
+        deliveredAt: new Date(),
         runnerId: 'runner-1',
       });
       prisma.rating.findUnique.mockResolvedValue(null);
@@ -159,6 +161,7 @@ describe('RatingsService', () => {
         id: 'order-1',
         customerId: 'other',
         status: 'DELIVERED',
+        deliveredAt: new Date(),
         runnerId: 'runner-1',
       });
 
@@ -173,6 +176,7 @@ describe('RatingsService', () => {
         id: 'order-1',
         customerId: 'cust-1',
         status: 'DELIVERED',
+        deliveredAt: new Date(),
         runnerId: 'runner-1',
       });
       prisma.rating.findUnique.mockResolvedValue({ id: 'existing' });
@@ -180,6 +184,22 @@ describe('RatingsService', () => {
       await expect(
         service.createRating('order-1', CUSTOMER, { stars: 5 }),
       ).rejects.toBeInstanceOf(ConflictException);
+    });
+
+    it('rejects ratings created more than 24h after delivery', async () => {
+      const expiredDelivery = new Date(Date.now() - 25 * 60 * 60 * 1000);
+      prisma.customer.findUnique.mockResolvedValue({ id: 'cust-1' });
+      prisma.order.findUnique.mockResolvedValue({
+        id: 'order-1',
+        customerId: 'cust-1',
+        status: 'DELIVERED',
+        deliveredAt: expiredDelivery,
+        runnerId: 'runner-1',
+      });
+
+      await expect(
+        service.createRating('order-1', CUSTOMER, { stars: 5 }),
+      ).rejects.toBeInstanceOf(UnprocessableEntityException);
     });
 
     it('forbids non-customer actors before querying the customer', async () => {

@@ -59,6 +59,19 @@ export class RatingsService {
         );
       }
 
+      if (!order.deliveredAt) {
+        throw new UnprocessableEntityException(
+          'Order has no delivery timestamp',
+        );
+      }
+      const hoursSinceDelivery =
+        (Date.now() - order.deliveredAt.getTime()) / (1000 * 60 * 60);
+      if (hoursSinceDelivery > 24) {
+        throw new UnprocessableEntityException(
+          'Rating window has expired (24 hours after delivery)',
+        );
+      }
+
       if (!order.runnerId) {
         throw new UnprocessableEntityException('Order has no runner to rate');
       }

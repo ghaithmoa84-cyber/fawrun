@@ -33,7 +33,12 @@ export default function DashboardPage() {
       setLoading(true);
       setError(null);
 
-      const today = new Date().toISOString().split('T')[0];
+      const today = new Intl.DateTimeFormat('en-CA', {
+        timeZone: 'Asia/Damascus',
+        year: 'numeric',
+        month: '2-digit',
+        day: '2-digit',
+      }).format(new Date());
 
       const [settlementsRes, runnersRes] = await Promise.all([
         api.get('/admin/settlements', {
