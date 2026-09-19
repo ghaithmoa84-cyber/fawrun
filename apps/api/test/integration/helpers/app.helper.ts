@@ -1,7 +1,7 @@
 import { INestApplication, ValidationPipe } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { AppModule } from '../../../src/app.module';
-import * as supertest from 'supertest';
+import supertest from 'supertest';
 
 let app: INestApplication;
 

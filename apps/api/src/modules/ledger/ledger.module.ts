@@ -7,5 +7,6 @@ import { LedgerService } from './ledger.service.js';
   imports: [PrismaModule],
   controllers: [LedgerController],
   providers: [LedgerService],
+  exports: [LedgerService],
 })
 export class LedgerModule {}
