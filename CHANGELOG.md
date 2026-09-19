@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-09-19 12:54 — Customer order details: full details mapping (feature-dev)
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/src/modules/orders/services/customer-orders.service.ts` — `getOrderDetails`:
+  - Prisma query: added `orderStores.receipts` (filtered `isDeleted: false`, ordered `uploadedAt` asc), `orderStores` filtered `isDeleted: false` (matches runner-orders pattern), `ratings` filtered by `customerId` (current customer), and `runner.user` now selects only `name`
+  - Response mapped to the updated `CustomerOrderDetails` type: added `pricing`, `stores` (simplified view with `id`, `storeName`, `status`, `isExtra`, `items`, `receipts`), `rating` (`{ stars } | null`, only when customer rated), and `timeline` (`createdAt`, `reviewedAt`, `assignedAt`, `startedAt`, `deliveredAt`, `cancelledAt`)
+  - Ownership check preserved via `customerId: customer.id` in the `where` clause
+
+**السبب:**
+تم توحيد `getOrderDetails` مع النوع المحدَّث `CustomerOrderDetails` في `shared-types`، بما في ذلك بيانات التقييمات، الإيصالات، التسعير، والجدول الزمني.
+
+**الأوامر والنتائج:**
+- `pnpm exec turbo run typecheck --force` → 4/4 packages successful (كان يوجد cache قديم أظهر خطأ `pricing` غير موجود اقتارفه، تم حله بزيارة الكاش)
+- `pnpm exec turbo run lint --force` → 4/4 successful؛ fawrun-api نظيف؛ تحذيرات runner-pwa موجودة مسبقًا غير مرتبطة
+
 ### 2026-09-12 18:18 — CodeRabbit review documentation fixes (Sprint 2/3 Brief)
 
 **الملفات والدوال المعدّلة:**
@@ -47,6 +62,157 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 - لا توجد أخطاء تشغيل
 
 ## [Unreleased]
+
+### 2026-09-19 16:21 — Runner settlement list and current endpoints
+
+**Modified files and functions:**
+- `apps/api/src/modules/settlements/settlements.controller.ts` — Added `listRunner()` for `GET /runner/settlements` with `RunnerSettlementsQuerySchema` validation and `getCurrentSettlement()` for `GET /runner/settlements/current`; both resolve the authenticated `userId` to a verified runner profile through `resolveRunner()` before calling `SettlementsService`.
+- `CHANGELOG.md` — Recorded this controller change and validation results.
+
+**Reason:**
+Expose runner-owned paginated settlement history and the current settlement while enforcing RUNNER authorization, verified-account checks, pagination validation, and rate limiting.
+
+**Commands and results:**
+- `pnpm --filter fawrun-api typecheck` → passed
+- `pnpm --filter fawrun-api lint` → passed
+- `pnpm --filter fawrun-api test` → passed, 9 files / 163 tests
+- `git diff -- apps/api/src/modules/settlements/settlements.controller.ts && git status --short` → controller diff reviewed; working tree contains unrelated concurrent changes
+
+**Errors and resolutions:**
+- Vitest reported the existing `vite-tsconfig-paths` deprecation and `test.poolOptions` migration warnings; tests still passed.
+- PowerShell `date` alias rejected the format string → used `Get-Date -Format 'yyyy-MM-dd HH:mm'` for the changelog timestamp.
+
+### 2026-09-19 16:16 — Runner settlements service: listRunnerSettlements and getCurrentSettlement
+
+**Modified files and functions:**
+- `apps/api/src/modules/settlements/settlements.service.ts` — Added two methods:
+  - `listRunnerSettlements(runnerId, page, limit)`: Filter settlements by `runnerId`, paginate with `skip`/`take`, order by `createdAt: desc`, return `{ data: RunnerSettlement[], meta: { total, page, limit, totalPages } }` mapped to `RunnerSettlementSchema` shape
+  - `getCurrentSettlement(runnerId)`: Check if today's settlement exists for runnerId + operationalDate; if exists return with items (orderNumber, deliveredAt); if not, compute temporary summary from DELIVERED orders (totalOrders, totalFees, estimatedRunnerShare=floor(totalFees*0.75), estimatedPlatformShare=ceil(totalFees*0.25)) with `status: 'NOT_CLOSED'`
+
+**Reason:**
+Implement Task 4.5 — provide runner-facing settlement views with support for temporary (NOT_CLOSED) status when today's settlement hasn't been closed yet.
+
+**Commands and results:**
+- `pnpm typecheck` → passed, 4/4 packages
+- `pnpm lint` → passed, 4/4 packages (0 errors)
+- `pnpm --filter fawrun-api test` → passed, 9 files / 163 tests
+
+**Errors and resolutions:**
+- `settlementItems does not exist` in Prisma include — the relation in schema is `items`, not `settlementItems` → corrected relation name
+- TS2322 nullable fields (`orderNumber: string | null`, `deliveredAt: Date | null`) don't match `RunnerSettlementItemSchema` (non-nullable) → used non-null assertions (`!`) when mapping
+- `@fawrun/shared-types` types not found during typecheck → ran `pnpm build` in shared-types first to compile new exports
+
+### 2026-09-19 13:08 — Task 4.5: Runner settlement DTOs in shared-types
+
+**Modified files and functions:**
+- `packages/shared-types/src/settlement.types.ts` — Added `RunnerSettlementItemSchema` (orderNumber, totalFee, deliveredAt), `RunnerSettlementSchema` (operationalDate, status PENDING|SETTLED, totalOrders, totalFees, runnerShare, platformShare), `RunnerSettlementListResponseSchema` (paginated with PaginatedMetaSchema), `RunnerCurrentSettlementSchema` (NOT_CLOSED status with estimatedRunnerShare/estimatedPlatformShare and orders array), `RunnerSettlementsQuerySchema` (page/limit pagination). All schemas exported with Zod inference types.
+
+**Reason:**
+Define shared Zod schemas and TypeScript types for runner settlement views as part of Task 4.5, following the existing pattern of DTOs-first in shared-types.
+
+**Commands and results:**
+- `npx tsc --noEmit -p packages/shared-types/tsconfig.json` → passed (no output, no errors)
+
+**Errors and resolutions:**
+- None.
+
+### 2026-09-19 16:05 — Add rating availability to customer order list
+
+**Modified files and functions:**
+- `apps/api/src/modules/orders/services/customer-orders.service.ts` — `listCustomerOrders`: add a customer-scoped `ratings` Prisma include selecting `id`, `expiresAt`, and `isFinal`; map `hasRating` and `canRate` using `DELIVERED`, no existing rating, `deliveredAt`, and the 24-hour rating window.
+
+**Reason:**
+Match the updated `CustomerOrderListItem` contract and expose whether the customer can rate each delivered order.
+
+**Commands and results:**
+- `pnpm --filter @fawrun/shared-types build` → passed
+- `pnpm --filter fawrun-api exec tsc --noEmit --incremental false --pretty false` → passed
+- `pnpm --filter fawrun-api exec eslint src/modules/orders/services/customer-orders.service.ts` → passed
+- `git diff --check -- apps/api/src/modules/orders/services/customer-orders.service.ts` → passed
+
+**Errors and resolutions:**
+- The incremental API typecheck initially reported `CustomerOrderDetails` missing `pricing` after concurrent `getOrderDetails` changes; a cache-free typecheck passed against the current shared type.
+- `pnpm exec prettier --write apps/api/src/modules/orders/services/customer-orders.service.ts` reformatted unrelated call sites; those incidental changes were reverted to keep the patch scoped.
+
+### 2026-09-19 15:31 — اختبارات unit للمهمتين 4.2 و4.3
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/test/ratings/ratings.service.spec.ts` — اختبارات `RatingsService.createRating()` و`updateRating()` و`mapRating()` مع Prisma وAudit mocks
+- `apps/api/test/settlements/settlements.cron.spec.ts` — اختبارات `getOperationalDate()` و`checkPendingOrders()` و`settlementReminder()` مع Prisma وNotifications mocks
+
+**السبب:**
+تغطية منطق التقييمات ونافذة التحرير والمتوسط المتحرك، ومنطق Cron لتذكير التسويات، بدون اتصال بقاعدة بيانات.
+
+**الأوامر والنتائج:**
+- `pnpm --filter fawrun-api test` → نجح، 9 ملفات و163 اختبارًا
+
+**الأخطاء والحلول:**
+- تم تصحيح قيمة `lte` في mock الخاص بنطاق تاريخ التسوية بعد مراجعة الملف قبل تشغيل الاختبارات.
+
+### 2026-09-19 14:43 — تثبيت إعداد Vitest للخيار 3 واستثناء integration
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/vitest.config.ts` — إضافة `pool: 'forks'`، و`execArgv: ['--require', 'ts-node/register']`، وalias لـ `@prisma/client`، و`exclude: ['test/integration/**/*.spec.ts']`؛ استخدام `resolve` من `node:path` مع `__dirname` المناسب لـ ESM
+
+**السبب:**
+تجاوز فشل `vite:oxc` عند تحليل Prisma `const enum`، وتشغيل اختبارات unit فقط من config الرئيسي مع إبقاء integration على `vitest.config.integration.ts`.
+
+**الأوامر والنتائج:**
+- `pnpm --filter fawrun-api test` → نجح، 7 ملفات و148 اختبارًا
+- `pnpm --filter fawrun-api lint` → نجح
+- `pnpm --filter fawrun-api typecheck` → نجح
+
+**الأخطاء والحلول:**
+- Vitest 4.1.11 لا يصدّر `resolve` من `vitest/config`، لذلك استُخدم `node:path` مع تعريف `__dirname` بصيغة ESM
+- ظهور تحذير `test.poolOptions`Deprecated` من Vitest 4؛ الإعداد ما زال يعمل ويعطي النتيجة المطلوبة
+
+### 2026-09-19 14:39 — اختبار بدائل إعداد Vitest لمعالجة Prisma const enum
+
+**الملفات والدوال المعدّلة:**
+- `apps/api/vitest.config.ts` — تطبيق وإعادة إعدادات الخيارات 1 و3 و4 مؤقتًا، ثم استعادة الإعداد الأصلي
+- `apps/api/vite.config.ts` — إنشاء إعداد الخيار 2 مؤقتًا ثم حذفه
+
+**السبب:**
+تحديد إعداد يحل فشل `vite:oxc` عند تحليل `node_modules/.prisma/client/index.d.ts` الناتج عن `const enum`.
+
+**الأوامر والنتائج:**
+- `pnpm --filter fawrun-api test` مع الخيار 1 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ استمرار خطأ `Missing initializer in const declaration` من `vite:oxc`
+- `pnpm --filter fawrun-api test` مع الخيار 2 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ استمرار الخطأ نفسه
+- `pnpm --filter fawrun-api test` مع الخيار 3 → تجاوز خطأ OXC: 7 ملفات نجحت، 3 ملفات integration فشلت بسبب عدم الوصول إلى قاعدة البيانات؛ 148 اختبارًا ناجحًا و13 تخطى
+- `pnpm --filter fawrun-api test` مع الخيار 4 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ حذّر Vitest من وجود `esbuild` و`oxc` معًا وأن إعدادات `oxc` هي المستخدمة
+- `git status --short -- apps/api/vitest.config.ts apps/api/vite.config.ts` → لا توجد تغييرات متبقية في ملفات الإعداد المؤقتة
+
+**الأخطاء والحلول:**
+- الخيار 4 لا يبدّل المحوّل إلى esbuild في Vitest 4.1.11/Vite 8.3.0؛ بقي OXC هو الفعّال
+- الخيار 3 هو الوحيد الذي تجاوز خطأ Prisma، لكنه يحتاج قاعدة اختبار متاحة قبل اعتبار الاختبارات مكتملة
+
+### 2026-09-19 14:30 — Sprint 4 Task 4.1: Settlements module implementation
+
+**الملفات والدوال المعدّلة:**
+- `packages/shared-types/src/settlement.types.ts` — إضافة `SettlementItemSchema`، `SettlementSchema`، `SettlementListResponseSchema`، `SettlementAdminQuerySchema` وأنواعها
+- `packages/shared-types/src/rating.types.ts` — إنشاء schemas: `CreateRatingSchema`، `RatingSchema`، `RatingListResponseSchema`، `RatingListQuerySchema`
+- `packages/shared-types/src/websocket.events.ts` — إضافة `SETTLEMENT_CLOSED` إلى `ADMIN_EVENTS`
+- `packages/shared-types/src/index.ts` — تصدير `rating.types`
+- `apps/api/src/modules/settlements/settlements.controller.ts` — Controller بـ 4 endpoints: `POST /admin/settlements/close-day`، `PUT /admin/settlements/:id/mark-settled`، `GET /admin/settlements`، `GET /admin/settlements/pending`
+- `apps/api/src/modules/settlements/settlements.service.ts` — Service بمنطق: `closeDay` (transaction مع حساب Damascus range، idempotent check، إنشاء Settlement + SettlementItems + SETTLEMENT_PAID LedgerEntry + AuditLog + WebSocket)، `markSettled` (PENDING→SETTLED + SETTLEMENT_PAID LedgerEntry + AuditLog)، `listAdmin` (pagination + filters)، `getPending` (مجمّعة حسب المندوب)
+- `apps/api/src/modules/settlements/settlements.module.ts` — Module مع Prisma + Audit + Notifications
+- `apps/api/src/app.module.ts` — تسجيل `SettlementsModule`
+
+**السبب:**
+تنفيذ المهمة 4.1 من Sprint 4 — إنشاء module التسويات اليومية (Settlements) بالكامل مع الالتزام بجميع القواعد: DTOs في shared-types أولاً، كل عملية مالية = LedgerEntry (SETTLEMENT_PAID فقط)، كل العمليات في transaction واحدة، فحص idempotency، AuditLog لكل عملية، WebSocket emitToAdmin.
+
+**الأوامر والنتائج:**
+- `pnpm build` → نجح، 4/4 حزم
+- `pnpm typecheck` → نجح، 4/4 حزم
+- `pnpm lint` → نجح، 4/4 حزم (0 errors)
+- `pnpm --filter fawrun-api test` → ⚠️ 123 اختبار نجح | 5 ملفات فشلت (بنية تحتية مسبقة — Prisma + Vitest/oxc incompatibility)
+
+**الأخطاء والحلول:**
+- خطأ `Duplicate identifier 'SettlementAdminQuery'` — تم تصحيح الاستيراد (القيمة `SettlementAdminQuerySchema` والنوع `type SettlementAdminQuery`)
+- خطأ `Module has no exported member 'Prisma'` — تم تصحيح الاستيراد من `@prisma/client` بدلاً من `prisma.service.js`
+- خطأ `TS2322: Type 'string' is not assignable to SettlementStatus` — تم تصحيح الـ cast إلى `'PENDING' | 'SETTLED'`
+- خطأ `no-unused-vars: CloseSettlementRequest` — تم إزالة الاستيراد غير المستخدم
+- خطأ `no-explicit-any` — تم تعيين نوع صريح لمتغير `settlements`
 
 ### 2026-09-19 11:13 — تصحيح تسلسل مراجعة الطلب في اختبارات integration
 

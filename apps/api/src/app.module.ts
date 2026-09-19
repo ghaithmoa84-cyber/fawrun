@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ThrottlerGuard, ThrottlerModule } from '@nestjs/throttler';
 import { JwtModule } from '@nestjs/jwt';
+import { ScheduleModule } from '@nestjs/schedule';
 import { APP_GUARD } from '@nestjs/core';
 import * as crypto from 'crypto';
 import { PrismaModule } from './database/prisma.module.js';
@@ -15,6 +16,8 @@ import { WebsocketModule } from './websocket/websocket.module.js';
 import { AuditModule } from './modules/audit/audit.module.js';
 import { LedgerModule } from './modules/ledger/ledger.module.js';
 import { ReceiptsModule } from './modules/receipts/receipts.module.js';
+import { SettlementsModule } from './modules/settlements/settlements.module.js';
+import { RatingsModule } from './modules/ratings/ratings.module.js';
 import { RolesGuard } from './common/guards/roles.guard.js';
 import { JwtAuthGuard } from './common/guards/jwt-auth.guard.js';
 import { jwtConfig } from './config/jwt.config.js';
@@ -116,13 +119,16 @@ import { jwtConfig } from './config/jwt.config.js';
     LedgerModule,
     NotificationsModule,
     WebsocketModule.registerAsync(),
+    ScheduleModule.forRoot(),
     AuthModule,
     UsersModule,
     RunnersModule,
     OrdersModule,
     CustomersModule,
     ReceiptsModule,
-  ],
+     SettlementsModule,
+     RatingsModule,
+   ],
   providers: [
     {
       provide: APP_GUARD,

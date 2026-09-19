@@ -257,6 +257,10 @@ export class CustomerOrdersService {
           _count: {
             select: { items: true },
           },
+          ratings: {
+            where: { customerId: customer.id },
+            select: { id: true, expiresAt: true, isFinal: true },
+          },
         },
       }),
     ]);
@@ -270,6 +274,13 @@ export class CustomerOrdersService {
         itemCount: order._count.items,
         createdAt: order.createdAt,
         deliveredAt: order.deliveredAt,
+        hasRating: order.ratings.length > 0,
+        canRate:
+          order.status === 'DELIVERED' &&
+          order.ratings.length === 0 &&
+          order.deliveredAt != null &&
+          new Date(order.deliveredAt.getTime() + 24 * 60 * 60 * 1000) >
+            new Date(),
       })),
       meta: {
         total,
@@ -301,17 +312,25 @@ export class CustomerOrdersService {
           orderBy: { createdAt: 'asc' },
         },
         orderStores: {
+          where: { isDeleted: false },
           orderBy: { createdAt: 'asc' },
           include: {
             items: {
               orderBy: { createdAt: 'asc' },
             },
+            receipts: {
+              where: { isDeleted: false },
+              orderBy: { uploadedAt: 'asc' },
+            },
           },
         },
         runner: {
           include: {
-            user: true,
+            user: { select: { name: true } },
           },
+        },
+        ratings: {
+          where: { customerId: customer.id },
         },
       },
     });
@@ -329,6 +348,12 @@ export class CustomerOrdersService {
       peripheralFee: order.peripheralFee,
       extraStoresFee: order.extraStoresFee,
       totalFee: order.totalFee,
+      pricing: {
+        baseFee: order.baseFee,
+        peripheralFee: order.peripheralFee,
+        extraStoresFee: order.extraStoresFee,
+        totalFee: order.totalFee,
+      },
       deliveryLat: order.deliveryLat,
       deliveryLng: order.deliveryLng,
       deliveryDesc: order.deliveryDesc,
@@ -352,6 +377,33 @@ export class CustomerOrdersService {
         updatedAt: store.updatedAt,
         items: store.items.map((item) => mapOrderItem(item)),
       })),
+      stores: order.orderStores.map((store) => ({
+        id: store.id,
+        storeName: store.storeName,
+        status: store.status,
+        isExtra: store.isExtra,
+        items: store.items.map((item) => ({
+          id: item.id,
+          itemName: item.itemName,
+          quantity: item.quantity,
+        })),
+        receipts: store.receipts.map((receipt) => ({
+          id: receipt.id,
+          imageUrl: receipt.imageUrl,
+        })),
+      })),
+      rating:
+        order.ratings.length > 0
+          ? { stars: order.ratings[0].stars }
+          : null,
+      timeline: {
+        createdAt: order.createdAt,
+        reviewedAt: order.reviewedAt,
+        assignedAt: order.assignedAt,
+        startedAt: order.startedAt,
+        deliveredAt: order.deliveredAt,
+        cancelledAt: order.cancelledAt,
+      },
       runner: order.runner
         ? {
             id: order.runner.id,

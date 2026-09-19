@@ -89,6 +89,8 @@ export type CustomerOrderListItem = {
   itemCount: number;
   createdAt: Date;
   deliveredAt: Date | null;
+  hasRating: boolean;
+  canRate: boolean;
 };
 
 export type CustomerOrderItem = {
@@ -116,6 +118,46 @@ export type CustomerOrderStore = {
   items: CustomerOrderItem[];
 };
 
+export type StoreReceipt = {
+  id: string;
+  imageUrl: string;
+};
+
+export type StoreDetailItem = {
+  id: string;
+  itemName: string;
+  quantity: string;
+};
+
+export type StoreDetail = {
+  id: string;
+  storeName: string;
+  status: 'PENDING' | 'PURCHASED' | 'SKIPPED';
+  isExtra: boolean;
+  items: StoreDetailItem[];
+  receipts: StoreReceipt[];
+};
+
+export type OrderPricing = {
+  baseFee: number;
+  peripheralFee: number;
+  extraStoresFee: number;
+  totalFee: number;
+};
+
+export type OrderRating = {
+  stars: number;
+} | null;
+
+export type OrderTimeline = {
+  createdAt: Date;
+  reviewedAt: Date | null;
+  assignedAt: Date | null;
+  startedAt: Date | null;
+  deliveredAt: Date | null;
+  cancelledAt: Date | null;
+};
+
 export type CustomerOrderDetails = {
   id: string;
   orderNumber: string;
@@ -125,6 +167,7 @@ export type CustomerOrderDetails = {
   peripheralFee: number;
   extraStoresFee: number;
   totalFee: number;
+  pricing: OrderPricing;
   deliveryLat: number;
   deliveryLng: number;
   deliveryDesc: string;
@@ -137,6 +180,9 @@ export type CustomerOrderDetails = {
   cancelledAt: Date | null;
   items: CustomerOrderItem[];
   orderStores: CustomerOrderStore[];
+  stores: StoreDetail[];
+  rating: OrderRating;
+  timeline: OrderTimeline;
   runner: {
     id: string;
     name: string;
