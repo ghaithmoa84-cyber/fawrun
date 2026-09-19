@@ -1,13 +1,13 @@
 # FAWRUN - Current State
 
 ## Last Updated
-2026-09-18 (Sprint 2 Post-Review Fixes)
+2026-09-19 (Sprint 4 Pre-Sprint Check)
 
 ## Last Completed Sprint
-Sprint 2 — Order Core (PR #3 merged; post-review fixes in progress)
+Sprint 2 — Order Core (PR #3 merged)
 
 ## Current Sprint
-Sprint 2 — Post-Review Fixes (branch: feature/sprint-2-post-review-fixes)
+Sprint 4 — Financial Ratings (branch: feature/sprint-4-financial-ratings)
 
 ## Sprint 1 Completion Status
 All 13 sub-tasks complete:
@@ -68,8 +68,9 @@ Admin:
 - PUT /api/v1/admin/orders/:id/assign-runner
 - PUT /api/v1/admin/orders/:id/cancel
 - GET /api/v1/admin/ledger
+- POST /api/v1/admin/settlements (close-settlement)
 
-## Post-Review Fixes (branch: feature/sprint-2-post-review-fixes)
+## Post-Review Fixes (Sprint 2, merged)
 Recent commits (2026-09-18):
 - 765fc5a — fix: customerNotified reflects actual delivery, Settlement FK quoting, Settlement TODO
 - 742b149 — fix: CodeRabbit fixes — approveOrder fee, BadRequestException, migration clauses, AdminOrderStore type, Logger, PR template
@@ -99,8 +100,7 @@ Recent commits (2026-09-18):
 - Cron job for settlement reminder not yet implemented (Sprint 4)
 
 ## Next Actions
-1. Complete Sprint 2 post-review fixes
+1. Implement Sprint 4: Settlement + Ratings
 2. Implement Sprint 3: Runner execution flow (receipts, R2, proceed-to-delivery, deliver)
-3. Implement Sprint 4: Settlement + Ratings
-4. Implement Sprint 5: Frontends (Admin Dashboard, Runner PWA, Android)
-5. Implement Sprint 6: QA + Launch
+3. Implement Sprint 5: Frontends (Admin Dashboard, Runner PWA, Android)
+4. Implement Sprint 6: QA + Launch
