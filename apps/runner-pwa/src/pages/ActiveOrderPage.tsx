@@ -44,19 +44,24 @@ export function ActiveOrderPage() {
   }, [fetchActiveOrder]);
 
   useEffect(() => {
-    on('order:status_changed', () => {
-      fetchActiveOrder();
-    });
-    on('order:fee_updated', () => {
-      fetchActiveOrder();
-    });
-    on('order:store_purchased', () => {
-      fetchActiveOrder();
-    });
-    on('order:delivered', () => {
-      navigate('/available');
-    });
-  }, []);
+    const cleanups = [
+      on('order:status_changed', () => {
+        fetchActiveOrder();
+      }),
+      on('order:fee_updated', () => {
+        fetchActiveOrder();
+      }),
+      on('order:store_purchased', () => {
+        fetchActiveOrder();
+      }),
+      on('order:delivered', () => {
+        navigate('/available');
+      }),
+    ];
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
+    };
+  }, [on, fetchActiveOrder, navigate]);
 
   const handleStartOrder = async () => {
     if (!order) return;

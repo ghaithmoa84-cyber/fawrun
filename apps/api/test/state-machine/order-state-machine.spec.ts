@@ -18,6 +18,7 @@ describe('OrderStateMachine', () => {
       ['AWAITING_RUNNER', 'AWAITING_PREFERRED_RUNNER', 'SYSTEM'],
       ['AWAITING_RUNNER', 'ASSIGNED', 'RUNNER'],
       ['AWAITING_PREFERRED_RUNNER', 'ASSIGNED', 'RUNNER'],
+      ['AWAITING_PREFERRED_RUNNER', 'ASSIGNED', 'ADMIN'],
       ['AWAITING_PREFERRED_RUNNER', 'AWAITING_RUNNER', 'SYSTEM'],
       ['ASSIGNED', 'IN_PROGRESS', 'RUNNER'],
       ['ASSIGNED', 'CANCELLED', 'CUSTOMER'],
@@ -138,8 +139,8 @@ describe('OrderStateMachine', () => {
 
   // ── Transition count ─────────────────────────────────────────────────
   describe('transition table integrity', () => {
-    it('defines exactly 25 allowed order transitions', () => {
-      expect(ORDER_TRANSITIONS).toHaveLength(25);
+    it('defines exactly 26 allowed order transitions', () => {
+      expect(ORDER_TRANSITIONS).toHaveLength(26);
     });
 
     it('covers all 10 OrderStatus enum values', () => {

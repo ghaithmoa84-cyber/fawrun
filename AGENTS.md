@@ -48,7 +48,7 @@ FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 3. test-engineer runs full local checklist
 4. /pr command: commit + push + create PR + wait for CodeRabbit
 5. CodeRabbit reviews on GitHub (not locally)
-6. Kilo reads CodeRabbit comments and fixes them
+6. Agent reads CodeRabbit comments and fixes them
 7. Merge to main
 
 ### Git Rules
@@ -70,15 +70,18 @@ Financial operations (Ledger, Settlement, Order fees) require a documented
 rollback plan BEFORE execution. Use /rollback-plan command to create one.
 
 ## Agents
+Defined in `.agents/agents-reference.md` and `.kilo/agent/`:
 - @code-architect — Sprint planning, schema design, state machine validation
 - @feature-dev — Endpoint implementation
 - @test-engineer — Tests, lint, typecheck, security checks
 - @debugger — Bug investigation (on-demand only)
+- @reviewer — CodeRabbit PR comment review & resolution
 
 ## Skills
-- pre-sprint-checklist — Pre-Sprint validation
-- rollback-plan — Financial rollback documentation
-- coderabbit-workflow — PR workflow with CodeRabbit review
+Active in `.agents/skills/`:
+- pre-sprint-checklist — Pre-Sprint validation (`.agents/skills/pre-sprint-checklist/SKILL.md`)
+- rollback-plan — Financial rollback documentation (`.agents/skills/rollback-plan/SKILL.md`)
+- coderabbit-workflow — PR workflow with CodeRabbit review (`.agents/skills/coderabbit-workflow/SKILL.md`)
 
 ## Commands
 - /pre-sprint — Run pre-sprint checklist

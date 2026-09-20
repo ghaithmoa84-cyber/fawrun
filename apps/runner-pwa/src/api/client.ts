@@ -133,11 +133,19 @@ api.interceptors.request.use(
 api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
-    if (error.response?.status === 401 && !isAuthEndpoint(error.config?.url)) {
+    const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+    if (
+      error.response?.status === 401 &&
+      originalRequest &&
+      !originalRequest._retry &&
+      !isAuthEndpoint(originalRequest.url)
+    ) {
+      originalRequest._retry = true;
       try {
-        await refreshAccessToken();
-        if (error.config) {
-          return api(error.config);
+        const token = await refreshAccessToken();
+        if (token) {
+          originalRequest.headers.set('Authorization', `Bearer ${token}`);
+          return api(originalRequest);
         }
       } catch {
         clearAuth();
