@@ -11,7 +11,18 @@ async function bootstrap(): Promise<void> {
     bodyParser: true,
   });
 
-  app.set('trust proxy', true);
+  // Trust proxy must be explicitly configured. Defaulting to `true` lets the
+  // client choose the left-most X-Forwarded-For value, which Nest's
+  // ThrottlerGuard uses as its tracker, allowing per-IP throttling to be
+  // bypassed on login/registration. Set TRUST_PROXY to the actual trusted
+  // proxy address or subnet (e.g. "127.0.0.1" or "10.0.0.0/8"); leave it
+  // unset or "false" when the API is directly exposed.
+  const trustProxy = process.env.TRUST_PROXY;
+  if (trustProxy && trustProxy !== 'false') {
+    app.set('trust proxy', trustProxy);
+  } else {
+    app.set('trust proxy', false);
+  }
 
   if (process.env.SENTRY_DSN) {
     Sentry.init({
