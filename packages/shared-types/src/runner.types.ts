@@ -47,6 +47,17 @@ export const ActiveOrderStoreItemSchema = z.object({
   anyStore: z.boolean(),
 });
 
+export type ActiveOrderStoreItem = z.infer<typeof ActiveOrderStoreItemSchema>;
+
+export const ActiveOrderStoreReceiptSchema = z.object({
+  id: z.string(),
+  imageUrl: z.string(),
+  isDeleted: z.boolean(),
+  uploadedAt: z.string(),
+});
+
+export type ActiveOrderStoreReceipt = z.infer<typeof ActiveOrderStoreReceiptSchema>;
+
 export const ActiveOrderStoreSchema = z.object({
   id: z.string(),
   storeName: z.string(),
@@ -56,13 +67,10 @@ export const ActiveOrderStoreSchema = z.object({
   addedBy: z.string().nullable(),
   purchasedAt: z.string().nullable(),
   items: z.array(ActiveOrderStoreItemSchema),
-  receipts: z.array(z.object({
-    id: z.string(),
-    imageUrl: z.string(),
-    isDeleted: z.boolean(),
-    uploadedAt: z.string(),
-  })),
+  receipts: z.array(ActiveOrderStoreReceiptSchema),
 });
+
+export type ActiveOrderStore = z.infer<typeof ActiveOrderStoreSchema>;
 
 export const ActiveOrderResponseSchema = z.object({
   id: z.string(),

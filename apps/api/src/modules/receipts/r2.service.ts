@@ -34,9 +34,15 @@ export class R2Service {
       );
     }
 
+    const endpoint =
+      this.configService.get<string>('R2_ENDPOINT') ||
+      `https://${accountId}.r2.cloudflarestorage.com`;
+    const forcePathStyle = !!this.configService.get<string>('R2_ENDPOINT');
+
     this.client = new S3Client({
       region: 'auto',
-      endpoint: `https://${accountId}.r2.cloudflarestorage.com`,
+      endpoint,
+      forcePathStyle,
       credentials: {
         accessKeyId,
         secretAccessKey,

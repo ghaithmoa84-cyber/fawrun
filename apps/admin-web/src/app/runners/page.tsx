@@ -1,0 +1,494 @@
+'use client';
+
+import React, { useState, useEffect, useCallback } from 'react';
+import api from '@/lib/api';
+import { useToast } from '@/components/Toast';
+
+import {
+  type RunnerProfileResponse,
+  type PaginatedResponse,
+  type RunnerStatus,
+} from '@fawrun/shared-types';
+
+type Runner = RunnerProfileResponse;
+type RunnersApiResponse = PaginatedResponse<Runner>;
+
+export default function RunnersPage() {
+  const { showToast } = useToast();
+  const [runners, setRunners] = useState<Runner[]>([]);
+  const [meta, setMeta] = useState({ total: 0, page: 1, limit: 20, totalPages: 1 });
+  const [loading, setLoading] = useState<boolean>(true);
+
+  // Create Modal state
+  const [isCreateOpen, setIsCreateOpen] = useState(false);
+  const [createForm, setCreateForm] = useState({
+    name: '',
+    whatsapp: '',
+    password: '',
+  });
+  const [createLoading, setCreateLoading] = useState(false);
+
+  // Edit Modal state
+  const [editRunner, setEditRunner] = useState<Runner | null>(null);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    password: '',
+    notes: '',
+  });
+  const [editLoading, setEditLoading] = useState(false);
+
+  // Visibility toggle loading state per runner
+  const [togglingId, setTogglingId] = useState<string | null>(null);
+
+  const fetchRunners = useCallback(async (page = 1) => {
+    try {
+      setLoading(true);
+      const res = await api.get<RunnersApiResponse>('/admin/runners', {
+        params: { page, limit: 20 },
+      });
+      setRunners(res.data.data);
+      setMeta(res.data.meta);
+    } catch {
+      showToast('تعذر تحميل بيانات المندوبين، يرجى المحاولة لاحقاً', 'error');
+    } finally {
+      setLoading(false);
+    }
+  }, [showToast]);
+
+  useEffect(() => {
+    fetchRunners(1);
+  }, [fetchRunners]);
+
+  const formatPhoneToE164 = (rawPhone: string): string => {
+    const clean = rawPhone.trim().replace(/[\s-]/g, '');
+    if (clean.startsWith('+')) return clean;
+    if (clean.startsWith('09')) return `+963${clean.substring(1)}`;
+    if (clean.startsWith('9') && clean.length === 9) return `+963${clean}`;
+    if (clean.startsWith('963')) return `+${clean}`;
+    return clean;
+  };
+
+  const handleCreateSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const formattedPhone = formatPhoneToE164(createForm.whatsapp);
+
+    if (!createForm.name || createForm.name.length < 2) {
+      showToast('يرجى إدخال اسم المندوب بشكل صحيح (حرفين على الأقل)', 'info');
+      return;
+    }
+    if (!formattedPhone || !formattedPhone.startsWith('+')) {
+      showToast('يرجى إدخال رقم واتساب صالح بالصيغة الدولية', 'info');
+      return;
+    }
+    if (!createForm.password || createForm.password.length < 8) {
+      showToast('كلمة المرور يجب أن تكون 8 محارف على الأقل', 'info');
+      return;
+    }
+
+    try {
+      setCreateLoading(true);
+      await api.post('/admin/runners', {
+        name: createForm.name.trim(),
+        whatsapp: formattedPhone,
+        password: createForm.password,
+      });
+
+      showToast(`تمت إضافة المندوب "${createForm.name}" بنجاح`, 'success');
+      setIsCreateOpen(false);
+      setCreateForm({ name: '', whatsapp: '', password: '' });
+      fetchRunners(meta.page);
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      showToast(axiosError.response?.data?.message || 'فشل في إضافة المندوب', 'error');
+    } finally {
+      setCreateLoading(false);
+    }
+  };
+
+  const handleOpenEdit = (runner: Runner) => {
+    setEditRunner(runner);
+    setEditForm({
+      name: runner.name,
+      password: '',
+      notes: runner.notes || '',
+    });
+  };
+
+  const handleEditSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editRunner) return;
+
+    try {
+      setEditLoading(true);
+      const payload: { name: string; notes?: string; password?: string } = {
+        name: editForm.name.trim(),
+        notes: editForm.notes ? editForm.notes.trim() : undefined,
+      };
+
+      if (editForm.password && editForm.password.length >= 8) {
+        payload.password = editForm.password;
+      }
+
+      await api.put(`/admin/runners/${editRunner.id}`, payload);
+      showToast(`تم تحديث بيانات المندوب "${editForm.name}" بنجاح`, 'success');
+      setEditRunner(null);
+      fetchRunners(meta.page);
+    } catch (err: unknown) {
+      const axiosError = err as { response?: { data?: { message?: string } } };
+      showToast(axiosError.response?.data?.message || 'فشل في تعديل بيانات المندوب', 'error');
+    } finally {
+      setEditLoading(false);
+    }
+  };
+
+  const handleToggleVisibility = async (runner: Runner) => {
+    const newVisibility = !runner.isVisible;
+
+    // Optimistic update
+    setRunners((prev) =>
+      prev.map((r) => (r.id === runner.id ? { ...r, isVisible: newVisibility } : r)),
+    );
+    setTogglingId(runner.id);
+
+    try {
+      await api.put(`/admin/runners/${runner.id}/visibility`, {
+        isVisible: newVisibility,
+      });
+      showToast(
+        `تم ${newVisibility ? 'تفعيل ظهور' : 'إخفاء'} المندوب "${runner.name}"`,
+        'success',
+      );
+    } catch {
+      // Revert optimistic update
+      setRunners((prev) =>
+        prev.map((r) => (r.id === runner.id ? { ...r, isVisible: !newVisibility } : r)),
+      );
+      showToast(`فشل في تحديث حالة ظهور المندوب "${runner.name}"`, 'error');
+    } finally {
+      setTogglingId(null);
+    }
+  };
+
+const RUNNER_STATUS_LABEL: Record<RunnerStatus, string> = {
+  AVAILABLE: 'متاح (Available)',
+  ON_MISSION: 'في مهمة (On Mission)',
+  UNAVAILABLE: 'غير متاح (Offline)',
+};
+
+const RUNNER_STATUS_STYLE: Record<RunnerStatus, string> = {
+  AVAILABLE: 'bg-emerald-50 text-emerald-700 border-emerald-200',
+  ON_MISSION: 'bg-amber-50 text-amber-700 border-amber-200',
+  UNAVAILABLE: 'bg-slate-100 text-slate-600 border-slate-200',
+};
+
+const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
+  AVAILABLE: 'bg-emerald-500 animate-pulse',
+  ON_MISSION: 'bg-amber-500',
+  UNAVAILABLE: 'bg-slate-400',
+};
+
+  const getStatusBadge = (status: RunnerStatus) => {
+    const label = RUNNER_STATUS_LABEL[status] ?? status;
+    const style = RUNNER_STATUS_STYLE[status] ?? 'bg-slate-100 text-slate-600 border-slate-200';
+    const dot = RUNNER_STATUS_DOT[status] ?? 'bg-slate-400';
+    return (
+      <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold border ${style}`}>
+        <span className={`w-1.5 h-1.5 rounded-full ${dot}`}></span>
+        {label}
+      </span>
+    );
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-black text-slate-900">إدارة المندوبين والكباتن</h1>
+          <p className="text-xs text-slate-500 mt-1">متابعة جاهزية الأسطول، التقييمات، والظهور في التطبيق</p>
+        </div>
+
+        <button
+          onClick={() => setIsCreateOpen(true)}
+          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md shadow-[#00C1A7]/20 transition-all cursor-pointer"
+        >
+          <span className="text-base font-black">+</span>
+          <span>إضافة مندوب جديد</span>
+        </button>
+      </div>
+
+      {/* Main Table Card */}
+      <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
+        <div className="overflow-x-auto">
+          <table className="w-full text-right text-xs">
+            <thead className="bg-slate-50/75 border-b border-slate-200 text-slate-600 font-bold">
+              <tr>
+                <th className="px-5 py-3.5">اسم المندوب</th>
+                <th className="px-5 py-3.5">رقم WhatsApp</th>
+                <th className="px-5 py-3.5">الحالة التشغيلية</th>
+                <th className="px-5 py-3.5">متوسط التقييم</th>
+                <th className="px-5 py-3.5 text-center">الظهور في التطبيق</th>
+                <th className="px-5 py-3.5 text-center">الإجراءات</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-slate-100">
+              {loading ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
+                    <div className="flex items-center justify-center gap-2">
+                      <span className="w-4 h-4 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+                      <span>جاري تحميل بيانات أسطول المندوبين...</span>
+                    </div>
+                  </td>
+                </tr>
+              ) : runners.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
+                    لا يوجد مناديب مسجلين في المنصة حتى الآن.
+                  </td>
+                </tr>
+              ) : (
+                runners.map((r) => (
+                  <tr key={r.id} className="hover:bg-slate-50/60 transition-colors">
+                    <td className="px-5 py-4 font-bold text-slate-900">{r.name}</td>
+                    <td className="px-5 py-4 font-medium text-slate-700" dir="ltr">
+                      {r.whatsapp}
+                    </td>
+                    <td className="px-5 py-4">{getStatusBadge(r.status)}</td>
+                    <td className="px-5 py-4">
+                      <div className="flex items-center gap-1 text-slate-700 font-bold">
+                        <span className="text-amber-400 text-sm">★</span>
+                        <span>{r.avgRating ? r.avgRating.toFixed(1) : 'جديد'}</span>
+                        <span className="text-slate-400 font-normal text-[11px]">
+                          ({r.totalRatings} تقييم)
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <button
+                        type="button"
+                        onClick={() => handleToggleVisibility(r)}
+                        disabled={togglingId === r.id}
+                        className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-50 ${
+                          r.isVisible ? 'bg-[#00C1A7]' : 'bg-slate-300'
+                        }`}
+                        title={r.isVisible ? 'ظاهر للعملاء' : 'مخفي عن العملاء'}
+                      >
+                        <span
+                          className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                            r.isVisible ? '-translate-x-5' : 'translate-x-0'
+                          }`}
+                        />
+                      </button>
+                    </td>
+                    <td className="px-5 py-4 text-center">
+                      <button
+                        onClick={() => handleOpenEdit(r)}
+                        className="px-3 py-1.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-lg transition-colors text-xs border border-slate-200"
+                      >
+                        تعديل
+                      </button>
+                    </td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+
+        {/* Pagination Footer */}
+        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
+          <div>
+            إجمالي المندوبين: <span className="font-bold text-slate-800">{meta.total}</span> (صفحة{' '}
+            <span className="font-bold text-slate-800">{meta.page}</span> من{' '}
+            <span className="font-bold text-slate-800">{meta.totalPages || 1}</span>)
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => fetchRunners(meta.page - 1)}
+              disabled={meta.page <= 1 || loading}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              السابق
+            </button>
+            <button
+              onClick={() => fetchRunners(meta.page + 1)}
+              disabled={meta.page >= meta.totalPages || loading}
+              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+            >
+              التالي
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* Modal: New Runner */}
+      {isCreateOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4" dir="rtl">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">إضافة مندوب جديد</h3>
+              <button
+                onClick={() => setIsCreateOpen(false)}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  اسم المندوب
+                </label>
+                <input
+                  type="text"
+                  value={createForm.name}
+                  onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
+                  placeholder="الاسم الثلاثي"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  رقم الواتساب
+                </label>
+                <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#00C1A7] focus-within:ring-2 focus-within:ring-[#00C1A7]/20 overflow-hidden">
+                  <span className="inline-flex items-center px-3 text-xs font-bold text-slate-500 bg-slate-100 border-l border-slate-300 select-none" dir="ltr">
+                    +963
+                  </span>
+                  <input
+                    type="text"
+                    dir="ltr"
+                    value={createForm.whatsapp}
+                    onChange={(e) => setCreateForm({ ...createForm, whatsapp: e.target.value })}
+                    placeholder="09XXXXXXXX"
+                    className="w-full px-3.5 py-2.5 text-xs text-slate-900 outline-hidden bg-transparent"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  كلمة المرور
+                </label>
+                <input
+                  type="password"
+                  value={createForm.password}
+                  onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
+                  placeholder="8 محارف على الأقل"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  required
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setIsCreateOpen(false)}
+                  disabled={createLoading}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={createLoading}
+                  className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {createLoading && (
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  )}
+                  <span>إضافة المندوب</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal: Edit Runner */}
+      {editRunner && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-xs p-4" dir="rtl">
+          <div className="bg-white rounded-2xl max-w-md w-full p-6 shadow-2xl border border-slate-200 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-4 mb-4 border-b border-slate-100">
+              <h3 className="text-base font-bold text-slate-900">تعديل بيانات المندوب</h3>
+              <button
+                onClick={() => setEditRunner(null)}
+                className="text-slate-400 hover:text-slate-600 font-bold text-lg"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleEditSubmit} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  اسم المندوب
+                </label>
+                <input
+                  type="text"
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  required
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  كلمة المرور الجديدة (اتركها فارغة للإبقاء على الحالية)
+                </label>
+                <input
+                  type="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  placeholder="••••••••"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  ملاحظات إدارية
+                </label>
+                <textarea
+                  value={editForm.notes}
+                  onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
+                  rows={3}
+                  placeholder="ملاحظات حول المندوب، المنطقة، أو الدراجة/المركبة..."
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden resize-none"
+                />
+              </div>
+
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditRunner(null)}
+                  disabled={editLoading}
+                  className="px-4 py-2 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-50"
+                >
+                  إلغاء
+                </button>
+                <button
+                  type="submit"
+                  disabled={editLoading}
+                  className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                >
+                  {editLoading && (
+                    <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                  )}
+                  <span>حفظ التعديلات</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}

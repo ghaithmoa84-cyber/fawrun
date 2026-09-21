@@ -1,41 +1,83 @@
 import { useEffect, useState, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
+import type { RunnerStatus } from '@fawrun/shared-constants';
 import type {
+  ActiveOrderResponse,
   OrderAssignedPayload,
   RunnerProfileResponse,
   RunnerStatusUpdate,
-  SoundType,
 } from '@fawrun/shared-types';
+import axios from 'axios';
 
-function playSound(soundType: SoundType): void {
-  if (typeof AudioContext === 'undefined') return;
+const RUNNER_STATUS_LABEL: Record<RunnerStatus, string> = {
+  AVAILABLE: 'متاح لاستقبال الطلبات',
+  ON_MISSION: 'في مهمة حالياً',
+  UNAVAILABLE: 'غير متاح',
+};
+
+const RUNNER_STATUS_BADGE: Record<RunnerStatus, string> = {
+  AVAILABLE: 'status-available',
+  ON_MISSION: 'status-on-mission',
+  UNAVAILABLE: 'status-unavailable',
+};
+
+let audioCtx: AudioContext | null = null;
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtxClass) return null;
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new AudioCtxClass();
+  }
+  return audioCtx;
+}
+
+function playSound(soundType?: string): void {
   try {
-    const ctx = new AudioContext();
-    const osc1 = ctx.createOscillator();
-    const gain1 = ctx.createGain();
-
-    osc1.connect(gain1);
-    gain1.connect(ctx.destination);
-
-    osc1.type = 'sine';
-    if (soundType === 'new_order') {
-      osc1.frequency.setValueAtTime(523.25, ctx.currentTime);
-      osc1.frequency.linearRampToValueAtTime(783.99, ctx.currentTime + 0.25);
-    } else if (soundType === 'success') {
-      osc1.frequency.setValueAtTime(783.99, ctx.currentTime);
-    } else {
-      osc1.frequency.setValueAtTime(440, ctx.currentTime);
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
     }
+    const now = ctx.currentTime;
 
-    gain1.gain.setValueAtTime(0.15, ctx.currentTime);
-    gain1.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+    const osc1 = ctx.createOscillator();
+    const osc2 = ctx.createOscillator();
+    const gain = ctx.createGain();
 
-    osc1.start(ctx.currentTime);
-    osc1.stop(ctx.currentTime + 0.3);
+    osc1.connect(gain);
+    osc2.connect(gain);
+    gain.connect(ctx.destination);
+
+    if (soundType === 'new_order' || !soundType) {
+      // Pleasant double notification chime
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(587.33, now); // D5
+      osc1.frequency.setValueAtTime(880, now + 0.15); // A5
+
+      osc2.type = 'triangle';
+      osc2.frequency.setValueAtTime(880, now);
+      osc2.frequency.setValueAtTime(1174.66, now + 0.15); // D6
+
+      gain.gain.setValueAtTime(0.2, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.5);
+
+      osc1.start(now);
+      osc2.start(now);
+      osc1.stop(now + 0.5);
+      osc2.stop(now + 0.5);
+    } else {
+      osc1.type = 'sine';
+      osc1.frequency.setValueAtTime(440, now);
+      gain.gain.setValueAtTime(0.15, now);
+      gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
+      osc1.start(now);
+      osc1.stop(now + 0.3);
+    }
   } catch {
-    // Silently fail if audio is unavailable
+    // Gracefully handle browser autoplay policies
   }
 }
 
@@ -48,186 +90,228 @@ export function AvailablePage() {
 
   const { on, isConnected } = useWebSocket();
 
-  const fetchProfile = useCallback(async () => {
+  // Guard: If runner already has an active order, navigate to ActiveOrderPage immediately!
+  const checkActiveOrderAndProfile = useCallback(async () => {
     setIsLoading(true);
     setError(null);
     try {
-      const response = await api.get<RunnerProfileResponse>('/runner/me');
-      setProfile(response.data);
+      const [orderRes, profileRes] = await Promise.all([
+        api.get<ActiveOrderResponse | null>('/runner/orders/active'),
+        api.get<RunnerProfileResponse>('/runner/me'),
+      ]);
+
+      if (orderRes.data) {
+        navigate('/active-order', { replace: true });
+        return;
+      }
+
+      setProfile(profileRes.data);
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to load profile',
-      );
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('فشل في تحميل الملف الشخصي');
+      }
     } finally {
       setIsLoading(false);
     }
-  }, []);
+  }, [navigate]);
 
   useEffect(() => {
-    void fetchProfile();
-  }, [fetchProfile]);
+    void checkActiveOrderAndProfile();
+  }, [checkActiveOrderAndProfile]);
+
+  const location = useLocation();
 
   useEffect(() => {
-    const unsubscribe = on<OrderAssignedPayload>(
+    const state = location.state as { notification?: string } | null;
+    if (state?.notification) {
+      setError(state.notification);
+    }
+  }, [location.state]);
+
+  // WebSocket: Listen for order events
+  useEffect(() => {
+    const unsubAssigned = on<OrderAssignedPayload>(
       'order:assigned',
       (payload) => {
+        console.log('[AUDIO] Playing new order chime via Web Audio API');
         playSound(payload.sound ?? 'new_order');
         navigate('/active-order');
       },
     );
 
-    return unsubscribe;
-  }, [on, navigate]);
+    const unsubCancelled = on(
+      'order:assignment_cancelled',
+      () => {
+        setError('تم إلغاء تعيين الطلب');
+        void checkActiveOrderAndProfile();
+      },
+    );
+
+    const unsubReassigned = on(
+      'order:reassigned',
+      () => {
+        navigate('/active-order');
+      },
+    );
+
+    return () => {
+      unsubAssigned();
+      unsubCancelled();
+      unsubReassigned();
+    };
+  }, [on, navigate, checkActiveOrderAndProfile]);
 
   const handleToggle = async () => {
-    if (!profile || toggleLoading) return;
+    if (!profile || toggleLoading || profile.status === 'ON_MISSION') return;
 
-    const newStatus: 'AVAILABLE' | 'UNAVAILABLE' =
+    const newStatus: RunnerStatus =
       profile.status === 'AVAILABLE' ? 'UNAVAILABLE' : 'AVAILABLE';
 
     setToggleLoading(true);
     setError(null);
 
     try {
-      const body: RunnerStatusUpdate = { status: newStatus };
-      const response = await api.put<{ status: string }>(
+      const body: RunnerStatusUpdate = { status: newStatus as 'AVAILABLE' | 'UNAVAILABLE' };
+      const response = await api.put<{ status: RunnerStatus }>(
         '/runner/me/status',
         body,
       );
-      setProfile((prev: RunnerProfileResponse | null) =>
+      setProfile((prev) =>
         prev
-          ? { ...prev, status: response.data.status as RunnerProfileResponse['status'] }
+          ? { ...prev, status: response.data.status }
           : null,
       );
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : 'Failed to update status',
-      );
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
+        setError(err.message);
+      } else {
+        setError('فشل في تحديث حالة التوافر');
+      }
     } finally {
       setToggleLoading(false);
     }
   };
 
-  const getToggleLabel = () => {
-    if (!profile) return '';
-    if (profile.status === 'AVAILABLE') return 'إيقاف التوافر';
-    if (profile.status === 'UNAVAILABLE') return 'تفعيل التوافر';
-    return 'في مهمة';
-  };
-
-  const getToggleDisabled = () => {
-    if (!profile) return true;
-    if (profile.status === 'ON_MISSION') return true;
-    return toggleLoading || !isConnected;
-  };
-
-  const getToggleClass = () => {
-    if (!profile || profile.status === 'ON_MISSION') {
-      return 'btn btn-outline';
-    }
-    return profile.status === 'AVAILABLE'
-      ? 'btn btn-warning'
-      : 'btn btn-success';
-  };
-
   if (isLoading) {
     return (
-      <div className="container" style={{ paddingTop: '24px' }}>
-        <p>جارٍ تحميل الملف الشخصي...</p>
+      <div className="container" style={{ paddingTop: '32px' }}>
+        <div className="card text-center">
+          <div className="spinner" style={{ margin: '16px auto' }} />
+          <p>جارٍ تحميل بيانات المندوب...</p>
+        </div>
       </div>
     );
   }
 
   if (!profile) {
     return (
-      <div className="container" style={{ paddingTop: '24px' }}>
-        <div className="error-msg">{error}</div>
+      <div className="container" style={{ paddingTop: '32px' }}>
+        <div className="card">
+          <div className="error-msg">{error ?? 'تعذر العثور على بيانات المندوب'}</div>
+          <button
+            type="button"
+            className="btn btn-outline"
+            style={{ marginTop: '16px', width: '100%' }}
+            onClick={() => void checkActiveOrderAndProfile()}
+          >
+            إعادة المحاولة
+          </button>
+        </div>
       </div>
     );
   }
 
+  const isAvailable = profile.status === 'AVAILABLE';
+  const isOnMission = profile.status === 'ON_MISSION';
+
   return (
-    <div className="container" style={{ paddingTop: '24px' }}>
-      <div className="card">
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-          }}
-        >
+    <div className="container" style={{ paddingTop: '20px' }}>
+      {/* Profile summary card */}
+      <div className="card profile-card">
+        <div className="profile-header">
           <div>
-            <h2>{profile.name}</h2>
-            <p style={{ color: 'var(--text)' }}>{profile.whatsapp}</p>
+            <h2 className="profile-name">{profile.name}</h2>
+            <p className="profile-contact" dir="ltr">{profile.whatsapp}</p>
             {profile.altPhone && (
-              <p style={{ color: 'var(--text)' }}>{profile.altPhone}</p>
-            )}
-            {profile.avgRating !== null && (
-              <p style={{ color: 'var(--text)' }}>
-                التقييم: {profile.avgRating}⭐ ({profile.totalRatings})
-              </p>
+              <p className="profile-contact" dir="ltr">{profile.altPhone}</p>
             )}
           </div>
-          <span
-            className={`status-badge ${
-              profile.status === 'AVAILABLE'
-                ? 'status-available'
-                : profile.status === 'ON_MISSION'
-                  ? 'status-on-mission'
-                  : 'status-unavailable'
-            }`}
-          >
-            {profile.status === 'AVAILABLE'
-              ? 'متاح'
-              : profile.status === 'ON_MISSION'
-                ? 'في مهمة'
-                : 'غير متاح'}
+          <span className={`status-badge ${RUNNER_STATUS_BADGE[profile.status]}`}>
+            {RUNNER_STATUS_LABEL[profile.status]}
           </span>
         </div>
 
-        {profile.status === 'ON_MISSION' && (
-          <div
-            style={{
-              marginTop: '16px',
-              padding: '12px',
-              background: 'rgba(147,51,234,0.1)',
-              borderRadius: '8px',
-            }}
-          >
-            <p style={{ color: '#7c3aed', fontSize: '14px' }}>
-              أنت في مهمة حالية. لا يمكن تغيير الحالة الآن.
-            </p>
+        <div className="profile-stats">
+          <div className="stat-box">
+            <span className="stat-label">التقييم العام</span>
+            <span className="stat-value">
+              {profile.avgRating !== null ? `${profile.avgRating} ⭐` : '—'}
+            </span>
           </div>
+          <div className="stat-box">
+            <span className="stat-label">إجمالي التقييمات</span>
+            <span className="stat-value">{profile.totalRatings}</span>
+          </div>
+          <div className="stat-box">
+            <span className="stat-label">حالة الاتصال</span>
+            <span className={`stat-value ${isConnected ? 'text-success' : 'text-warning'}`}>
+              {isConnected ? 'متصل 🟢' : 'منفصل 🟠'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Main Big Toggle Control */}
+      <div className="card toggle-card text-center">
+        <h3 style={{ marginBottom: '8px' }}>حالة استقبال الطلبات</h3>
+        <p style={{ color: 'var(--text)', marginBottom: '24px', fontSize: '14px' }}>
+          {isOnMission
+            ? 'لديك طلب نشط قيد التنفيذ حالياً.'
+            : isAvailable
+              ? 'أنت متاح لاستقبال وتعيين الطلبات الجديدة فوراً.'
+              : 'أنت غير متاح. قم بتفعيل التوافر لبدء استقبال الطلبات.'}
+        </p>
+
+        {isOnMission ? (
+          <button
+            type="button"
+            className="btn btn-primary btn-big"
+            onClick={() => navigate('/active-order')}
+          >
+            الانتقال للطلب النشط
+          </button>
+        ) : (
+          <button
+            type="button"
+            className={`btn btn-big ${isAvailable ? 'btn-danger' : 'btn-success'}`}
+            onClick={handleToggle}
+            disabled={toggleLoading}
+          >
+            {toggleLoading
+              ? 'جارٍ التحديث...'
+              : isAvailable
+                ? 'إيقاف التوافر (تعطيل)'
+                : 'تفعيل التوافر (استقبال الطلبات)'}
+          </button>
         )}
 
-        {profile.status !== 'ON_MISSION' && (
-          <>
-            <button
-              type="button"
-              className={getToggleClass()}
-              onClick={handleToggle}
-              disabled={getToggleDisabled()}
-              style={{ width: '100%', marginTop: '16px' }}
-            >
-              {toggleLoading ? 'جارٍ التحديث...' : getToggleLabel()}
-            </button>
-
-            {!isConnected && (
-              <p
-                style={{ color: '#f59e0b', fontSize: '13px', marginTop: '8px' }}
-              >
-                الاتصال غير متوفر - سيتم تجديد الطلبات تلقائيًا
-              </p>
-            )}
-          </>
+        {!isConnected && (
+          <p style={{ color: 'var(--warning)', fontSize: '13px', marginTop: '14px' }}>
+            تنبيه: الاتصال بالشبكة غير مستقر، جارٍ محاولة إعادة الربط التلقائي...
+          </p>
         )}
       </div>
 
       {error && (
-        <div
-          className="toast"
-          style={{ bottom: 'auto', top: '24px' }}
-        >
+        <div className="toast toast-error">
           {error}
         </div>
       )}

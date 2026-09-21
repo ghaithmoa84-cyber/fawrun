@@ -28,11 +28,14 @@ export const SettlementItemSchema = z.object({
 
 export type SettlementItem = z.infer<typeof SettlementItemSchema>;
 
+export const SETTLEMENT_STATUS_VALUES = ['PENDING', 'SETTLED'] as const;
+export type SettlementStatus = (typeof SETTLEMENT_STATUS_VALUES)[number];
+
 export const SettlementSchema = z.object({
   id: z.string(),
   runnerId: z.string(),
   operationalDate: z.string(),
-  status: z.enum(['PENDING', 'SETTLED']),
+  status: z.enum(SETTLEMENT_STATUS_VALUES),
   totalOrders: z.number().int(),
   totalFees: z.number().int(),
   runnerShare: z.number().int(),

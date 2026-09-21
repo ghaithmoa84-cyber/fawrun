@@ -26,6 +26,9 @@ const MIME_BY_EXT: Record<FileExtension, string> = {
 };
 
 const EXT_BY_MIME: Record<string, FileExtension> = {
+  jpg: 'jpg',
+  jpeg: 'jpg',
+  png: 'png',
   'image/jpeg': 'jpg',
   'image/png': 'png',
 };

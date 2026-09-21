@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import axios from 'axios';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -9,43 +10,55 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     setError(null);
 
     const whatsappTrim = whatsapp.trim();
     if (!/^\+[1-9]\d{0,14}$/.test(whatsappTrim)) {
-      setError('WhatsApp number must be in E.164 format (e.g. +963912345678)');
+      setError('رقم الواتساب يجب أن يكون بصيغة دولية (مثال: 963912345678+)');
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError('كلمة المرور يجب أن لا تقل عن 8 أحرف');
       return;
     }
 
     try {
       await login(whatsappTrim, password);
-      navigate('/available');
+      navigate('/', { replace: true });
     } catch (err) {
-      if (err instanceof Error) {
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
         setError(err.message);
       } else {
-        setError('Login failed');
+        setError('فشل تسجيل الدخول. يرجى التحقق من صحة البيانات.');
       }
     }
   };
 
   return (
-    <div className="container" style={{ paddingTop: '48px', maxWidth: '400px', margin: '0 auto' }}>
-      <h1 style={{ textAlign: 'center', marginBottom: '32px' }}>FAWRUN Runner</h1>
-      <div className="card">
-        <form onSubmit={handleSubmit}>
+    <div className="login-container">
+      <div className="login-card card">
+        <div className="login-brand">
+          <div className="brand-badge">FORERUN</div>
+          <h1 className="brand-title">فَوْراً — تطبيق المندوب</h1>
+          <p className="brand-subtitle">تسجيل الدخول لمتابعة واستلام الطلبات</p>
+        </div>
+
+        <form onSubmit={handleSubmit} className="login-form">
           <div className="form-group">
-            <label className="label">WhatsApp</label>
+            <label className="label" htmlFor="whatsapp">
+              رقم الواتساب
+            </label>
             <input
+              id="whatsapp"
               type="tel"
               className="input"
+              dir="ltr"
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value)}
               placeholder="+963912345678"
@@ -53,11 +66,16 @@ export function LoginPage() {
               autoComplete="tel"
             />
           </div>
+
           <div className="form-group" style={{ marginTop: '16px' }}>
-            <label className="label">كلمة المرور</label>
+            <label className="label" htmlFor="password">
+              كلمة المرور
+            </label>
             <input
+              id="password"
               type="password"
               className="input"
+              dir="ltr"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="••••••••"
@@ -65,11 +83,17 @@ export function LoginPage() {
               autoComplete="current-password"
             />
           </div>
-          {error && <div className="error-msg" style={{ marginTop: '12px' }}>{error}</div>}
+
+          {error && (
+            <div className="error-msg" style={{ marginTop: '14px' }}>
+              {error}
+            </div>
+          )}
+
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', marginTop: '20px' }}
+            style={{ width: '100%', marginTop: '22px' }}
             disabled={isLoading}
           >
             {isLoading ? 'جارٍ تسجيل الدخول...' : 'تسجيل الدخول'}

@@ -45,6 +45,14 @@ export const ORDER_TRANSITIONS: readonly OrderTransition[] = [
   // AWAITING_PREFERRED_RUNNER → ASSIGNED  (preferred runner accepts)
   { from: 'AWAITING_PREFERRED_RUNNER', to: 'ASSIGNED', actor: 'RUNNER', description: 'Preferred runner accepts the order' },
 
+  // AWAITING_PREFERRED_RUNNER → ASSIGNED  (admin assigns runner)
+  {
+    from: 'AWAITING_PREFERRED_RUNNER',
+    to: 'ASSIGNED',
+    actor: 'ADMIN',
+    description: 'Admin assigns runner to order waiting for preferred runner',
+  },
+
   // AWAITING_PREFERRED_RUNNER → AWAITING_RUNNER  (preferred runner declines, fallback)
   { from: 'AWAITING_PREFERRED_RUNNER', to: 'AWAITING_RUNNER', actor: 'SYSTEM', description: 'Preferred runner unavailable, order returns to general pool' },
 

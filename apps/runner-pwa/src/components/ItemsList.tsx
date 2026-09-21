@@ -1,26 +1,24 @@
-import type { ActiveOrderResponse } from '@fawrun/shared-types';
-
-type OrderItem = NonNullable<
-  NonNullable<ActiveOrderResponse>['orderStores']
->[number]['items'][number];
+import type { ActiveOrderStoreItem } from '@fawrun/shared-types';
 
 interface ItemsListProps {
-  items: OrderItem[];
+  items: ActiveOrderStoreItem[];
 }
 
 export function ItemsList({ items }: ItemsListProps) {
   if (!items || items.length === 0) {
-    return <p className="text-muted">No items</p>;
+    return <p className="text-muted">لا توجد مواد مسجلة لهذا المتجر.</p>;
   }
 
   return (
     <ul className="items-list">
       {items.map((item) => (
         <li key={item.id} className="items-list-item">
-          <span className="item-name">
-            {item.itemName}
-            {item.customStoreName && <span className="item-custom">({item.customStoreName})</span>}
-          </span>
+          <div className="item-info">
+            <span className="item-name">{item.itemName}</span>
+            {item.customStoreName && (
+              <span className="item-custom">({item.customStoreName})</span>
+            )}
+          </div>
           <span className="item-quantity">{item.quantity}</span>
         </li>
       ))}

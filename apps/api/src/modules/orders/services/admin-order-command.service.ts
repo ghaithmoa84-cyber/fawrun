@@ -59,11 +59,51 @@ export class AdminOrderCommandService {
             ? 'AWAITING_PREFERRED_RUNNER'
             : 'AWAITING_RUNNER';
 
-        const transitionResult = this.orderStateMachine.transition(
-          order.status as OrderStatus,
-          targetStatus,
-          'ADMIN',
-        );
+        let transitionResult: { from: OrderStatus; to: OrderStatus; actor: string; description: string };
+
+        if (order.status === 'PENDING_REVIEW') {
+          // Transition 1: PENDING_REVIEW -> UNDER_REVIEW
+          this.orderStateMachine.transition(
+            'PENDING_REVIEW',
+            'UNDER_REVIEW',
+            'ADMIN',
+          );
+
+          await this.auditService.log(
+            {
+              orderId: order.id,
+              actorId: adminId,
+              actorRole: 'ADMIN',
+              event: 'ORDER_REVIEW_STARTED',
+              fromStatus: 'PENDING_REVIEW',
+              toStatus: 'UNDER_REVIEW',
+              meta: {
+                orderNumber: order.orderNumber,
+                notes: dto.notes ?? null,
+              },
+            },
+            tx,
+          );
+
+          // Transition 2: UNDER_REVIEW -> targetStatus
+          transitionResult = this.orderStateMachine.transition(
+            'UNDER_REVIEW',
+            targetStatus,
+            'ADMIN',
+          );
+        } else if (order.status === 'UNDER_REVIEW') {
+          transitionResult = this.orderStateMachine.transition(
+            'UNDER_REVIEW',
+            targetStatus,
+            'ADMIN',
+          );
+        } else {
+          transitionResult = this.orderStateMachine.transition(
+            order.status as OrderStatus,
+            targetStatus,
+            'ADMIN',
+          );
+        }
 
         const newFee = this.pricingService.calculateFee({
           isPeripheral: dto.isPeripheral,
@@ -87,6 +127,7 @@ export class AdminOrderCommandService {
           data: {
             isPeripheral: dto.isPeripheral,
             status: transitionResult.to,
+            reviewedAt: new Date(),
             ...(dto.notes !== undefined ? { notes: dto.notes } : {}),
             ...(feeChanged
               ? {
@@ -111,7 +152,7 @@ export class AdminOrderCommandService {
             actorId: adminId,
             actorRole: 'ADMIN',
             event: 'ORDER_APPROVED',
-            fromStatus: order.status,
+            fromStatus: 'UNDER_REVIEW',
             toStatus: targetStatus,
             meta: {
               orderNumber: order.orderNumber,
@@ -129,7 +170,7 @@ export class AdminOrderCommandService {
               actorId: adminId,
               actorRole: 'ADMIN',
               event: 'ORDER_PERIPHERAL_SET',
-              fromStatus: order.status,
+              fromStatus: 'UNDER_REVIEW',
               toStatus: targetStatus,
               meta: { orderNumber: order.orderNumber },
             },
@@ -144,7 +185,7 @@ export class AdminOrderCommandService {
               actorId: adminId,
               actorRole: 'ADMIN',
               event: 'ORDER_FEE_UPDATED',
-              fromStatus: order.status,
+              fromStatus: 'UNDER_REVIEW',
               toStatus: targetStatus,
               meta: {
                 orderNumber: order.orderNumber,

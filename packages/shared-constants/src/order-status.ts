@@ -1,4 +1,4 @@
-export const ORDER_STATUSES = [
+export const ORDER_STATUS_VALUES = [
   'DRAFT',
   'PENDING_REVIEW',
   'UNDER_REVIEW',
@@ -11,12 +11,84 @@ export const ORDER_STATUSES = [
   'CANCELLED',
 ] as const;
 
-export type OrderStatus = (typeof ORDER_STATUSES)[number];
+export const ORDER_STATUSES = ORDER_STATUS_VALUES;
+export type OrderStatus = (typeof ORDER_STATUS_VALUES)[number];
 
-export const ORDER_STORE_STATUSES = [
+export const ORDER_STORE_STATUS_VALUES = [
   'PENDING',
   'PURCHASED',
   'SKIPPED',
 ] as const;
 
-export type OrderStoreStatus = (typeof ORDER_STORE_STATUSES)[number];
+export const ORDER_STORE_STATUSES = ORDER_STORE_STATUS_VALUES;
+export type OrderStoreStatus = (typeof ORDER_STORE_STATUS_VALUES)[number];
+
+export const RUNNER_STATUS_VALUES = [
+  'AVAILABLE',
+  'ON_MISSION',
+  'UNAVAILABLE',
+] as const;
+export type RunnerStatus = (typeof RUNNER_STATUS_VALUES)[number];
+
+export const USER_STATUS_VALUES = [
+  'PENDING_VERIFICATION',
+  'VERIFIED',
+  'REJECTED',
+  'SUSPENDED',
+] as const;
+export type UserStatus = (typeof USER_STATUS_VALUES)[number];
+
+export const LEDGER_ENTRY_TYPE_VALUES = [
+  'ORDER_FEE_TOTAL',
+  'RUNNER_SHARE',
+  'PLATFORM_SHARE',
+  'SETTLEMENT_PAID',
+  'ADMIN_ADJUSTMENT',
+] as const;
+export type LedgerEntryType = (typeof LEDGER_ENTRY_TYPE_VALUES)[number];
+
+export const ORDER_STATUS = {
+  DRAFT: 'DRAFT',
+  PENDING_REVIEW: 'PENDING_REVIEW',
+  UNDER_REVIEW: 'UNDER_REVIEW',
+  AWAITING_RUNNER: 'AWAITING_RUNNER',
+  AWAITING_PREFERRED_RUNNER: 'AWAITING_PREFERRED_RUNNER',
+  ASSIGNED: 'ASSIGNED',
+  IN_PROGRESS: 'IN_PROGRESS',
+  OUT_FOR_DELIVERY: 'OUT_FOR_DELIVERY',
+  DELIVERED: 'DELIVERED',
+  CANCELLED: 'CANCELLED',
+} as const;
+
+export const ORDER_STORE_STATUS = {
+  PENDING: 'PENDING',
+  PURCHASED: 'PURCHASED',
+  SKIPPED: 'SKIPPED',
+} as const;
+
+export const RUNNER_STATUS = {
+  AVAILABLE: 'AVAILABLE',
+  ON_MISSION: 'ON_MISSION',
+  UNAVAILABLE: 'UNAVAILABLE',
+} as const;
+
+export const USER_STATUS = {
+  PENDING_VERIFICATION: 'PENDING_VERIFICATION',
+  VERIFIED: 'VERIFIED',
+  REJECTED: 'REJECTED',
+  SUSPENDED: 'SUSPENDED',
+} as const;
+
+export const USER_ROLE = {
+  CUSTOMER: 'CUSTOMER',
+  RUNNER: 'RUNNER',
+  ADMIN: 'ADMIN',
+} as const;
+export type UserRole = (typeof USER_ROLE)[keyof typeof USER_ROLE];
+
+export const SETTLEMENT_STATUS_VALUES = [
+  'PENDING',
+  'SETTLED',
+] as const;
+export type SettlementStatus = (typeof SETTLEMENT_STATUS_VALUES)[number];
+

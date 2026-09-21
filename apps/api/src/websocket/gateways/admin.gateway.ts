@@ -7,7 +7,6 @@ import {
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException } from '@nestjs/common';
 import { UsersService } from '../../modules/users/users.service.js';
 import { SOCKET_SERVERS } from './socket-registry.js';
 import { getCorsOrigins } from './cors-origins.js';
@@ -63,11 +62,13 @@ export class AdminGateway
     try {
       user = await this.usersService.findLeanById(userId);
     } catch {
-      throw new UnauthorizedException('User not found');
+      client.disconnect(true);
+      return;
     }
 
     if (!user || user.isDeleted || user.status !== 'VERIFIED') {
-      throw new UnauthorizedException('Account is not active');
+      client.disconnect(true);
+      return;
     }
 
     if (user.role !== 'ADMIN') {

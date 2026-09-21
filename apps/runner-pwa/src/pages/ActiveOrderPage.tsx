@@ -1,17 +1,42 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { MapView } from '../components/MapView';
 import { StoreCard } from '../components/StoreCard';
-import type { ActiveOrderResponse } from '@fawrun/shared-types';
+import type { OrderStatus } from '@fawrun/shared-constants';
+import type {
+  ActiveOrderResponse,
+  CreateOrderStoreRequest,
+  DeliverOrderRequest,
+} from '@fawrun/shared-types';
+import axios from 'axios';
 
-function extractErrorMessage(err: unknown): string {
-  if (err instanceof Error) {
-    return err.message;
-  }
-  return 'حدث خطأ غير متوقع';
-}
+const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
+  DRAFT: 'مسودة',
+  PENDING_REVIEW: 'بانتظار المراجعة',
+  UNDER_REVIEW: 'قيد المراجعة',
+  AWAITING_RUNNER: 'بانتظار مندوب',
+  AWAITING_PREFERRED_RUNNER: 'بانتظار المندوب المفضل',
+  ASSIGNED: 'تم التعيين لك',
+  IN_PROGRESS: 'قيد التنفيذ (الشراء)',
+  OUT_FOR_DELIVERY: 'في الطريق للتسليم',
+  DELIVERED: 'تم التسليم بنجاح',
+  CANCELLED: 'ملغي',
+};
+
+const ORDER_STATUS_BADGE: Record<OrderStatus, string> = {
+  DRAFT: 'status-pending',
+  PENDING_REVIEW: 'status-pending',
+  UNDER_REVIEW: 'status-pending',
+  AWAITING_RUNNER: 'status-pending',
+  AWAITING_PREFERRED_RUNNER: 'status-pending',
+  ASSIGNED: 'status-available',
+  IN_PROGRESS: 'status-on-mission',
+  OUT_FOR_DELIVERY: 'status-on-mission',
+  DELIVERED: 'status-delivered',
+  CANCELLED: 'status-unavailable',
+};
 
 export function ActiveOrderPage() {
   const navigate = useNavigate();
@@ -19,17 +44,22 @@ export function ActiveOrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const deliveryIdempotencyKeyRef = useRef<string | null>(null);
+  const deliveredOrderRef = useRef<string | null>(null);
+
+  // Add store state
   const [showAddStore, setShowAddStore] = useState(false);
   const [storeName, setStoreName] = useState('');
 
   const fetchActiveOrder = useCallback(async () => {
     setIsLoading(true);
+    setActionError(null);
     try {
       const response = await api.get<ActiveOrderResponse | null>(
         '/runner/orders/active',
       );
-      const data = response.data;
-      setOrder(data ?? null);
+      setOrder(response.data ?? null);
     } catch {
       setOrder(null);
     } finally {
@@ -43,21 +73,38 @@ export function ActiveOrderPage() {
     void fetchActiveOrder();
   }, [fetchActiveOrder]);
 
+  // WebSocket listeners
   useEffect(() => {
-    on('order:status_changed', () => {
-      fetchActiveOrder();
-    });
-    on('order:fee_updated', () => {
-      fetchActiveOrder();
-    });
-    on('order:store_purchased', () => {
-      fetchActiveOrder();
-    });
-    on('order:delivered', () => {
-      navigate('/available');
-    });
-  }, []);
+    const cleanups = [
+      on('order:status_changed', () => {
+        void fetchActiveOrder();
+      }),
+      on('order:fee_updated', () => {
+        void fetchActiveOrder();
+      }),
+      on('order:store_purchased', () => {
+        void fetchActiveOrder();
+      }),
+      on('order:delivered', () => {
+        void fetchActiveOrder();
+      }),
+      on('order:reassigned', () => {
+        void fetchActiveOrder();
+      }),
+      on('order:assignment_cancelled', () => {
+        setOrder(null);
+        navigate('/available', {
+          replace: true,
+          state: { notification: 'تم إلغاء تعيين الطلب' },
+        });
+      }),
+    ];
+    return () => {
+      cleanups.forEach((cleanup) => cleanup());
+    };
+  }, [on, fetchActiveOrder, navigate]);
 
+  // Phase 1: ASSIGNED -> start order
   const handleStartOrder = async () => {
     if (!order) return;
     setActionLoading(true);
@@ -66,30 +113,47 @@ export function ActiveOrderPage() {
       await api.put(`/runner/orders/${order.id}/start`);
       await fetchActiveOrder();
     } catch (err) {
-      setActionError(extractErrorMessage(err));
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setActionError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError('فشل بدء تنفيذ الطلب');
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
+  // Phase 2: Add Store
   const handleAddStore = async () => {
     if (!order || !storeName.trim()) return;
     setActionLoading(true);
     setActionError(null);
     try {
-      await api.post(`/runner/orders/${order.id}/stores`, {
+      const body: CreateOrderStoreRequest = {
         storeName: storeName.trim(),
-      });
+      };
+      await api.post(`/runner/orders/${order.id}/stores`, body);
       setStoreName('');
       setShowAddStore(false);
       await fetchActiveOrder();
     } catch (err) {
-      setActionError(extractErrorMessage(err));
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setActionError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError('فشل إضافة المتجر');
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
+  // Phase 2: Proceed to Delivery
   const handleProceedToDelivery = async () => {
     if (!order) return;
     setActionLoading(true);
@@ -98,24 +162,50 @@ export function ActiveOrderPage() {
       await api.put(`/runner/orders/${order.id}/proceed-to-delivery`);
       await fetchActiveOrder();
     } catch (err) {
-      setActionError(extractErrorMessage(err));
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setActionError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError('فشل الانتقال للتوصيل. تأكد من شراء أو تخطي جميع المتاجر.');
+      }
     } finally {
       setActionLoading(false);
     }
   };
 
+  // Phase 3: OUT_FOR_DELIVERY -> deliver order
   const handleDeliver = async () => {
     if (!order) return;
     setActionLoading(true);
     setActionError(null);
     try {
-      const idempotencyKey = crypto.randomUUID();
-      await api.put(`/runner/orders/${order.id}/deliver`, {
-        idempotencyKey,
-      });
+      if (
+        deliveryIdempotencyKeyRef.current &&
+        deliveredOrderRef.current === order.id
+      ) {
+        setActionError('⏳ جارٍ تسجيل التسليم، يرجى الانتظار...');
+        return;
+      }
+      if (deliveredOrderRef.current !== order.id) {
+        deliveryIdempotencyKeyRef.current = crypto.randomUUID();
+        deliveredOrderRef.current = order.id;
+      }
+      const idempotencyKey = deliveryIdempotencyKeyRef.current ?? crypto.randomUUID();
+      deliveryIdempotencyKeyRef.current = idempotencyKey;
+      const body: DeliverOrderRequest = { idempotencyKey };
+      await api.put(`/runner/orders/${order.id}/deliver`, body);
       await fetchActiveOrder();
     } catch (err) {
-      setActionError(extractErrorMessage(err));
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        const msg = err.response.data.message;
+        setActionError(Array.isArray(msg) ? msg.join(' - ') : msg);
+      } else if (err instanceof Error) {
+        setActionError(err.message);
+      } else {
+        setActionError('فشل تسجيل تسليم الطلب');
+      }
     } finally {
       setActionLoading(false);
     }
@@ -123,46 +213,53 @@ export function ActiveOrderPage() {
 
   if (isLoading) {
     return (
-      <div className="container" style={{ paddingTop: '24px' }}>
-        <p>جارٍ تحميل الطلب...</p>
+      <div className="container" style={{ paddingTop: '32px' }}>
+        <div className="card text-center">
+          <div className="spinner" style={{ margin: '16px auto' }} />
+          <p>جارٍ تحميل تفاصيل الطلب النشط...</p>
+        </div>
       </div>
     );
   }
 
   if (!order) {
     return (
-      <div className="container" style={{ paddingTop: '24px' }}>
-        <div className="card">
-          <h2>لا يوجد طلب نشط</h2>
-          <p style={{ color: 'var(--text)' }}>
-            قم بتفعيل التوافر للحصول على طلبات.
+      <div className="container" style={{ paddingTop: '32px' }}>
+        <div className="card text-center">
+          <div style={{ fontSize: '48px', marginBottom: '16px' }}>📦</div>
+          <h2>لا يوجد طلب نشط حالياً</h2>
+          <p style={{ color: 'var(--text)', marginTop: '8px' }}>
+            يمكنك تفعيل التوافر لاستقبال طلبات جديدة من العملاء.
           </p>
           <button
             type="button"
             className="btn btn-primary"
-            style={{ marginTop: '12px' }}
+            style={{ marginTop: '20px' }}
             onClick={() => navigate('/available')}
           >
-            العودة للتوافر
+            الذهاب لشاشة التوافر
           </button>
         </div>
       </div>
     );
   }
 
-  const allStoresDone =
+  const orderStatus = order.status as OrderStatus;
+  const isAssigned = orderStatus === 'ASSIGNED';
+  const isInProgress = orderStatus === 'IN_PROGRESS';
+  const isOutForDelivery = orderStatus === 'OUT_FOR_DELIVERY';
+  const isDelivered = orderStatus === 'DELIVERED';
+
+  const allStoresHandled =
     order.orderStores.length > 0 &&
     order.orderStores.every(
-      (s: NonNullable<ActiveOrderResponse>['orderStores'][number]) =>
-        s.status === 'PURCHASED' || s.status === 'SKIPPED',
+      (s) => s.status === 'PURCHASED' || s.status === 'SKIPPED',
     );
 
-  const canProceed = order.status === 'IN_PROGRESS' && allStoresDone;
-  const canDeliver = order.status === 'OUT_FOR_DELIVERY';
-
   return (
-    <div className="container" style={{ paddingTop: '24px' }}>
-      <div className="card">
+    <div className="container active-order-container" style={{ paddingTop: '20px' }}>
+      {/* Header Info */}
+      <div className="card order-header-card">
         <div
           style={{
             display: 'flex',
@@ -170,37 +267,195 @@ export function ActiveOrderPage() {
             alignItems: 'center',
           }}
         >
-          <h2>طلب #{order.orderNumber}</h2>
-          <span
-            className={`status-badge ${
-              order.status === 'DELIVERED'
-                ? 'status-delivered'
-                : order.status === 'OUT_FOR_DELIVERY'
-                  ? 'status-on-mission'
-                  : order.status === 'IN_PROGRESS'
-                    ? 'status-purchased'
-                    : 'status-pending'
-            }`}
-          >
-            {order.status}
+          <div>
+            <span className="order-number-badge">#{order.orderNumber}</span>
+            <h2 style={{ marginTop: '4px' }}>طلب التوصيل</h2>
+          </div>
+          <span className={`status-badge ${ORDER_STATUS_BADGE[orderStatus] ?? 'status-pending'}`}>
+            {ORDER_STATUS_LABEL[orderStatus] ?? order.status}
           </span>
         </div>
 
-        <p style={{ marginTop: '12px', color: 'var(--text)' }}>
-          {order.customerName} | {order.customerWhatsapp}
-        </p>
-
-        {order.isPeripheral && (
-          <p style={{ color: 'var(--warning)', fontSize: '13px' }}>
-            طلب نطاق حاشي
-          </p>
-        )}
+        <div className="customer-info" style={{ marginTop: '16px' }}>
+          <div className="customer-item">
+            <span className="label">العميل:</span>
+            <strong>{order.customerName}</strong>
+          </div>
+          <div className="customer-item">
+            <span className="label">رقم التواصل:</span>
+            <a
+              href={`https://wa.me/${order.customerWhatsapp.replace('+', '')}`}
+              target="_blank"
+              rel="noreferrer"
+              className="whatsapp-link"
+              dir="ltr"
+            >
+              💬 {order.customerWhatsapp}
+            </a>
+          </div>
+          {order.isPeripheral && (
+            <div className="peripheral-badge">
+              ⚠️ طلب نطاق حاشي (يشمل رسوم نطاق إضافية)
+            </div>
+          )}
+        </div>
       </div>
 
+      {/* Stage: ASSIGNED */}
+      {isAssigned && (
+        <div className="card stage-card">
+          <div className="stage-banner stage-banner--assigned">
+            تم تعيين هذا الطلب لك. اضغط "بدأت" للتوجه للمتاجر والشراء.
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-primary btn-big"
+            style={{ width: '100%', marginTop: '16px' }}
+            onClick={handleStartOrder}
+            disabled={actionLoading}
+          >
+            {actionLoading ? 'جارٍ البدء...' : '🚀 بدأت (بدء الشراء)'}
+          </button>
+        </div>
+      )}
+
+      {/* Stores Section (Visible in ASSIGNED and IN_PROGRESS) */}
+      {(isAssigned || isInProgress) && (
+        <div className="card">
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              marginBottom: '16px',
+            }}
+          >
+            <h3>المتاجر والمواد المطلوبة ({order.orderStores.length})</h3>
+            {isInProgress && !showAddStore && (
+              <button
+                type="button"
+                className="btn btn-outline btn-small"
+                onClick={() => setShowAddStore(true)}
+              >
+                ➕ إضافة متجر
+              </button>
+            )}
+          </div>
+
+          {/* Add store inline form */}
+          {isInProgress && showAddStore && (
+            <div className="add-store-form card" style={{ background: '#f8fafc', marginBottom: '16px' }}>
+              <h4>إضافة متجر جديد للطلب</h4>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '8px' }}>
+                <input
+                  type="text"
+                  className="input"
+                  placeholder="اسم المتجر (مثال: بقالة النور)"
+                  value={storeName}
+                  onChange={(e) => setStoreName(e.target.value)}
+                  style={{ flex: 1 }}
+                />
+                <button
+                  type="button"
+                  className="btn btn-primary btn-small"
+                  onClick={handleAddStore}
+                  disabled={actionLoading || !storeName.trim()}
+                >
+                  حفظ
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-outline btn-small"
+                  onClick={() => {
+                    setShowAddStore(false);
+                    setStoreName('');
+                  }}
+                >
+                  إلغاء
+                </button>
+              </div>
+            </div>
+          )}
+
+          {order.orderStores.map((store) => (
+            <StoreCard
+              key={store.id}
+              store={store}
+              orderId={order.id}
+              orderStatus={order.status}
+              onStoreUpdated={fetchActiveOrder}
+            />
+          ))}
+
+          {/* Proceed to Delivery Button */}
+          {isInProgress && (
+            <div style={{ marginTop: '20px' }}>
+              {allStoresHandled ? (
+                <button
+                  type="button"
+                  className="btn btn-primary btn-big"
+                  style={{ width: '100%' }}
+                  onClick={handleProceedToDelivery}
+                  disabled={actionLoading}
+                >
+                  {actionLoading ? 'جارٍ التحضير...' : '🛵 انتقل للتوصيل'}
+                </button>
+              ) : (
+                <div className="hint-box">
+                  ℹ️ يجب شراء أو تخطي جميع المتاجر المتبقية قبل الانتقال للتوصيل.
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Stage: OUT_FOR_DELIVERY */}
+      {isOutForDelivery && (
+        <div className="card stage-card">
+          <div className="stage-banner stage-banner--delivery">
+            🛵 أنت في الطريق لتسليم الطلب للعميل.
+          </div>
+
+          <button
+            type="button"
+            className="btn btn-success btn-big"
+            style={{ width: '100%', marginTop: '16px' }}
+            onClick={handleDeliver}
+            disabled={actionLoading}
+          >
+            {actionLoading ? 'جارٍ التأكيد...' : '✅ تم التسليم بنجاح'}
+          </button>
+        </div>
+      )}
+
+      {/* Stage: DELIVERED */}
+      {isDelivered && (
+        <div className="card text-center" style={{ background: '#ecfdf5', borderColor: '#10b981' }}>
+          <div style={{ fontSize: '48px', marginBottom: '12px' }}>🎉</div>
+          <h3 style={{ color: '#047857' }}>تم تسليم الطلب بنجاح!</h3>
+          <p style={{ color: '#065f46', marginTop: '8px' }}>
+            تم تسجيل أتعاب التوصيل وإضافتها إلى تسوية اليوم.
+          </p>
+          <button
+            type="button"
+            className="btn btn-primary"
+            style={{ marginTop: '16px', width: '100%' }}
+            onClick={() => navigate('/available')}
+          >
+            العودة لاستقبال طلبات جديدة
+          </button>
+        </div>
+      )}
+
+      {/* Map of Delivery Address */}
       <div className="card">
-        <h3 style={{ marginBottom: '12px' }}>عنوان التسليم</h3>
-        <p>{order.deliveryAddress.description}</p>
-        <div style={{ marginTop: '12px' }}>
+        <h3 style={{ marginBottom: '8px' }}>عنوان التسليم</h3>
+        <p style={{ color: 'var(--text)', marginBottom: '14px' }}>
+          📍 {order.deliveryAddress.description}
+        </p>
+        <div style={{ height: '260px', borderRadius: '8px', overflow: 'hidden' }}>
           <MapView
             lat={order.deliveryAddress.lat}
             lng={order.deliveryAddress.lng}
@@ -209,189 +464,40 @@ export function ActiveOrderPage() {
         </div>
       </div>
 
+      {/* Fee Summary (Server is source of truth - displayed only from order.pricing) */}
       {order.pricing && (
-        <div className="card">
-          <h3 style={{ marginBottom: '12px' }}>ملخص الرسوم</h3>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span>الرسوم الأساسية:</span>
+        <div className="card fee-card">
+          <h3 style={{ marginBottom: '14px' }}>تفاصيل رسوم التوصيل</h3>
+          <div className="fee-rows">
+            <div className="fee-row">
+              <span>الرسم الأساسي:</span>
               <span>{order.pricing.baseFee} ل.س</span>
             </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-              }}
-            >
-              <span>الرسوم الإضافية:</span>
-              <span>{order.pricing.peripheralFee} ل.س</span>
-            </div>
-            <div
-              style={{
-                display: 'flex',
-                justifyContent: 'space-between',
-                fontWeight: 'bold',
-                fontSize: '18px',
-                borderTop: '1px solid var(--border)',
-                paddingTop: '8px',
-              }}
-            >
-              <span>المجموع:</span>
-              <span>{order.pricing.totalFee} ل.س</span>
+            {order.pricing.peripheralFee > 0 && (
+              <div className="fee-row">
+                <span>رسم نطاق حاشي:</span>
+                <span>{order.pricing.peripheralFee} ل.س</span>
+              </div>
+            )}
+            {order.pricing.extraStoresFee > 0 && (
+              <div className="fee-row">
+                <span>رسم متاجر إضافية:</span>
+                <span>{order.pricing.extraStoresFee} ل.س</span>
+              </div>
+            )}
+            <div className="fee-row fee-row--total">
+              <span>إجمالي رسم التوصيل:</span>
+              <span className="total-fee">{order.pricing.totalFee} ل.س</span>
             </div>
           </div>
         </div>
       )}
 
-      {order.orderStores && order.orderStores.length > 0 && (
-        <div className="card">
-          <h3 style={{ marginBottom: '12px' }}>المتاجر</h3>
-          {order.orderStores.map((store) => (
-            <StoreCard
-              key={store.id}
-              store={store}
-              orderId={order!.id}
-              onStoreUpdated={fetchActiveOrder}
-            />
-          ))}
+      {actionError && (
+        <div className="toast toast-error">
+          {actionError}
         </div>
       )}
-
-      {order.status === 'ASSIGNED' && (
-        <div className="card">
-          <button
-            type="button"
-            className="btn btn-primary"
-            style={{ width: '100%' }}
-            onClick={handleStartOrder}
-            disabled={actionLoading}
-          >
-            {actionLoading ? 'جارٍ البدء...' : 'بدء الطلب'}
-          </button>
-        </div>
-      )}
-
-      {order.status === 'IN_PROGRESS' && (
-        <div className="card">
-          {showAddStore && (
-            <div
-              style={{
-                display: 'flex',
-                gap: '8px',
-                marginBottom: '12px',
-              }}
-            >
-              <input
-                type="text"
-                className="input"
-                placeholder="اسم المتجر"
-                value={storeName}
-                onChange={(e) => setStoreName(e.target.value)}
-                style={{ flex: 1 }}
-              />
-              <button
-                type="button"
-                className="btn btn-success btn-small"
-                onClick={handleAddStore}
-                disabled={actionLoading || !storeName.trim()}
-              >
-                إضافة
-              </button>
-              <button
-                type="button"
-                className="btn btn-outline btn-small"
-                onClick={() => {
-                  setShowAddStore(false);
-                  setStoreName('');
-                }}
-              >
-                إلغاء
-              </button>
-            </div>
-          )}
-
-          {!showAddStore && (
-            <button
-              type="button"
-              className="btn btn-outline"
-              style={{ width: '100%', marginBottom: '12px' }}
-              onClick={() => setShowAddStore(true)}
-              disabled={actionLoading}
-            >
-            إضافة متجر
-            </button>
-          )}
-
-          {canProceed && (
-            <button
-              type="button"
-              className="btn btn-warning"
-              style={{ width: '100%' }}
-              onClick={handleProceedToDelivery}
-              disabled={actionLoading}
-            >
-              {actionLoading ? 'جارٍ التحضير...' : 'انتقل للتوصيل'}
-            </button>
-          )}
-
-          {!canProceed && !showAddStore && order.orderStores.some(
-            (s: NonNullable<ActiveOrderResponse>['orderStores'][number]) =>
-              s.status === 'PENDING',
-          ) && (
-            <p
-              style={{
-                color: 'var(--warning)',
-                fontSize: '13px',
-                textAlign: 'center',
-              }}
-            >
-              قم بشراء أو تخطي جميع المتاجر أولاً
-            </p>
-          )}
-        </div>
-      )}
-
-      {canDeliver && (
-        <div className="card">
-          <button
-            type="button"
-            className="btn btn-success"
-            style={{ width: '100%' }}
-            onClick={handleDeliver}
-            disabled={actionLoading}
-          >
-            {actionLoading ? 'جارٍ الإرسال...' : 'تم التسليم'}
-          </button>
-        </div>
-      )}
-
-      {order.status === 'DELIVERED' && (
-        <div className="card">
-          <p
-            style={{
-              color: 'var(--success)',
-              textAlign: 'center',
-            }}
-          >
-            تم تسليم الطلب بنجاح!
-          </p>
-          <button
-            type="button"
-            className="btn btn-primary"
-            style={{ width: '100%', marginTop: '12px' }}
-            onClick={() => navigate('/available')}
-          >
-            العودة للتوافر
-          </button>
-        </div>
-      )}
-
-      {actionError && <div className="error-msg">{actionError}</div>}
     </div>
   );
 }
