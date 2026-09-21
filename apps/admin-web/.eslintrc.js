@@ -1,4 +1,6 @@
 module.exports = {
+  root: true,
+  ignorePatterns: ['.eslintrc.js', '*.config.js', '.next'],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 2020,
@@ -6,7 +8,6 @@ module.exports = {
     ecmaFeatures: {
       jsx: true,
     },
-    project: './tsconfig.json',
   },
   plugins: ['@typescript-eslint', 'react'],
   extends: [
@@ -19,7 +20,19 @@ module.exports = {
     'react/no-unescaped-entities': 'off',
     'react/react-in-jsx-scope': 'off',
   },
+  overrides: [
+    {
+      files: ['*.ts', '*.tsx'],
+      parserOptions: {
+        project: './tsconfig.json',
+        tsconfigRootDir: __dirname,
+      },
+    },
+  ],
   settings: {
+    next: {
+      rootDir: __dirname,
+    },
     react: {
       version: 'detect',
     },

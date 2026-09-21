@@ -1,12 +1,24 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Cairo, Inter } from 'next/font/google';
 import './globals.css';
+import { ToastProvider } from '@/components/Toast';
+import { AdminShell } from '@/components/AdminShell';
 
-const inter = Inter({ subsets: ['latin', 'latin-ext'] });
+const cairo = Cairo({
+  subsets: ['arabic', 'latin'],
+  variable: '--font-cairo',
+  display: 'swap',
+});
+
+const inter = Inter({
+  subsets: ['latin', 'latin-ext'],
+  variable: '--font-inter',
+  display: 'swap',
+});
 
 export const metadata: Metadata = {
-  title: 'FAWRUN Admin Dashboard',
-  description: 'Grocery Delivery Platform Admin Dashboard',
+  title: 'FORERUN Admin — لوحة التحكم المركزية',
+  description: 'لوحة إدارة منصة فَوْراً للتوصيل والخدمات اللوجستية',
 };
 
 export default function RootLayout({
@@ -15,12 +27,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="ar" dir="rtl">
-      <body className={inter.className}>
-        <ToastProvider>{children}</ToastProvider>
+    <html lang="ar" dir="rtl" className={`${cairo.variable} ${inter.variable}`}>
+      <body className="font-sans bg-slate-50 text-slate-800 antialiased min-h-screen">
+        <ToastProvider>
+          <AdminShell>{children}</AdminShell>
+        </ToastProvider>
       </body>
     </html>
   );
 }
-
-import { ToastProvider } from '@/components/Toast';

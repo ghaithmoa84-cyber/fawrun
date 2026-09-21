@@ -7,11 +7,11 @@ import axios, {
 import type { LoginResponse } from '@fawrun/shared-types';
 
 const api: AxiosInstance = axios.create({
-  baseURL: import.meta.env.VITE_API_URL,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
   withCredentials: true,
 });
 
-const REFRESH_THRESHOLD_MS = 10 * 60 * 1000;
+const REFRESH_THRESHOLD_MS = 10 * 60 * 1000; // 10 minutes
 const LOGIN_PATH = '/login';
 
 function readStorage(key: string): string | null {
@@ -26,13 +26,34 @@ function removeStorage(key: string): void {
   localStorage.removeItem(key);
 }
 
-const AUTH_KEYS = ['accessToken', 'refreshToken', 'tokenExpiry', 'runnerId', 'userName', 'userRole'];
+const AUTH_KEYS = [
+  'accessToken',
+  'refreshToken',
+  'tokenExpiry',
+  'runnerId',
+  'userName',
+  'userRole',
+];
 
-function clearAuth(): void {
-  AUTH_KEYS.forEach(removeStorage);
+export function setAuthCookie(token: string): void {
+  if (typeof document !== 'undefined') {
+    const secure = import.meta.env.PROD ? ' Secure;' : '';
+    document.cookie = `accessToken=${token}; path=/; max-age=${7 * 24 * 60 * 60}; SameSite=Lax;${secure}`;
+  }
 }
 
-function decodeJwtExpiry(token: string): number | null {
+export function clearAuthCookie(): void {
+  if (typeof document !== 'undefined') {
+    document.cookie = 'accessToken=; path=/; expires=Thu, 01 Jan 1970 00:00:00 GMT; SameSite=Lax;';
+  }
+}
+
+export function clearAuth(): void {
+  AUTH_KEYS.forEach(removeStorage);
+  clearAuthCookie();
+}
+
+export function decodeJwtExpiry(token: string): number | null {
   try {
     const parts = token.split('.');
     if (parts.length < 2 || !parts[1]) return null;
@@ -43,7 +64,7 @@ function decodeJwtExpiry(token: string): number | null {
   }
 }
 
-function isTokenExpiringSoon(): boolean {
+export function isTokenExpiringSoon(): boolean {
   const expiryStr = readStorage('tokenExpiry');
   if (!expiryStr) return false;
   const expiry = parseInt(expiryStr, 10);
@@ -51,7 +72,7 @@ function isTokenExpiringSoon(): boolean {
   return Date.now() + REFRESH_THRESHOLD_MS > expiry;
 }
 
-async function refreshAccessToken(): Promise<string | null> {
+export async function refreshAccessToken(): Promise<string | null> {
   const refreshToken = readStorage('refreshToken');
   if (!refreshToken) {
     clearAuth();
@@ -60,8 +81,9 @@ async function refreshAccessToken(): Promise<string | null> {
   }
 
   try {
+    const baseURL = import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1';
     const response = await axios.post<LoginResponse>(
-      `${import.meta.env.VITE_API_URL}/auth/refresh`,
+      `${baseURL}/auth/refresh`,
       { refreshToken },
     );
 
@@ -69,6 +91,8 @@ async function refreshAccessToken(): Promise<string | null> {
     const newExpiry = decodeJwtExpiry(accessToken);
 
     writeStorage('accessToken', accessToken);
+    setAuthCookie(accessToken);
+
     writeStorage('refreshToken', newRefreshToken);
     writeStorage('runnerId', user.id);
     writeStorage('userName', user.name);
@@ -86,16 +110,18 @@ async function refreshAccessToken(): Promise<string | null> {
 }
 
 function redirectToLogin(): void {
-  window.location.href = LOGIN_PATH;
+  if (typeof window !== 'undefined' && window.location.pathname !== LOGIN_PATH) {
+    window.location.href = LOGIN_PATH;
+  }
 }
 
 function isAuthEndpoint(url?: string): boolean {
   if (!url) return false;
   const normalized = url.includes('?') ? url.split('?')[0]! : url;
   return (
-    normalized === '/auth/login' ||
-    normalized === '/auth/refresh' ||
-    normalized === '/auth/logout'
+    normalized.endsWith('/auth/login') ||
+    normalized.endsWith('/auth/refresh') ||
+    normalized.endsWith('/auth/logout')
   );
 }
 
@@ -106,7 +132,7 @@ api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const accessToken = readStorage('accessToken');
 
-    if (accessToken && isTokenExpiringSoon()) {
+    if (accessToken && !isAuthEndpoint(config.url) && isTokenExpiringSoon()) {
       if (!isRefreshing) {
         isRefreshing = true;
         pendingRefresh = refreshAccessToken().finally(() => {

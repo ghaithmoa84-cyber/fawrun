@@ -33,17 +33,17 @@ import { jwtConfig } from './config/jwt.config.js';
         {
           name: 'default',
           ttl: 60000,
-          limit: 100,
+          limit: 300,
         },
         {
           name: 'login',
           ttl: 900000,
-          limit: 10,
+          limit: 1000,
         },
         {
           name: 'register',
           ttl: 3600000,
-          limit: 3,
+          limit: 1000,
         },
       ],
     }),

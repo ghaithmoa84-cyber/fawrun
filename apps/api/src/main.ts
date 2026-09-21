@@ -11,6 +11,8 @@ async function bootstrap(): Promise<void> {
     bodyParser: true,
   });
 
+  app.set('trust proxy', true);
+
   if (process.env.SENTRY_DSN) {
     Sentry.init({
       dsn: process.env.SENTRY_DSN,

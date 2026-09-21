@@ -5,17 +5,13 @@ import {
   useState,
   type ReactNode,
 } from 'react';
-import api from '../api/client';
+import api, { clearAuth, decodeJwtExpiry, setAuthCookie } from '../api/client';
 import type { LoginResponse } from '@fawrun/shared-types';
 
-interface User {
-  id: string;
-  name: string;
-  role: string;
-}
+type AuthUser = LoginResponse['user'];
 
 interface AuthContextType {
-  user: User | null;
+  user: AuthUser | null;
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (whatsapp: string, password: string) => Promise<void>;
@@ -24,37 +20,18 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const AUTH_KEYS = [
-  'accessToken',
-  'refreshToken',
-  'tokenExpiry',
-  'runnerId',
-  'userName',
-  'userRole',
-];
-
-function clearAuth(): void {
-  AUTH_KEYS.forEach((key) => localStorage.removeItem(key));
-}
-
-function decodeJwtExpiry(token: string): number | null {
-  try {
-    const parts = token.split('.');
-    if (parts.length < 2 || !parts[1]) return null;
-    const payload = JSON.parse(atob(parts[1]));
-    return typeof payload.exp === 'number' ? payload.exp * 1000 : null;
-  } catch {
-    return null;
-  }
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(() => {
+  const [user, setUser] = useState<AuthUser | null>(() => {
     const storedRunnerId = localStorage.getItem('runnerId');
     const storedName = localStorage.getItem('userName');
-    const storedRole = localStorage.getItem('userRole');
+    const storedRole = localStorage.getItem('userRole') as AuthUser['role'] | null;
     if (storedRunnerId && storedName && storedRole) {
-      return { id: storedRunnerId, name: storedName, role: storedRole };
+      return {
+        id: storedRunnerId,
+        name: storedName,
+        role: storedRole,
+        status: 'VERIFIED',
+      };
     }
     return null;
   });
@@ -73,6 +50,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const expiry = decodeJwtExpiry(data.accessToken);
 
       localStorage.setItem('accessToken', data.accessToken);
+      setAuthCookie(data.accessToken);
+
       localStorage.setItem('refreshToken', data.refreshToken);
       localStorage.setItem('runnerId', data.user.id);
       localStorage.setItem('userName', data.user.name);
@@ -81,11 +60,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         localStorage.setItem('tokenExpiry', expiry.toString());
       }
 
-      setUser({
-        id: data.user.id,
-        name: data.user.name,
-        role: data.user.role,
-      });
+      setUser(data.user);
     } finally {
       setIsLoading(false);
     }
@@ -94,7 +69,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const logout = useCallback(() => {
     clearAuth();
     setUser(null);
-    window.location.href = '/login';
+    if (typeof window !== 'undefined') {
+      window.location.href = '/login';
+    }
   }, []);
 
   return (

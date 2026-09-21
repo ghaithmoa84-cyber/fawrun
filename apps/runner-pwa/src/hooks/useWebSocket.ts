@@ -12,6 +12,7 @@ export function useWebSocket(): UseWebSocketResult {
   const [socket, setSocket] = useState<Socket | null>(null);
 
   useEffect(() => {
+    const wsUrl = import.meta.env.VITE_WS_URL || 'http://localhost:3000';
     const accessToken = localStorage.getItem('accessToken');
     const runnerId = localStorage.getItem('runnerId');
 
@@ -19,8 +20,8 @@ export function useWebSocket(): UseWebSocketResult {
       return;
     }
 
-    const newSocket = io(`${import.meta.env.VITE_WS_URL}/orders`, {
-      auth: { token: accessToken },
+    const newSocket = io(`${wsUrl}/orders`, {
+      auth: (cb) => cb({ token: localStorage.getItem('accessToken') ?? '' }),
       transports: ['websocket'],
     });
 
@@ -28,11 +29,14 @@ export function useWebSocket(): UseWebSocketResult {
 
     newSocket.on('connect', () => {
       setIsConnected(true);
-      newSocket.emit('join-room', `runner:${runnerId}`);
     });
 
     newSocket.on('disconnect', () => {
       setIsConnected(false);
+    });
+
+    newSocket.on('connect_error', (err) => {
+      console.error('[Runner WS] connect_error:', err.message);
     });
 
     return () => {

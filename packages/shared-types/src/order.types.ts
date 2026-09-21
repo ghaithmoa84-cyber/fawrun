@@ -123,6 +123,14 @@ export interface AdminOrderStoreReceipt {
   uploadedAt: Date;
 }
 
+export const ORDER_STORE_STATUS_VALUES = [
+  'PENDING',
+  'PURCHASED',
+  'SKIPPED',
+] as const;
+
+export type OrderStoreStatus = (typeof ORDER_STORE_STATUS_VALUES)[number];
+
 export interface AdminOrderStore extends CustomerOrderStore {
   receipts: AdminOrderStoreReceipt[];
 }

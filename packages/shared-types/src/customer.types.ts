@@ -13,12 +13,14 @@ export const ORDER_STATUS_VALUES = [
   'DELIVERED',
   'CANCELLED',
 ] as const;
+export type OrderStatus = (typeof ORDER_STATUS_VALUES)[number];
 
 export const RUNNER_STATUS_VALUES = [
   'AVAILABLE',
   'ON_MISSION',
   'UNAVAILABLE',
 ] as const;
+export type RunnerStatus = (typeof RUNNER_STATUS_VALUES)[number];
 
 export const USER_STATUS_VALUES = [
   'PENDING_VERIFICATION',
@@ -26,6 +28,16 @@ export const USER_STATUS_VALUES = [
   'REJECTED',
   'SUSPENDED',
 ] as const;
+export type UserStatus = (typeof USER_STATUS_VALUES)[number];
+
+export type AdminUserListItem = {
+  id: string;
+  name: string;
+  whatsapp: string;
+  altPhone: string | null;
+  status: (typeof USER_STATUS_VALUES)[number];
+  createdAt: Date;
+};
 
 export const IdParamSchema = z.object({
   id: z.string().trim().min(1, 'id cannot be empty'),

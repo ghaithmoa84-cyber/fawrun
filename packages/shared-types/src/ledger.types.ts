@@ -8,6 +8,7 @@ export const LEDGER_ENTRY_TYPES = [
   'ADMIN_ADJUSTMENT',
 ] as const;
 
+export const LEDGER_ENTRY_TYPE_VALUES = LEDGER_ENTRY_TYPES;
 export type LedgerEntryType = (typeof LEDGER_ENTRY_TYPES)[number];
 
 export const LedgerQuerySchema = z.object({

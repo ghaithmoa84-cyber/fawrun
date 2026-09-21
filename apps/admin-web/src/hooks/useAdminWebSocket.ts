@@ -13,20 +13,27 @@ export function useAdminWebSocket(): UseAdminWebSocketResult {
   const [isConnected, setIsConnected] = useState(false);
   const [socket, setSocket] = useState<Socket | null>(null);
 
-  useEffect(() => {
-    const accessToken = localStorage.getItem('accessToken');
+  const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000';
 
-    if (!accessToken) {
+  useEffect(() => {
+    if (!wsUrl) {
       return;
     }
 
-    const wsUrl = process.env.NEXT_PUBLIC_WS_URL || 'http://localhost:3000';
+    const token = localStorage.getItem('accessToken');
+    if (!token) {
+      return;
+    }
+
     const newSocket = io(`${wsUrl}/admin`, {
-      auth: { token: accessToken },
+      auth: (cb) => cb({ token: localStorage.getItem('accessToken') ?? '' }),
       transports: ['websocket'],
     });
 
     setSocket(newSocket);
+    if (typeof window !== 'undefined') {
+      (window as unknown as { socket: Socket }).socket = newSocket;
+    }
 
     newSocket.on('connect', () => {
       setIsConnected(true);
@@ -36,11 +43,18 @@ export function useAdminWebSocket(): UseAdminWebSocketResult {
       setIsConnected(false);
     });
 
+    newSocket.on('connect_error', (err) => {
+      console.error('[WS] connect_error:', err.message);
+    });
+
     return () => {
       newSocket.disconnect();
       setSocket(null);
+      if (typeof window !== 'undefined') {
+        delete (window as unknown as { socket?: Socket }).socket;
+      }
     };
-  }, []);
+  }, [wsUrl]);
 
   const on = useCallback(
     <T = unknown>(event: string, handler: (payload: T) => void) => {

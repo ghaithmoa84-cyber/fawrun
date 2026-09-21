@@ -7,30 +7,41 @@ export default defineConfig({
     react(),
     VitePWA({
       registerType: 'autoUpdate',
-      devOptions: {
-        enabled: true,
-      },
+      includeAssets: ['favicon.svg', 'pwa-icon.svg', 'pwa-icon-192.png', 'pwa-icon-512.png'],
       manifest: {
-        name: 'FAWRUN Runner',
-        short_name: 'FAWRUN',
+        name: 'FORERUN — فَوْراً',
+        short_name: 'فَوْراً',
+        description: 'تطبيق مندوب التوصيل - فوراً',
         start_url: '/',
         display: 'standalone',
-        theme_color: '#000000',
-        background_color: '#000000',
+        orientation: 'portrait',
+        dir: 'rtl',
+        lang: 'ar',
+        theme_color: '#00C1A7',
+        background_color: '#ffffff',
         icons: [
           {
-            src: '/pwa-icon.svg',
+            src: '/pwa-icon-192.png',
             sizes: '192x192',
-            type: 'image/svg+xml',
+            type: 'image/png',
+            purpose: 'any maskable',
+          },
+          {
+            src: '/pwa-icon-512.png',
+            sizes: '512x512',
+            type: 'image/png',
+            purpose: 'any maskable',
           },
           {
             src: '/pwa-icon.svg',
             sizes: '512x512',
             type: 'image/svg+xml',
+            purpose: 'any',
           },
         ],
       },
       workbox: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
@@ -40,6 +51,17 @@ export default defineConfig({
               expiration: {
                 maxEntries: 50,
                 maxAgeSeconds: 300,
+              },
+            },
+          },
+          {
+            urlPattern: ({ url }) => url.hostname.includes('tile.openstreetmap.org'),
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'osm-tiles',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 7, // 7 days
               },
             },
           },

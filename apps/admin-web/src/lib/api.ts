@@ -16,7 +16,42 @@ const LOGIN_PATH = '/login';
 
 function readStorage(key: string): string | null {
   if (typeof window === 'undefined') return null;
-  return localStorage.getItem(key);
+  const val = localStorage.getItem(key);
+  if (val) return val;
+
+  if (key === 'accessToken' && typeof document !== 'undefined') {
+    const match = document.cookie.match(/(^|;\s*)accessToken=([^;]*)/);
+    if (match && match[2]) {
+      const cookieToken = decodeURIComponent(match[2]);
+      const cookieExpiry = parseInt(
+        document.cookie.match(/(^|;\s*)tokenExpiry=([^;]+)/)?.[2] ?? '0',
+        10,
+      );
+      const expiry = cookieExpiry || decodeJwtExpiry(cookieToken);
+
+      if (expiry && Date.now() < expiry && cookieToken.length > 20) {
+        localStorage.setItem('accessToken', cookieToken);
+        localStorage.setItem('tokenExpiry', expiry.toString());
+        return cookieToken;
+      } else {
+        clearAuth();
+        return null;
+      }
+    }
+  }
+
+  if (key === 'tokenExpiry' && typeof document !== 'undefined') {
+    const cookieExpiry = document.cookie.match(/(^|;\s*)tokenExpiry=([^;]+)/)?.[2];
+    if (cookieExpiry) {
+      const expiry = parseInt(cookieExpiry, 10);
+      if (expiry && Date.now() < expiry) {
+        localStorage.setItem('tokenExpiry', cookieExpiry);
+        return cookieExpiry;
+      }
+    }
+  }
+
+  return null;
 }
 
 function writeStorage(key: string, value: string): void {
@@ -33,6 +68,11 @@ const AUTH_KEYS = ['accessToken', 'refreshToken', 'tokenExpiry', 'userId', 'user
 
 function clearAuth(): void {
   AUTH_KEYS.forEach(removeStorage);
+  if (typeof document !== 'undefined') {
+    const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+    document.cookie = `accessToken=; path=/; max-age=0; SameSite=Lax;${secure}`;
+    document.cookie = `tokenExpiry=; path=/; max-age=0; SameSite=Lax;${secure}`;
+  }
 }
 
 function decodeJwtExpiry(token: string): number | null {
@@ -72,8 +112,15 @@ async function refreshAccessToken(): Promise<string | null> {
     const newExpiry = decodeJwtExpiry(accessToken);
 
     writeStorage('accessToken', accessToken);
+    if (typeof document !== 'undefined') {
+      const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+      const maxAge = 7 * 24 * 60 * 60;
+      document.cookie = `accessToken=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax;${secure}`;
+      if (newExpiry) {
+        document.cookie = `tokenExpiry=${newExpiry}; path=/; max-age=${maxAge}; SameSite=Lax;${secure}`;
+      }
+    }
     writeStorage('refreshToken', newRefreshToken);
-    writeStorage('userId', user.id);
     writeStorage('userName', user.name);
     writeStorage('userRole', user.role);
     if (newExpiry) {
@@ -90,7 +137,9 @@ async function refreshAccessToken(): Promise<string | null> {
 
 function redirectToLogin(): void {
   if (typeof window !== 'undefined') {
-    window.location.href = LOGIN_PATH;
+    if (!window.location.pathname.startsWith(LOGIN_PATH)) {
+      window.location.href = `${LOGIN_PATH}?expired=true`;
+    }
   }
 }
 

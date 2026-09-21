@@ -103,7 +103,7 @@ export class RunnerController {
   }
 
   @Get('orders/active')
-  @Throttle({ default: { limit: 30, ttl: 60000 } })
+  @Throttle({ default: { limit: 120, ttl: 60000 } })
   async getActiveOrder(
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
