@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
@@ -44,6 +44,9 @@ export function ActiveOrderPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(false);
   const [actionError, setActionError] = useState<string | null>(null);
+
+  const deliveryIdempotencyKeyRef = useRef<string | null>(null);
+  const deliveredOrderRef = useRef<string | null>(null);
 
   // Add store state
   const [showAddStore, setShowAddStore] = useState(false);
@@ -178,7 +181,19 @@ export function ActiveOrderPage() {
     setActionLoading(true);
     setActionError(null);
     try {
-      const idempotencyKey = crypto.randomUUID();
+      if (
+        deliveryIdempotencyKeyRef.current &&
+        deliveredOrderRef.current === order.id
+      ) {
+        setActionError('⏳ جارٍ تسجيل التسليم، يرجى الانتظار...');
+        return;
+      }
+      if (deliveredOrderRef.current !== order.id) {
+        deliveryIdempotencyKeyRef.current = crypto.randomUUID();
+        deliveredOrderRef.current = order.id;
+      }
+      const idempotencyKey = deliveryIdempotencyKeyRef.current ?? crypto.randomUUID();
+      deliveryIdempotencyKeyRef.current = idempotencyKey;
       const body: DeliverOrderRequest = { idempotencyKey };
       await api.put(`/runner/orders/${order.id}/deliver`, body);
       await fetchActiveOrder();

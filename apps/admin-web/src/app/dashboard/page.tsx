@@ -36,6 +36,37 @@ interface DashboardStats {
   totalPendingReviewOrders: number; // PENDING_REVIEW + UNDER_REVIEW
 }
 
+const PAGE_SIZE = 100;
+
+interface PaginatedResponse<T> {
+  data: T[];
+  meta?: {
+    total?: number;
+    totalPages?: number;
+    page?: number;
+  };
+}
+
+async function fetchAllPages<T>(
+  url: string,
+  params: Record<string, unknown>,
+): Promise<T[]> {
+  const result: T[] = [];
+  let page = 1;
+  // eslint-disable-next-line no-constant-condition
+  while (true) {
+    const res = await api.get<PaginatedResponse<T>>(url, {
+      params: { ...params, page, limit: PAGE_SIZE },
+    });
+    const items = res.data?.data ?? [];
+    result.push(...items);
+    const totalPages = res.data?.meta?.totalPages ?? 0;
+    if (page >= totalPages || items.length < PAGE_SIZE) break;
+    page++;
+  }
+  return result;
+}
+
 function playNewOrderSound() {
   if (typeof window === 'undefined') return;
   try {
@@ -110,24 +141,24 @@ export default function DashboardPage() {
   const fetchPendingOrders = useCallback(async () => {
     try {
       setOrdersLoading(true);
-      const [pendingRes, reviewRes] = await Promise.all([
-        api.get('/admin/orders', { params: { status: 'PENDING_REVIEW', limit: 50 } }),
-        api.get('/admin/orders', { params: { status: 'UNDER_REVIEW', limit: 50 } }),
+      const [list1, list2, total1, total2] = await Promise.all([
+        fetchAllPages<PendingOrderItem>('/admin/orders', { status: 'PENDING_REVIEW' }),
+        fetchAllPages<PendingOrderItem>('/admin/orders', { status: 'UNDER_REVIEW' }),
+        api.get('/admin/orders', { params: { status: 'PENDING_REVIEW', limit: 1 } }).then(
+          (res) => res.data?.meta?.total ?? 0,
+        ),
+        api.get('/admin/orders', { params: { status: 'UNDER_REVIEW', limit: 1 } }).then(
+          (res) => res.data?.meta?.total ?? 0,
+        ),
       ]);
-
-      const list1: PendingOrderItem[] = pendingRes.data?.data || [];
-      const list2: PendingOrderItem[] = reviewRes.data?.data || [];
 
       // Combine and sort oldest first (longest waiting at top)
       const combined = [...list1, ...list2].sort(
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
 
-      const totalPending =
-        (pendingRes.data?.meta?.total ?? 0) + (reviewRes.data?.meta?.total ?? 0);
-
       setPendingOrders(combined);
-      setStats((prev) => ({ ...prev, totalPendingReviewOrders: totalPending }));
+      setStats((prev) => ({ ...prev, totalPendingReviewOrders: total1 + total2 }));
     } catch (err) {
       console.error('Failed to fetch pending review orders:', err);
     } finally {
@@ -147,13 +178,18 @@ export default function DashboardPage() {
         day: '2-digit',
       }).format(new Date());
 
-      const [settlementsRes, runnersRes, inProgressRes, outForDeliveryRes, pendingSettlementsRes] = await Promise.all([
-        api.get('/admin/settlements', {
-          params: { dateFrom: today, dateTo: today, limit: 100 },
+      const [
+        settlements,
+        runnersList,
+        inProgressRes,
+        outForDeliveryRes,
+        pendingSettlementsRes,
+      ] = await Promise.all([
+        fetchAllPages<Settlement>('/admin/settlements', {
+          dateFrom: today,
+          dateTo: today,
         }),
-        api.get('/admin/runners', {
-          params: { limit: 100 },
-        }),
+        fetchAllPages<{ id: string; status: RunnerStatus }>('/admin/runners', {}),
         api.get('/admin/orders', {
           params: { status: 'IN_PROGRESS', limit: 1 },
         }),
@@ -165,22 +201,20 @@ export default function DashboardPage() {
         }),
       ]);
 
-      const settlements: Settlement[] = settlementsRes.data?.data || [];
       const todayPlatformShare = settlements.reduce(
         (sum: number, s: Settlement) => sum + (s.platformShare ?? 0),
         0,
       );
       const pendingSettlements = pendingSettlementsRes.data?.meta?.total ?? 0;
 
-      const runnersList = runnersRes.data?.data || [];
       const runnersAvailable = runnersList.filter(
-        (r: { status: RunnerStatus }) => r.status === 'AVAILABLE',
+        (r) => r.status === 'AVAILABLE',
       ).length;
       const runnersOnMission = runnersList.filter(
-        (r: { status: RunnerStatus }) => r.status === 'ON_MISSION',
+        (r) => r.status === 'ON_MISSION',
       ).length;
       const runnersUnavailable = runnersList.filter(
-        (r: { status: RunnerStatus }) => r.status === 'UNAVAILABLE',
+        (r) => r.status === 'UNAVAILABLE',
       ).length;
 
       const inProgressCount = inProgressRes.data?.meta?.total || 0;
