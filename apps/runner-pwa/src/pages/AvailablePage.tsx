@@ -23,13 +23,24 @@ const RUNNER_STATUS_BADGE: Record<RunnerStatus, string> = {
   UNAVAILABLE: 'status-unavailable',
 };
 
-function playSound(soundType?: string): void {
-  if (typeof window === 'undefined') return;
-  const AudioCtx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
-  if (!AudioCtx) return;
+let audioCtx: AudioContext | null = null;
+function getAudioContext(): AudioContext | null {
+  if (typeof window === 'undefined') return null;
+  const AudioCtxClass = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+  if (!AudioCtxClass) return null;
+  if (!audioCtx || audioCtx.state === 'closed') {
+    audioCtx = new AudioCtxClass();
+  }
+  return audioCtx;
+}
 
+function playSound(soundType?: string): void {
   try {
-    const ctx = new AudioCtx();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    if (ctx.state === 'suspended') {
+      ctx.resume().catch(() => {});
+    }
     const now = ctx.currentTime;
 
     const osc1 = ctx.createOscillator();

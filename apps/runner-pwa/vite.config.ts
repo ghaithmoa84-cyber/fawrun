@@ -45,14 +45,7 @@ export default defineConfig({
         runtimeCaching: [
           {
             urlPattern: ({ url }) => url.pathname.startsWith('/api/'),
-            handler: 'NetworkFirst',
-            options: {
-              cacheName: 'api-cache',
-              expiration: {
-                maxEntries: 50,
-                maxAgeSeconds: 300,
-              },
-            },
+            handler: 'NetworkOnly',
           },
           {
             urlPattern: ({ url }) => url.hostname.includes('tile.openstreetmap.org'),

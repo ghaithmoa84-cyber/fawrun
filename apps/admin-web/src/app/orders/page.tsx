@@ -53,6 +53,16 @@ const ORDER_STATUS_DOT: Record<OrderStatus, string> = {
 
 type OrdersApiResponse = PaginatedResponse<AdminOrderListItem>;
 
+function toDamascusDateRange(dateStr: string) {
+  // dateStr مثل "2026-09-21"
+  const startDamascus = new Date(`${dateStr}T00:00:00+03:00`);
+  const endDamascus = new Date(`${dateStr}T23:59:59.999+03:00`);
+  return {
+    from: startDamascus.toISOString(),
+    to: endDamascus.toISOString(),
+  };
+}
+
 export default function OrdersPage() {
   const router = useRouter();
   const { showToast } = useToast();
@@ -72,8 +82,9 @@ export default function OrdersPage() {
         params.status = statusFilter;
       }
       if (dateFilter) {
-        params.dateFrom = `${dateFilter}T00:00:00.000Z`;
-        params.dateTo = `${dateFilter}T23:59:59.999Z`;
+        const { from, to } = toDamascusDateRange(dateFilter);
+        params.dateFrom = from;
+        params.dateTo = to;
       }
 
       const res = await api.get<OrdersApiResponse>('/admin/orders', { params });

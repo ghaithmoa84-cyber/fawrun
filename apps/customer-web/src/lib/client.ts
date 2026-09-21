@@ -36,6 +36,7 @@ const AUTH_KEYS = [
   'userId',
   'userName',
   'userRole',
+  'userStatus',
 ];
 
 export function setAuthCookie(token: string): void {

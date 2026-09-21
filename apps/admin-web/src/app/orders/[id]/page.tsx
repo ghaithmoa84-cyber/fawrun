@@ -68,6 +68,7 @@ export default function OrderDetailPage() {
   const [auditLogs, setAuditLogs] = useState<AuditLogEntry[]>([]);
   const [availableRunners, setAvailableRunners] = useState<AvailableRunner[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
   // Action states
   const [actionLoading, setActionLoading] = useState(false);
@@ -83,6 +84,7 @@ export default function OrderDetailPage() {
     if (!orderId) return;
     try {
       setLoading(true);
+      setError(null);
       const [orderRes, auditRes, runnersRes] = await Promise.all([
         api.get<AdminOrderDetails>(`/admin/orders/${orderId}`),
         api.get<AuditLogEntry[]>(`/admin/orders/${orderId}/audit`),
@@ -92,8 +94,10 @@ export default function OrderDetailPage() {
       setOrder(orderRes.data);
       setIsPeripheralChecked(orderRes.data.isPeripheral);
       setAuditLogs(auditRes.data);
-      setAvailableRunners(runnersRes.data.data);
+      const runners = runnersRes.data?.data || [];
+      setAvailableRunners(runners.filter((r) => r.status === 'AVAILABLE'));
     } catch {
+      setError('تعذّر تحميل الطلب');
       showToast('تعذر تحميل تفاصيل الطلب، يرجى المحاولة لاحقاً', 'error');
     } finally {
       setLoading(false);
@@ -197,11 +201,30 @@ export default function OrderDetailPage() {
     }
   };
 
-  if (loading || !order) {
+  if (loading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center gap-3">
         <span className="w-6 h-6 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
         <span className="text-xs font-bold text-slate-500">جاري تحميل تفاصيل الطلب...</span>
+      </div>
+    );
+  }
+
+  if (error || !order) {
+    return (
+      <div className="py-20 flex flex-col items-center justify-center gap-4 text-center">
+        <div className="w-12 h-12 rounded-full bg-rose-50 text-rose-600 flex items-center justify-center text-xl font-bold">
+          ⚠️
+        </div>
+        <p className="text-sm font-bold text-slate-800">
+          {error || 'تعذّر تحميل الطلب'}
+        </p>
+        <button
+          onClick={fetchOrderData}
+          className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs transition-colors shadow-xs"
+        >
+          إعادة المحاولة
+        </button>
       </div>
     );
   }

@@ -123,8 +123,11 @@ export default function DashboardPage() {
         (a, b) => new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime(),
       );
 
+      const totalPending =
+        (pendingRes.data?.meta?.total ?? 0) + (reviewRes.data?.meta?.total ?? 0);
+
       setPendingOrders(combined);
-      setStats((prev) => ({ ...prev, totalPendingReviewOrders: combined.length }));
+      setStats((prev) => ({ ...prev, totalPendingReviewOrders: totalPending }));
     } catch (err) {
       console.error('Failed to fetch pending review orders:', err);
     } finally {
@@ -144,7 +147,7 @@ export default function DashboardPage() {
         day: '2-digit',
       }).format(new Date());
 
-      const [settlementsRes, runnersRes, inProgressRes, outForDeliveryRes] = await Promise.all([
+      const [settlementsRes, runnersRes, inProgressRes, outForDeliveryRes, pendingSettlementsRes] = await Promise.all([
         api.get('/admin/settlements', {
           params: { dateFrom: today, dateTo: today, limit: 100 },
         }),
@@ -157,6 +160,9 @@ export default function DashboardPage() {
         api.get('/admin/orders', {
           params: { status: 'OUT_FOR_DELIVERY', limit: 1 },
         }),
+        api.get('/admin/settlements/pending', {
+          params: { limit: 1 },
+        }),
       ]);
 
       const settlements: Settlement[] = settlementsRes.data?.data || [];
@@ -164,9 +170,7 @@ export default function DashboardPage() {
         (sum: number, s: Settlement) => sum + (s.platformShare ?? 0),
         0,
       );
-      const pendingSettlements = settlements.filter(
-        (s: Settlement) => s.status === 'PENDING',
-      ).length;
+      const pendingSettlements = pendingSettlementsRes.data?.meta?.total ?? 0;
 
       const runnersList = runnersRes.data?.data || [];
       const runnersAvailable = runnersList.filter(

@@ -72,7 +72,9 @@ export function isTokenExpiringSoon(): boolean {
   return Date.now() + REFRESH_THRESHOLD_MS > expiry;
 }
 
-export async function refreshAccessToken(): Promise<string | null> {
+let pendingRefresh: Promise<string | null> | null = null;
+
+async function doRefresh(): Promise<string | null> {
   const refreshToken = readStorage('refreshToken');
   if (!refreshToken) {
     clearAuth();
@@ -109,6 +111,14 @@ export async function refreshAccessToken(): Promise<string | null> {
   }
 }
 
+export async function refreshAccessToken(): Promise<string | null> {
+  if (pendingRefresh) return pendingRefresh;
+  pendingRefresh = doRefresh().finally(() => {
+    pendingRefresh = null;
+  });
+  return pendingRefresh;
+}
+
 function redirectToLogin(): void {
   if (typeof window !== 'undefined' && window.location.pathname !== LOGIN_PATH) {
     window.location.href = LOGIN_PATH;
@@ -125,25 +135,12 @@ function isAuthEndpoint(url?: string): boolean {
   );
 }
 
-let isRefreshing = false;
-let pendingRefresh: Promise<string | null> | null = null;
-
 api.interceptors.request.use(
   async (config: InternalAxiosRequestConfig) => {
     const accessToken = readStorage('accessToken');
 
     if (accessToken && !isAuthEndpoint(config.url) && isTokenExpiringSoon()) {
-      if (!isRefreshing) {
-        isRefreshing = true;
-        pendingRefresh = refreshAccessToken().finally(() => {
-          isRefreshing = false;
-          pendingRefresh = null;
-        });
-      }
-
-      if (pendingRefresh) {
-        await pendingRefresh;
-      }
+      await refreshAccessToken();
     }
 
     const token = readStorage('accessToken');

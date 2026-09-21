@@ -26,13 +26,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const storedUserId = localStorage.getItem('userId');
     const storedName = localStorage.getItem('userName');
     const storedRole = localStorage.getItem('userRole') as AuthUser['role'] | null;
-    const storedStatus = localStorage.getItem('userStatus') as AuthUser['status'] | null;
+    const storedStatus = (localStorage.getItem('userStatus') as AuthUser['status'] | null) ?? 'PENDING_VERIFICATION';
     if (storedUserId && storedName && storedRole) {
       return {
         id: storedUserId,
         name: storedName,
         role: storedRole,
-        status: storedStatus || 'VERIFIED',
+        status: storedStatus,
       };
     }
     return null;
