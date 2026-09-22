@@ -9,6 +9,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 import { UsersService } from '../../modules/users/users.service.js';
+import { PrismaService } from '../../database/prisma.service.js';
 
 export interface JwtPayload {
   sub: string;
@@ -19,6 +20,7 @@ export interface JwtPayload {
 export interface AuthenticatedRequest extends Request {
   user?: {
     userId: string;
+    adminId?: string | null;
     role: string;
     status: string;
   };
@@ -30,6 +32,7 @@ export class JwtAuthGuard implements CanActivate {
     private readonly reflector: Reflector,
     private readonly jwtService: JwtService,
     private readonly usersService: UsersService,
+    private readonly prisma: PrismaService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -62,8 +65,17 @@ export class JwtAuthGuard implements CanActivate {
       throw new UnauthorizedException('User not found or deleted');
     }
 
+    let adminId: string | null = null;
+    if (user.role === 'ADMIN') {
+      const admin = await this.prisma.admin.findUnique({
+        where: { userId: user.id },
+      });
+      adminId = admin?.id ?? null;
+    }
+
     request.user = {
       userId: user.id,
+      adminId,
       role: user.role,
       status: user.status,
     };

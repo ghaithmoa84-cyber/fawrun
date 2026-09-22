@@ -98,9 +98,12 @@ export class SettlementsController {
   @Roles('ADMIN')
   async markSettled(
     @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
-    @CurrentUser() user: { userId: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; adminId?: string | null; role: string; status: string },
   ) {
-    return this.settlementsService.markSettled(params.id, user.userId);
+    if (!user.adminId) {
+      throw new ForbiddenException('Admin record not found');
+    }
+    return this.settlementsService.markSettled(params.id, user.adminId);
   }
 
   @Get('admin/settlements')
