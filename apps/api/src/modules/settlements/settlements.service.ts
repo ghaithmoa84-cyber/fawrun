@@ -66,6 +66,7 @@ export class SettlementsService {
   async closeDay(
     operationalDate: string,
     notes: string | null,
+    userId: string,
     adminId: string,
   ): Promise<CloseDayResult> {
     const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
@@ -168,7 +169,7 @@ export class SettlementsService {
 
       await this.auditService.log(
         {
-          actorId: adminId,
+          actorId: userId,
           actorRole: 'ADMIN',
           event: 'SETTLEMENT_CLOSED',
           meta: {
@@ -191,7 +192,7 @@ export class SettlementsService {
     return result;
   }
 
-  async markSettled(id: string, adminId: string) {
+  async markSettled(id: string, userId: string, adminId: string) {
     return this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const settlement = await tx.settlement.findUnique({ where: { id } });
 
@@ -237,7 +238,7 @@ export class SettlementsService {
 
       await this.auditService.log(
         {
-          actorId: adminId,
+          actorId: userId,
           actorRole: 'ADMIN',
           event: 'SETTLEMENT_MARKED_SETTLED',
           fromStatus: 'PENDING',

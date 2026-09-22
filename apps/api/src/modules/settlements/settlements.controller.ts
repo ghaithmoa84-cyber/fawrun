@@ -89,9 +89,12 @@ export class SettlementsController {
   @Throttle({ default: { limit: 5, ttl: 600000 } })
   async closeDay(
     @Body(new ZodValidationPipe(CloseSettlementSchema)) dto: CloseSettlementRequest,
-    @CurrentUser() user: { userId: string; role: string; status: string },
+    @CurrentUser() user: { userId: string; adminId?: string | null; role: string; status: string },
   ) {
-    return this.settlementsService.closeDay(dto.operationalDate, dto.notes, user.userId);
+    if (!user.adminId) {
+      throw new ForbiddenException('Admin record not found');
+    }
+    return this.settlementsService.closeDay(dto.operationalDate, dto.notes, user.userId, user.adminId);
   }
 
   @Put('admin/settlements/:id/mark-settled')
@@ -103,7 +106,7 @@ export class SettlementsController {
     if (!user.adminId) {
       throw new ForbiddenException('Admin record not found');
     }
-    return this.settlementsService.markSettled(params.id, user.adminId);
+    return this.settlementsService.markSettled(params.id, user.userId, user.adminId);
   }
 
   @Get('admin/settlements')
