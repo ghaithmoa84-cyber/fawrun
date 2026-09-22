@@ -4,6 +4,7 @@ WORKDIR /app
 COPY pnpm-workspace.yaml .
 COPY pnpm-lock.yaml .
 COPY package.json .
+COPY tsconfig.json .
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 RUN pnpm install --no-frozen-lockfile
