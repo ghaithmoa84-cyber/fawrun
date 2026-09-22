@@ -13,4 +13,4 @@ RUN pnpm --filter @fawrun/shared-constants build
 RUN pnpm --filter @fawrun/shared-types build
 RUN pnpm --filter fawrun-api build
 EXPOSE 3000
-CMD ["node", "apps/api/dist/main.js"]
+CMD ["sh", "-c", "pnpm --filter fawrun-api exec prisma generate && node apps/api/dist/main.js"]
