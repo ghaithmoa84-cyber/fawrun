@@ -1,0 +1,11 @@
+{
+  "install": {
+    "cmd": "npm install -g pnpm@9.15.9 && pnpm install --no-frozen-lockfile"
+  },
+  "build": {
+    "cmd": "pnpm --filter fawrun-api build"
+  },
+  "start": {
+    "cmd": "node apps/api/dist/main.js"
+  }
+}
