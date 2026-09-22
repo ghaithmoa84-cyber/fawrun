@@ -1,6 +1,6 @@
 [build]
 builder = "nixpacks"
-buildCommand = "pnpm install && pnpm --filter fawrun-api build"
+buildCommand = "npm install -g pnpm && pnpm install --no-frozen-lockfile && pnpm --filter fawrun-api build"
 
 [deploy]
 startCommand = "node apps/api/dist/main.js"
