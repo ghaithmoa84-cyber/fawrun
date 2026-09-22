@@ -1,4 +1,4 @@
-FROM node:20-alpine
+FROM node:20-slim
 RUN npm install -g pnpm@9.15.9
 WORKDIR /app
 COPY pnpm-workspace.yaml .
