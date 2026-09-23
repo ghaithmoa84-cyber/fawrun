@@ -193,7 +193,7 @@ export class UsersService {
   async suspend(id: string, actorId: string) {
     await this.prisma.$transaction(async (tx) => {
       const user = await tx.user.findUnique({
-        where: { id, isDeleted: false, role: 'CUSTOMER' },
+        where: { id, isDeleted: false },
       });
 
       if (!user) {
@@ -223,6 +223,59 @@ export class UsersService {
     return {
       statusCode: 200,
       message: 'Account suspended successfully',
+    };
+  }
+
+  async unsuspend(id: string, actorId: string) {
+    await this.prisma.$transaction(async (tx) => {
+      const user = await tx.user.findUnique({
+        where: { id, isDeleted: false },
+      });
+
+      if (!user) {
+        throw new NotFoundException('User not found');
+      }
+
+      if (user.status !== 'SUSPENDED' && user.status !== 'REJECTED') {
+        throw new UnprocessableEntityException(
+          'Account is not in suspended or rejected state',
+        );
+      }
+
+      await tx.user.update({
+        where: { id },
+        data: { status: 'VERIFIED' },
+      });
+
+      await tx.refreshToken.updateMany({
+        where: { userId: id, isRevoked: false },
+        data: { isRevoked: true, revokedAt: new Date() },
+      });
+
+      await this.auditService.log(
+        {
+          actorId,
+          actorRole: 'ADMIN',
+          event: 'USER_UNSUSPENDED',
+          fromStatus: user.status,
+          toStatus: 'VERIFIED',
+          meta: { userId: id },
+        },
+        tx,
+      );
+    });
+
+    try {
+      await this.notificationsService.emitToCustomer(id, 'account:verified', {
+        message: 'تم إعادة تفعيل حسابك بنجاح',
+      });
+    } catch {
+      // WebSocket emit is best-effort
+    }
+
+    return {
+      statusCode: 200,
+      message: 'Account unsuspended successfully',
     };
   }
 }

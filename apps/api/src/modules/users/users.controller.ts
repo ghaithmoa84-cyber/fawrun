@@ -57,4 +57,12 @@ export class UsersController {
   ) {
     return this.usersService.suspend(params.id, user.userId);
   }
+
+  @Put(':id/unsuspend')
+  async unsuspend(
+    @Param(new ZodValidationPipe(CuidParamSchema)) params: CuidParamRequest,
+    @CurrentUser() user: { userId: string; role: string; status: string },
+  ) {
+    return this.usersService.unsuspend(params.id, user.userId);
+  }
 }
