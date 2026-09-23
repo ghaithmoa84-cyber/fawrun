@@ -106,6 +106,10 @@ export type AdminOrderListItem = {
   customerName: string;
   runnerId: string | null;
   runnerName: string | null;
+  preferredRunner: {
+    id: string;
+    name: string;
+  } | null;
   totalFee: number;
   itemCount: number;
   createdAt: Date;
@@ -149,6 +153,10 @@ export type AdminOrderDetails = {
   deliveryDesc: string;
   notes: string | null;
   preferredRunnerId: string | null;
+  preferredRunner: {
+    id: string;
+    name: string;
+  } | null;
   waitForPreferred: boolean;
   createdAt: Date;
   updatedAt: Date;

@@ -43,6 +43,13 @@ export class AdminOrderQueryService {
               user: true,
             },
           },
+          preferredRunner: {
+            include: {
+              user: {
+                select: { name: true },
+              },
+            },
+          },
           _count: {
             select: { items: true },
           },
@@ -59,6 +66,12 @@ export class AdminOrderQueryService {
         customerName: order.customer?.user.name ?? '',
         runnerId: order.runnerId,
         runnerName: order.runner?.user.name ?? null,
+        preferredRunner: order.preferredRunner
+          ? {
+              id: order.preferredRunner.id,
+              name: order.preferredRunner.user.name,
+            }
+          : null,
         totalFee: order.totalFee,
         itemCount: order._count.items,
         createdAt: order.createdAt,
@@ -86,6 +99,13 @@ export class AdminOrderQueryService {
         runner: {
           include: {
             user: true,
+          },
+        },
+        preferredRunner: {
+          include: {
+            user: {
+              select: { name: true },
+            },
           },
         },
         items: {
@@ -126,6 +146,12 @@ export class AdminOrderQueryService {
       deliveryDesc: order.deliveryDesc,
       notes: order.notes,
       preferredRunnerId: order.preferredRunnerId,
+      preferredRunner: order.preferredRunner
+        ? {
+            id: order.preferredRunner.id,
+            name: order.preferredRunner.user.name,
+          }
+        : null,
       waitForPreferred: order.waitForPreferred,
       createdAt: order.createdAt,
       updatedAt: order.updatedAt,
