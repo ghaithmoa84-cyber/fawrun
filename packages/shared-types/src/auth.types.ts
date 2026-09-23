@@ -8,13 +8,13 @@ export const passwordSchema = z.string().min(8).max(72).refine(
 // Syrian local phone format: 09 followed by 8 digits, e.g. 0912345678.
 // Used for the WhatsApp identity and alternate phone fields across
 // registration/login. No international prefix (+963) is required.
-export const PhoneE164Schema = z
+export const SyrianPhoneSchema = z
   .string()
   .trim()
-  .min(1, 'Phone number is required')
+  .min(1, 'رقم الواتساب مطلوب')
   .regex(
     /^09\d{8}$/,
-    'WhatsApp number must be in Syrian format (e.g. 0912345678)',
+    'رقم الواتساب يجب أن يكون بالصيغة المحلية (مثال: 0912345678)',
   );
 
 export const AddressSchema = z.object({
@@ -25,8 +25,8 @@ export const AddressSchema = z.object({
 
 export const RegisterSchema = z.object({
   name: z.string().min(2),
-  whatsapp: PhoneE164Schema,
-  altPhone: PhoneE164Schema.nullable().optional(),
+  whatsapp: SyrianPhoneSchema,
+  altPhone: SyrianPhoneSchema.nullable().optional(),
   password: passwordSchema,
   address: AddressSchema,
 });
@@ -34,7 +34,7 @@ export const RegisterSchema = z.object({
 export type RegisterRequest = z.infer<typeof RegisterSchema>;
 
 export const LoginSchema = z.object({
-  whatsapp: PhoneE164Schema,
+  whatsapp: SyrianPhoneSchema,
   password: passwordSchema,
 });
 

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
+import { SyrianPhoneSchema } from '@fawrun/shared-types';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -24,9 +25,10 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
 
-const whatsappTrim = whatsapp.trim();
-    if (!/^09\d{8}$/.test(whatsappTrim)) {
-      setError('رقم الواتساب يجب أن يكون بالصيغة السورية (مثال: 0912345678)');
+    const whatsappTrim = whatsapp.trim();
+    const phoneResult = SyrianPhoneSchema.safeParse(whatsappTrim);
+    if (!phoneResult.success) {
+      setError(phoneResult.error.errors[0].message);
       return;
     }
 

@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { passwordSchema, PhoneE164Schema } from './auth.types.js';
+import { passwordSchema, SyrianPhoneSchema } from './auth.types.js';
 
 export const ORDER_STATUS_VALUES = [
   'DRAFT',
@@ -60,7 +60,7 @@ export type CustomerOrdersQuery = z.infer<typeof CustomerOrdersQuerySchema>;
 
 export const UpdateCustomerSchema = z.object({
   name: z.string().trim().min(2).optional(),
-  altPhone: PhoneE164Schema.nullable().optional(),
+  altPhone: SyrianPhoneSchema.nullable().optional(),
   password: passwordSchema.optional(),
 });
 

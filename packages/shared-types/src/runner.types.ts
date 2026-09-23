@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { passwordSchema, PhoneE164Schema } from "./auth.types.js";
+import { passwordSchema, SyrianPhoneSchema } from "./auth.types.js";
 
 const nonEmptyString = z
   .string()
@@ -98,16 +98,16 @@ export type ActiveOrderResponse = z.infer<typeof ActiveOrderResponseSchema>;
 
 export const CreateRunnerSchema = z.object({
   name: nonEmptyString.min(2, "Name must be at least 2 characters"),
-  whatsapp: PhoneE164Schema,
+  whatsapp: SyrianPhoneSchema,
   password: passwordSchema,
-  altPhone: PhoneE164Schema.optional(),
+  altPhone: SyrianPhoneSchema.optional(),
 });
 
 export type CreateRunnerRequest = z.infer<typeof CreateRunnerSchema>;
 
 export const UpdateRunnerSchema = z.object({
   name: nonEmptyString.min(2, "Name must be at least 2 characters").optional(),
-  altPhone: PhoneE164Schema.optional(),
+  altPhone: SyrianPhoneSchema.optional(),
   notes: z.string().optional(),
   password: passwordSchema.optional(),
 });

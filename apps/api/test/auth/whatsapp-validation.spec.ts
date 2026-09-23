@@ -2,18 +2,18 @@ import { describe, expect, it } from 'vitest';
 import {
   CreateRunnerSchema,
   LoginSchema,
-  PhoneE164Schema,
   RegisterSchema,
+  SyrianPhoneSchema,
 } from '@fawrun/shared-types';
 
 describe('F-9: WhatsApp Syrian local validation (shared Zod schemas)', () => {
-  describe('PhoneE164Schema', () => {
+  describe('SyrianPhoneSchema', () => {
     it.each([
       '0912345678',
       '0991234567',
       '0987654321',
     ])('accepts valid Syrian number %s', (value) => {
-      expect(PhoneE164Schema.parse(value)).toBe(value);
+      expect(SyrianPhoneSchema.parse(value)).toBe(value);
     });
 
     it.each([
@@ -25,7 +25,7 @@ describe('F-9: WhatsApp Syrian local validation (shared Zod schemas)', () => {
       ['no country code', '12345678'],
       ['empty', ''],
     ])('rejects invalid number: %s', (_label, value) => {
-      expect(() => PhoneE164Schema.parse(value)).toThrow();
+      expect(() => SyrianPhoneSchema.parse(value)).toThrow();
     });
   });
 

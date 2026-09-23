@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { LoginSchema, RegisterSchema, PhoneE164Schema } from '@fawrun/shared-types';
+import { LoginSchema, RegisterSchema, SyrianPhoneSchema } from '@fawrun/shared-types';
 
-describe('PhoneE164Schema (Syria local format: 09XXXXXXXX)', () => {
+describe('SyrianPhoneSchema (Syria local format: 09XXXXXXXX)', () => {
   const valid = ['0912345678', '0991234567', '0987654321'];
   const invalid = [
     '+963912345678', // international format no longer accepted
@@ -16,11 +16,11 @@ describe('PhoneE164Schema (Syria local format: 09XXXXXXXX)', () => {
   ];
 
   it.each(valid)('accepts valid Syrian number %s', (phone) => {
-    expect(PhoneE164Schema.parse(phone)).toBe(phone);
+    expect(SyrianPhoneSchema.parse(phone)).toBe(phone);
   });
 
   it.each(invalid)('rejects invalid whatsapp %s', (phone) => {
-    expect(() => PhoneE164Schema.parse(phone)).toThrow();
+    expect(() => SyrianPhoneSchema.parse(phone)).toThrow();
   });
 
   it('RegisterSchema rejects international whatsapp', () => {

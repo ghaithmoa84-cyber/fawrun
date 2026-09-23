@@ -3,6 +3,7 @@ import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
 import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
+import { SyrianPhoneSchema } from '@fawrun/shared-types';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -28,9 +29,10 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
 
-const trimmedPhone = whatsapp.trim();
-    if (!/^09\d{8}$/.test(trimmedPhone)) {
-      setError('يرجى إدخل رقم واتساب صالح (مثال: 0912345678)');
+    const trimmedPhone = whatsapp.trim();
+    const phoneResult = SyrianPhoneSchema.safeParse(trimmedPhone);
+    if (!phoneResult.success) {
+      setError(phoneResult.error.errors[0].message);
       return;
     }
 
