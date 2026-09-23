@@ -1,12 +1,16 @@
 import { NestFactory } from '@nestjs/core';
 import type { NestExpressApplication } from '@nestjs/platform-express';
+import { z } from 'zod';
 import { AppModule } from './app.module.js';
 import { AllExceptionsFilter } from './common/filters/all-exceptions.filter.js';
+import { arabicErrorMap } from './common/pipes/zod-validation.pipe.js';
 import helmet from 'helmet';
 import * as Sentry from '@sentry/nestjs';
 import { nestIntegration } from '@sentry/nestjs';
 
 async function bootstrap(): Promise<void> {
+  z.setErrorMap(arabicErrorMap);
+
   const app = await NestFactory.create<NestExpressApplication>(AppModule, {
     bodyParser: true,
   });
