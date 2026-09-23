@@ -372,7 +372,16 @@ export default function OrderDetailPage() {
                 </span>
                 <div className="text-purple-900 space-y-0.5">
                   {order.preferredRunnerId && (
-                    <div>معرّف المندوب المفضل: <span className="font-mono font-bold">{order.preferredRunnerId}</span></div>
+                    <div>
+                      المندوب المفضل:{' '}
+                      <span className="font-bold">
+                        {(order as { preferredRunnerName?: string }).preferredRunnerName ||
+                          (order as { preferredRunner?: { name?: string; user?: { name?: string } } }).preferredRunner?.name ||
+                          (order as { preferredRunner?: { name?: string; user?: { name?: string } } }).preferredRunner?.user?.name ||
+                          (order.runner && order.runner.id === order.preferredRunnerId ? order.runner.name : null) ||
+                          '—'}
+                      </span>
+                    </div>
                   )}
                   <div>
                     الانتظار: {order.waitForPreferred ? 'العميل فضّل انتظار كابتنه المفضل' : 'لا ينتظر (أي كابتن متاح)'}
