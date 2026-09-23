@@ -67,7 +67,7 @@ export class SettlementsService {
     operationalDate: string,
     notes: string | null,
     userId: string,
-    adminId: string,
+    _adminId: string,
   ): Promise<CloseDayResult> {
     const result = await this.prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       const { start, end } = getUtcRangeForOperationalDate(operationalDate);
