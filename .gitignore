@@ -25,3 +25,7 @@ prisma/*.db-journal
 coverage/
 .nest/
 *.log
+.tmp-patch-tty.js
+build-output.txt
+test-output.txt
+apps/api/.tmp-answers.txt
