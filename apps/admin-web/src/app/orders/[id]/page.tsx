@@ -375,11 +375,7 @@ export default function OrderDetailPage() {
                     <div>
                       المندوب المفضل:{' '}
                       <span className="font-bold">
-                        {(order as { preferredRunnerName?: string }).preferredRunnerName ||
-                          (order as { preferredRunner?: { name?: string; user?: { name?: string } } }).preferredRunner?.name ||
-                          (order as { preferredRunner?: { name?: string; user?: { name?: string } } }).preferredRunner?.user?.name ||
-                          (order.runner && order.runner.id === order.preferredRunnerId ? order.runner.name : null) ||
-                          '—'}
+                        {order.preferredRunner?.name || '—'}
                       </span>
                     </div>
                   )}

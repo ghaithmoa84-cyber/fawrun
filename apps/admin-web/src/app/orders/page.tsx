@@ -239,6 +239,13 @@ export default function OrdersPage() {
                     <td className="px-5 py-4 text-slate-600">
                       {order.runnerName ? (
                         <span className="font-semibold text-slate-800">🏃 {order.runnerName}</span>
+                      ) : order.preferredRunner?.name ? (
+                        <div className="flex flex-col">
+                          <span className="text-slate-400 italic">لم يُعيّن</span>
+                          <span className="text-[11px] text-purple-600 font-medium">
+                            ⭐ المفضل: {order.preferredRunner.name}
+                          </span>
+                        </div>
                       ) : (
                         <span className="text-slate-400 italic">لم يُعيّن</span>
                       )}
