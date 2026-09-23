@@ -47,6 +47,17 @@ describe('PhoneE164Schema (Syria local format: 09XXXXXXXX)', () => {
     expect(dto.altPhone).toBe('0987654321');
   });
 
+  it('RegisterSchema accepts registration without altPhone', () => {
+    const dto = RegisterSchema.parse({
+      name: 'Tester',
+      whatsapp: '0912345678',
+      password: 'password123',
+      address: { lat: 0, lng: 0, description: 'home' },
+    });
+    expect(dto.whatsapp).toBe('0912345678');
+    expect(dto.altPhone).toBeUndefined();
+  });
+
   it('RegisterSchema rejects non-Syrian altPhone', () => {
     expect(() =>
       RegisterSchema.parse({

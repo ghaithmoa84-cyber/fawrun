@@ -127,7 +127,7 @@ if (altPhone.trim() && !/^09\d{8}$/.test(altPhone.trim())) {
       const payload = {
         name: name.trim(),
         whatsapp: trimmedPhone,
-        altPhone: altPhone.trim() || undefined,
+        altPhone: altPhone.trim() || null,
         password,
         address: {
           lat,

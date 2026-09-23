@@ -26,7 +26,7 @@ export const AddressSchema = z.object({
 export const RegisterSchema = z.object({
   name: z.string().min(2),
   whatsapp: PhoneE164Schema,
-  altPhone: PhoneE164Schema.nullable(),
+  altPhone: PhoneE164Schema.nullable().optional(),
   password: passwordSchema,
   address: AddressSchema,
 });
