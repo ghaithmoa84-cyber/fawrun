@@ -20,31 +20,11 @@ if (!fs.existsSync(SCHEMA_PATH)) {
 }
 
 // 2. Resolve DATABASE_URL
-let databaseUrl = process.argv[2] || process.env.DATABASE_URL;
+const databaseUrl = process.argv[2] || process.env.DATABASE_URL;
 
 if (!databaseUrl) {
-  const envPath = path.resolve(__dirname, '../apps/api/.env');
-  if (fs.existsSync(envPath)) {
-    const envContent = fs.readFileSync(envPath, 'utf8');
-    for (const line of envContent.split('\n')) {
-      const trimmed = line.trim();
-      if (trimmed.startsWith('DATABASE_URL=')) {
-        databaseUrl = trimmed.substring('DATABASE_URL='.length).trim();
-        // Remove surrounding quotes if present
-        if (
-          (databaseUrl.startsWith('"') && databaseUrl.endsWith('"')) ||
-          (databaseUrl.startsWith("'") && databaseUrl.endsWith("'"))
-        ) {
-          databaseUrl = databaseUrl.slice(1, -1);
-        }
-        break;
-      }
-    }
-  }
-}
-
-if (!databaseUrl) {
-  console.error('[ERROR] DATABASE_URL not provided via argument, environment, or apps/api/.env');
+  console.error('[ERROR] DATABASE_URL must be provided via CLI argument or DATABASE_URL environment variable.');
+  console.error('Usage: node scripts/diff-schema.js [DATABASE_URL]');
   process.exit(1);
 }
 
