@@ -1,11 +1,21 @@
-import { useState, type FormEvent } from 'react';
+import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
 
 export function LoginPage() {
   const navigate = useNavigate();
-  const { login, isLoading } = useAuth();
+  const { user, login, isAuthenticated, isLoading } = useAuth();
+  useEffect(() => {
+    if (isAuthenticated) {
+      if (user?.status === 'SUSPENDED') {
+        navigate('/suspended', { replace: true });
+      } else {
+        navigate('/', { replace: true });
+      }
+    }
+  }, [isAuthenticated, user?.status, navigate]);
   const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -31,6 +41,10 @@ const whatsappTrim = whatsapp.trim();
     } catch (err) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         const msg = err.response.data.message;
+        if (msg === ACCOUNT_SUSPENDED_MESSAGE) {
+          navigate('/suspended', { replace: true });
+          return;
+        }
         setError(Array.isArray(msg) ? msg.join(' - ') : msg);
       } else if (err instanceof Error) {
         setError(err.message);

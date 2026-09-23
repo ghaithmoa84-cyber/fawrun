@@ -30,7 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         id: storedRunnerId,
         name: storedName,
         role: storedRole,
-        status: 'VERIFIED',
+        status: (localStorage.getItem('userStatus') as AuthUser['status'] | null) ?? 'VERIFIED',
       };
     }
     return null;
@@ -56,6 +56,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem('runnerId', data.user.id);
       localStorage.setItem('userName', data.user.name);
       localStorage.setItem('userRole', data.user.role);
+      localStorage.setItem('userStatus', data.user.status);
+      localStorage.setItem('userWhatsapp', whatsapp);
       if (expiry) {
         localStorage.setItem('tokenExpiry', expiry.toString());
       }
@@ -68,6 +70,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const logout = useCallback(() => {
     clearAuth();
+    localStorage.removeItem('userStatus');
+    localStorage.removeItem('userWhatsapp');
     setUser(null);
     if (typeof window !== 'undefined') {
       window.location.href = '/login';

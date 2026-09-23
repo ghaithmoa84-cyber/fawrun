@@ -4,6 +4,7 @@ import { AuthProvider, useAuth } from './hooks/useAuth';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
 import { PendingVerificationPage } from './pages/PendingVerificationPage';
+import { SuspendedPage } from './pages/SuspendedPage';
 import { HomeScreen } from './pages/HomeScreen';
 import { CreateOrderScreen } from './pages/CreateOrderScreen';
 import { OrdersListScreen } from './pages/OrdersListScreen';
@@ -28,6 +29,10 @@ function RequireAuth({ children }: { children: ReactNode }) {
     return <Navigate to="/login" replace />;
   }
 
+  if (user?.status === 'SUSPENDED') {
+    return <Navigate to="/suspended" replace />;
+  }
+
   if (user?.status === 'PENDING_VERIFICATION') {
     return <Navigate to="/pending-verification" replace />;
   }
@@ -48,6 +53,9 @@ function RootRedirect() {
   }
 
   if (isAuthenticated()) {
+    if (user?.status === 'SUSPENDED') {
+      return <Navigate to="/suspended" replace />;
+    }
     return <Navigate to={user?.status === 'PENDING_VERIFICATION' ? '/pending-verification' : '/home'} replace />;
   }
 
@@ -60,6 +68,7 @@ export function AppRoutes() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/register" element={<RegisterPage />} />
       <Route path="/pending-verification" element={<PendingVerificationPage />} />
+      <Route path="/suspended" element={<SuspendedPage />} />
 
       <Route
         element={

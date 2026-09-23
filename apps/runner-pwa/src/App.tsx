@@ -2,6 +2,7 @@ import { useEffect, useState, type ReactNode } from 'react';
 import { Navigate, Routes, Route } from 'react-router-dom';
 import { useAuth } from './hooks/useAuth';
 import { LoginPage } from './pages/LoginPage';
+import { SuspendedPage } from './pages/SuspendedPage';
 import { AvailablePage } from './pages/AvailablePage';
 import { ActiveOrderPage } from './pages/ActiveOrderPage';
 import { SettlementsPage } from './pages/SettlementsPage';
@@ -10,20 +11,27 @@ import api from './api/client';
 import type { ActiveOrderResponse } from '@fawrun/shared-types';
 
 function RequireAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   if (!isAuthenticated) {
     return <Navigate to="/login" replace />;
+  }
+  if (user?.status === 'SUSPENDED') {
+    return <Navigate to="/suspended" replace />;
   }
   return <>{children}</>;
 }
 
 function RootRedirect() {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, user } = useAuth();
   const [target, setTarget] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isAuthenticated) {
       setTarget('/login');
+      return;
+    }
+    if (user?.status === 'SUSPENDED') {
+      setTarget('/suspended');
       return;
     }
 
@@ -46,7 +54,7 @@ function RootRedirect() {
     return () => {
       isMounted = false;
     };
-  }, [isAuthenticated]);
+  }, [isAuthenticated, user?.status]);
 
   if (!target) {
     return (
@@ -64,6 +72,7 @@ function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/suspended" element={<SuspendedPage />} />
 
       <Route
         element={

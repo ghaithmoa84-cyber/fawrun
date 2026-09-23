@@ -2,6 +2,7 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -13,7 +14,9 @@ export function LoginPage() {
   // If already authenticated, redirect according to verification status
   useEffect(() => {
     if (isAuthenticated()) {
-      if (user?.status === 'VERIFIED') {
+      if (user?.status === 'SUSPENDED') {
+        navigate('/suspended', { replace: true });
+      } else if (user?.status === 'VERIFIED') {
         navigate('/home', { replace: true });
       } else if (user?.status === 'PENDING_VERIFICATION') {
         navigate('/pending-verification', { replace: true });
@@ -46,6 +49,10 @@ const trimmedPhone = whatsapp.trim();
     } catch (err: unknown) {
       if (axios.isAxiosError(err) && err.response?.data?.message) {
         const msg = err.response.data.message;
+        if (msg === ACCOUNT_SUSPENDED_MESSAGE) {
+          navigate('/suspended', { replace: true });
+          return;
+        }
         setError(Array.isArray(msg) ? msg.join(' - ') : String(msg));
       } else if (err instanceof Error) {
         setError(err.message);

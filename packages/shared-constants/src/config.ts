@@ -15,3 +15,5 @@ export const CONFIG = {
   ORDER_NUMBER_PAD_LENGTH: 6,
   DAMASCUS_TIMEZONE: 'Asia/Damascus',
 } as const;
+
+export const ACCOUNT_SUSPENDED_MESSAGE = 'Account is suspended' as const;

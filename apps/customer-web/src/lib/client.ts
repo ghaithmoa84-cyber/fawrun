@@ -5,6 +5,7 @@ import axios, {
   type AxiosResponse,
 } from 'axios';
 import type { LoginResponse } from '@fawrun/shared-types';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',
@@ -106,9 +107,18 @@ export async function refreshAccessToken(): Promise<string | null> {
     }
 
     return accessToken;
-  } catch {
+  } catch (err: unknown) {
     clearAuth();
-    redirectToLogin();
+    if (
+      axios.isAxiosError(err) &&
+      (err.response?.data as { message?: string } | undefined)?.message === ACCOUNT_SUSPENDED_MESSAGE
+    ) {
+      if (typeof window !== 'undefined' && window.location.pathname !== '/suspended') {
+        window.location.href = '/suspended';
+      }
+    } else {
+      redirectToLogin();
+    }
     return null;
   }
 }
@@ -164,6 +174,19 @@ api.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
     const originalRequest = error.config as (InternalAxiosRequestConfig & { _retry?: boolean }) | undefined;
+
+    const responseData = error.response?.data as { message?: string } | undefined;
+    if (
+      error.response?.status === 401 &&
+      responseData?.message === ACCOUNT_SUSPENDED_MESSAGE
+    ) {
+      clearAuth();
+      if (typeof window !== 'undefined' && window.location.pathname !== '/suspended') {
+        window.location.href = '/suspended';
+      }
+      return Promise.reject(error);
+    }
+
     if (
       error.response?.status === 401 &&
       originalRequest &&

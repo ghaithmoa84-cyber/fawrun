@@ -10,6 +10,7 @@ import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 import { UsersService } from '../../modules/users/users.service.js';
 import { PrismaService } from '../../database/prisma.service.js';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
 
 export interface JwtPayload {
   sub: string;
@@ -63,6 +64,10 @@ export class JwtAuthGuard implements CanActivate {
     const user = await this.usersService.findLeanById(payload.sub);
     if (!user || user.isDeleted) {
       throw new UnauthorizedException('User not found or deleted');
+    }
+
+    if (user.status === 'SUSPENDED') {
+      throw new UnauthorizedException(ACCOUNT_SUSPENDED_MESSAGE);
     }
 
     let adminId: string | null = null;

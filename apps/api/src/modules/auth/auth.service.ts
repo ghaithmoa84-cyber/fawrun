@@ -9,7 +9,7 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
-import { CONFIG } from '@fawrun/shared-constants';
+import { CONFIG, ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
 import type { RegisterRequest, LoginRequest, RefreshRequest } from '@fawrun/shared-types';
 import type { LogoutDto } from './dto/logout.dto.js';
 
@@ -106,7 +106,11 @@ export class AuthService {
       throw new UnauthorizedException('Invalid credentials');
     }
 
-    if (user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+    if (user.status === 'SUSPENDED') {
+      throw new UnauthorizedException(ACCOUNT_SUSPENDED_MESSAGE);
+    }
+
+    if (user.status === 'REJECTED') {
       throw new UnauthorizedException('Account is not active');
     }
 
@@ -191,7 +195,11 @@ export class AuthService {
 
       const user = token.user;
 
-      if (user.isDeleted || user.status === 'REJECTED' || user.status === 'SUSPENDED') {
+      if (user.status === 'SUSPENDED') {
+        throw new UnauthorizedException(ACCOUNT_SUSPENDED_MESSAGE);
+      }
+
+      if (user.isDeleted || user.status === 'REJECTED') {
         throw new UnauthorizedException('Account is not active');
       }
 
