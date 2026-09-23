@@ -9,6 +9,7 @@ import type {
   CustomerProfile,
   PaginatedResponse,
 } from '@fawrun/shared-types';
+import { formatWhatsappUrl, formatTelUrl } from '../lib/phone';
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   [ORDER_STATUS.DRAFT]: 'مسودة',
@@ -52,6 +53,9 @@ export function HomeScreen() {
   const [profile, setProfile] = useState<CustomerProfile | null>(null);
   const [activeOrders, setActiveOrders] = useState<CustomerOrderListItem[]>([]);
   const [loading, setLoading] = useState(true);
+
+  const adminWhatsapp = import.meta.env.VITE_ADMIN_WHATSAPP || '';
+  const adminPhone = import.meta.env.VITE_ADMIN_PHONE || import.meta.env.VITE_ADMIN_WHATSAPP || '';
 
   const fetchHomeData = useCallback(async () => {
     try {
@@ -105,6 +109,15 @@ export function HomeScreen() {
     );
   }
 
+  // Active orders with an assigned runner in execution stage
+  const executionOrders = activeOrders.filter(
+    (o) =>
+      (o.status === ORDER_STATUS.ASSIGNED ||
+        o.status === ORDER_STATUS.IN_PROGRESS ||
+        o.status === ORDER_STATUS.OUT_FOR_DELIVERY) &&
+      o.runner,
+  );
+
   return (
     <div className="home-screen">
       {/* Welcome Hero Card */}
@@ -120,7 +133,7 @@ export function HomeScreen() {
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
           <div>
             <h1 style={{ fontSize: '22px', fontWeight: 800, marginBottom: '4px' }}>
-              مرحباً، {profile?.name ?? 'عزيزنا العميل'} 👋
+              مرحباً، {profile?.name ?? 'عزيزنا العميل'}
             </h1>
             <p style={{ fontSize: '14px', opacity: 0.9 }}>
               كل ما تحتاجه من بقالة ومواد غذائية يصلك إلى باب بيتك فَوْراً
@@ -211,7 +224,7 @@ export function HomeScreen() {
                 >
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <span style={{ fontWeight: 800, fontSize: '15px', color: 'var(--text-h)' }}>
-                      #{order.orderNumber}
+                      طلب رقم {order.orderNumber}
                     </span>
                     <span className={`badge ${ORDER_STATUS_BADGE[status]}`}>
                       <span className="badge-dot" />
@@ -222,7 +235,7 @@ export function HomeScreen() {
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: '13px', color: 'var(--text-muted)' }}>
                     <span>{order.itemCount} مواد مطلوبة</span>
                     <span style={{ fontWeight: 700, color: 'var(--primary)' }}>
-                      {order.totalFee > 0 ? `${order.totalFee} ل.س` : 'قيد التقدير'}
+                      {order.totalFee > 0 ? `${order.totalFee} ليرة سورية` : 'قيد التقدير'}
                     </span>
                   </div>
                 </div>
@@ -232,6 +245,136 @@ export function HomeScreen() {
         )}
       </div>
 
+      {/* Active Runner Contact Section (Visible after runner assignment & during execution) */}
+      {executionOrders.length > 0 && (
+        <div style={{ marginTop: '24px' }}>
+          <div className="section-title">
+            <span>التواصل مع مندوب التوصيل</span>
+          </div>
+          {executionOrders.map((order) => {
+            const runner = order.runner!;
+            return (
+              <div
+                key={`runner-${order.id}`}
+                className="card"
+                style={{
+                  border: '1px solid #00C1A7',
+                  backgroundColor: '#f0fdf4',
+                  padding: '16px',
+                  marginBottom: '12px',
+                }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+                  <div>
+                    <span style={{ fontSize: '12px', color: 'var(--text-muted)' }}>الكابتن المعيّن للطلب رقم {order.orderNumber}</span>
+                    <h3 style={{ fontSize: '16px', fontWeight: 800, color: 'var(--text-h)', margin: '2px 0 0 0' }}>
+                      {runner.name}
+                    </h3>
+                  </div>
+                  <span className="badge badge-assigned" style={{ fontSize: '12px' }}>
+                    جاري التنفيذ
+                  </span>
+                </div>
+
+                <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
+                  يمكنك التواصل المباشر مع المندوب لمتابعة تفاصيل الشراء والتسليم:
+                </p>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                  <a
+                    href={formatWhatsappUrl(runner.whatsapp, `مرحباً كابتن ${runner.name}، بخصوص طلبي رقم ${order.orderNumber}`)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="btn btn-outline"
+                    style={{
+                      borderColor: '#25D366',
+                      color: '#25D366',
+                      backgroundColor: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      textAlign: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    واتساب المندوب
+                  </a>
+                  <a
+                    href={formatTelUrl(runner.phone || runner.whatsapp)}
+                    className="btn btn-outline"
+                    style={{
+                      borderColor: 'var(--primary)',
+                      color: 'var(--primary)',
+                      backgroundColor: '#ffffff',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      textAlign: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    اتصال بالمندوب
+                  </a>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Permanent Administration Support Section */}
+      {(adminWhatsapp || adminPhone) && (
+        <div className="card" style={{ marginTop: '24px', padding: '16px' }}>
+          <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-h)', marginBottom: '4px' }}>
+            الدعم والمساعدة
+          </h3>
+          <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '14px' }}>
+            فريق إدارة فَوْراً جاهز دائماً لمساعدتك في أي استفسار أو متابعة للطلبات
+          </p>
+
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: adminWhatsapp && adminPhone ? '1fr 1fr' : '1fr',
+              gap: '10px',
+            }}
+          >
+            {adminWhatsapp && (
+              <a
+                href={formatWhatsappUrl(adminWhatsapp, 'مرحباً إدارة فَوْراً، لدي استفسار بخصوص خدمتي')}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-outline"
+                style={{
+                  borderColor: '#25D366',
+                  color: '#15803d',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  textAlign: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                واتساب الإدارة
+              </a>
+            )}
+            {adminPhone && (
+              <a
+                href={formatTelUrl(adminPhone)}
+                className="btn btn-outline"
+                style={{
+                  borderColor: 'var(--primary)',
+                  color: 'var(--primary)',
+                  fontWeight: 700,
+                  fontSize: '13px',
+                  textAlign: 'center',
+                  justifyContent: 'center',
+                }}
+              >
+                اتصال هاتفي بالإدارة
+              </a>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Quick Access Services / Features banner */}
       <div className="card" style={{ marginTop: '24px', backgroundColor: '#ffffff' }}>
         <h3 style={{ fontSize: '15px', fontWeight: 700, color: 'var(--text-h)', marginBottom: '8px' }}>
@@ -239,15 +382,15 @@ export function HomeScreen() {
         </h3>
         <ul style={{ listStyle: 'none', padding: 0, display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px', color: 'var(--text)' }}>
           <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--primary)', fontWeight: 800 }}>✓</span>
+            <span style={{ color: 'var(--primary)', fontWeight: 800 }}>•</span>
             اختر أي مواد بقالة ترغب بها من أي متجر
           </li>
           <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--primary)', fontWeight: 800 }}>✓</span>
+            <span style={{ color: 'var(--primary)', fontWeight: 800 }}>•</span>
             توصيل سريع من قِبل كباتن معتمدين وموثوقين
           </li>
           <li style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span style={{ color: 'var(--primary)', fontWeight: 800 }}>✓</span>
+            <span style={{ color: 'var(--primary)', fontWeight: 800 }}>•</span>
             متابعة حية لحالة الطلب لحظة بلحظة
           </li>
         </ul>

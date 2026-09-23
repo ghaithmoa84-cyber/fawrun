@@ -57,6 +57,7 @@ export function RegisterPage() {
   const [addressDesc, setAddressDesc] = useState('');
   const [lat, setLat] = useState<number>(DEFAULT_CENTER[0]);
   const [lng, setLng] = useState<number>(DEFAULT_CENTER[1]);
+  const [showMap, setShowMap] = useState<boolean>(false);
 
   // Status & Errors
   const [submitting, setSubmitting] = useState(false);
@@ -320,55 +321,70 @@ if (altPhone.trim() && !/^09\d{8}$/.test(altPhone.trim())) {
             )}
           </div>
 
-          {/* Leaflet Mini Map */}
+          {/* Leaflet Map (Hidden by default, toggled with button) */}
           <div className="form-group" style={{ marginBottom: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
-              <label className="label" style={{ marginBottom: 0 }}>تحديد الموقع الجغرافي على الخريطة</label>
+              <label className="label" style={{ marginBottom: 0 }}>تحديد الموقع الجغرافي</label>
               <button
                 type="button"
                 className="btn btn-outline btn-sm"
-                onClick={handleGetCurrentLocation}
-                style={{ fontSize: '12px', padding: '3px 8px' }}
+                onClick={() => setShowMap((prev) => !prev)}
+                style={{ fontSize: '13px', fontWeight: 700 }}
               >
-                📍 موقعي الحالي
+                {showMap ? 'إخفاء الخريطة' : 'تحديد موقعي على الخريطة'}
               </button>
             </div>
-            <div style={{ height: '180px', borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
-              <MapContainer
-                center={markerPosition}
-                zoom={13}
-                scrollWheelZoom={false}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <Marker
-                  position={markerPosition}
-                  icon={pinIcon}
-                  draggable={true}
-                  eventHandlers={{
-                    dragend: (e) => {
-                      const marker = e.target;
-                      const pos = marker.getLatLng();
-                      setLat(pos.lat);
-                      setLng(pos.lng);
-                    },
-                  }}
-                />
-                <MapClickHandler
-                  onLocationChange={(newLat, newLng) => {
-                    setLat(newLat);
-                    setLng(newLng);
-                  }}
-                />
-                <RecenterMap lat={lat} lng={lng} />
-              </MapContainer>
-            </div>
-            <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
-              انقر على الخريطة أو اسحب المؤشر لتحديد موقع منزلك بدقة
-            </p>
+
+            {showMap && (
+              <div style={{ marginTop: '10px' }}>
+                <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '8px' }}>
+                  <button
+                    type="button"
+                    className="btn btn-outline btn-sm"
+                    onClick={handleGetCurrentLocation}
+                    style={{ fontSize: '12px', padding: '3px 8px' }}
+                  >
+                    موقعي الحالي
+                  </button>
+                </div>
+                <div style={{ height: '180px', borderRadius: 'var(--radius)', overflow: 'hidden', border: '1px solid var(--border)' }}>
+                  <MapContainer
+                    center={markerPosition}
+                    zoom={13}
+                    scrollWheelZoom={false}
+                    style={{ height: '100%', width: '100%' }}
+                  >
+                    <TileLayer
+                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                    <Marker
+                      position={markerPosition}
+                      icon={pinIcon}
+                      draggable={true}
+                      eventHandlers={{
+                        dragend: (e) => {
+                          const marker = e.target;
+                          const pos = marker.getLatLng();
+                          setLat(pos.lat);
+                          setLng(pos.lng);
+                        },
+                      }}
+                    />
+                    <MapClickHandler
+                      onLocationChange={(newLat, newLng) => {
+                        setLat(newLat);
+                        setLng(newLng);
+                      }}
+                    />
+                    <RecenterMap lat={lat} lng={lng} />
+                  </MapContainer>
+                </div>
+                <p style={{ fontSize: '11px', color: 'var(--text-muted)', marginTop: '4px' }}>
+                  انقر على الخريطة أو اسحب المؤشر لتحديد موقع منزلك بدقة
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Submit Button */}

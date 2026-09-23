@@ -16,6 +16,19 @@ interface ToastState {
   duration?: number;
 }
 
+const STATUS_ARABIC: Record<string, string> = {
+  DRAFT: 'مسودة',
+  PENDING_REVIEW: 'قيد المراجعة',
+  UNDER_REVIEW: 'قيد التدقيق',
+  AWAITING_RUNNER: 'بانتظار قبول مندوب',
+  AWAITING_PREFERRED_RUNNER: 'بانتظار المندوب المفضل',
+  ASSIGNED: 'تم تعيين مندوب التوصيل',
+  IN_PROGRESS: 'جاري شراء وتجهيز المواد',
+  OUT_FOR_DELIVERY: 'جاري التوصيل إلى عنوانك',
+  DELIVERED: 'تم التسليم بنجاح',
+  CANCELLED: 'ملغي',
+};
+
 export function Layout() {
   const { user, logout } = useAuth();
   const location = useLocation();
@@ -23,12 +36,12 @@ export function Layout() {
   const [toast, setToast] = useState<ToastState | null>(null);
 
   useEffect(() => {
-    // Listen to global real-time notifications
+    // Listen to global real-time notifications with 100% Arabic localization
     const unsubFee = on<OrderFeeUpdatedPayload>(
       CLIENT_EVENTS.ORDER_FEE_UPDATED,
       (payload) => {
         setToast({
-          message: `تم تحديث رسوم الطلب من ${payload.oldFee} ل.س إلى ${payload.newFee} ل.س (${payload.reason})`,
+          message: `تم تحديث رسوم التوصيل من ${payload.oldFee} ليرة سورية إلى ${payload.newFee} ليرة سورية، السبب: ${payload.reason}`,
           type: 'warning',
         });
       },
@@ -37,8 +50,9 @@ export function Layout() {
     const unsubStatus = on<OrderStatusChangedPayload>(
       CLIENT_EVENTS.ORDER_STATUS_CHANGED,
       (payload) => {
+        const statusText = STATUS_ARABIC[payload.newStatus] || payload.newStatus;
         setToast({
-          message: `تحديث الطلب #${payload.orderNumber}: تغيرت الحالة إلى ${payload.newStatus}`,
+          message: `تحديث للطلب رقم ${payload.orderNumber}، أصبحت حالة الطلب ${statusText}`,
           type: 'info',
         });
       },
@@ -49,7 +63,7 @@ export function Layout() {
       (payload) => {
         const orderNum = payload.orderNumber || payload.orderId;
         setToast({
-          message: `كابتنك في الطريق إليك! 🛵 الطلب #${orderNum}`,
+          message: `مندوب التوصيل في طريقه إليك لتسليم الطلب رقم ${orderNum}`,
           type: 'primary',
           duration: 8000,
         });
@@ -60,7 +74,7 @@ export function Layout() {
       CLIENT_EVENTS.ORDER_DELIVERED,
       () => {
         setToast({
-          message: 'تم تسليم طلبك بنجاح! شكراً لاستخدامك فوراً.',
+          message: 'تم تسليم طلبك بنجاح، شكراً لاستخدامك منصة فَوْراً للتوصيل',
           type: 'success',
         });
       },
@@ -70,7 +84,7 @@ export function Layout() {
       CLIENT_EVENTS.ORDER_CANCELLED,
       (payload) => {
         setToast({
-          message: `تم إلغاء الطلب: ${payload.reason}`,
+          message: `تم إلغاء الطلب، السبب: ${payload.reason || 'إلغاء الطلب'}`,
           type: 'warning',
         });
       },

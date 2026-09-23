@@ -3,6 +3,8 @@ import { io, type Socket } from 'socket.io-client';
 import { CLIENT_EVENTS } from '@fawrun/shared-types';
 import { useAuth } from './useAuth';
 
+import { playNotificationBeep } from '../lib/sound';
+
 interface UseCustomerWebSocketResult {
   socket: Socket | null;
   isConnected: boolean;
@@ -57,7 +59,10 @@ export function useCustomerWebSocket(): UseCustomerWebSocketResult {
       if (!socket) {
         return () => {};
       }
-      const wrapped = (payload: T) => handler(payload);
+      const wrapped = (payload: T) => {
+        playNotificationBeep();
+        handler(payload);
+      };
       socket.on(event, wrapped);
       return () => {
         socket.off(event, wrapped);

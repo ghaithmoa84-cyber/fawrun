@@ -261,6 +261,13 @@ export class CustomerOrdersService {
             where: { customerId: customer.id },
             select: { id: true, expiresAt: true, isFinal: true },
           },
+          runner: {
+            include: {
+              user: {
+                select: { id: true, name: true, whatsapp: true, altPhone: true },
+              },
+            },
+          },
         },
       }),
     ]);
@@ -281,6 +288,14 @@ export class CustomerOrdersService {
           order.deliveredAt != null &&
           new Date(order.deliveredAt.getTime() + 24 * 60 * 60 * 1000) >
             new Date(),
+        runner: order.runner
+          ? {
+              id: order.runner.id,
+              name: order.runner.user.name,
+              whatsapp: order.runner.user.whatsapp,
+              phone: order.runner.user.altPhone || order.runner.user.whatsapp,
+            }
+          : null,
       })),
       meta: {
         total,
@@ -326,7 +341,7 @@ export class CustomerOrdersService {
         },
         runner: {
           include: {
-            user: { select: { name: true } },
+            user: { select: { name: true, whatsapp: true, altPhone: true } },
           },
         },
         ratings: {
@@ -364,6 +379,7 @@ export class CustomerOrdersService {
       updatedAt: order.updatedAt,
       deliveredAt: order.deliveredAt,
       cancelledAt: order.cancelledAt,
+      cancelReason: order.cancelReason,
       items: order.items.map((item) => mapOrderItem(item)),
       orderStores: order.orderStores.map((store) => ({
         id: store.id,
@@ -411,6 +427,8 @@ export class CustomerOrdersService {
             avgRating: order.runner.avgRating,
             totalRatings: order.runner.totalRatings,
             status: order.runner.status,
+            whatsapp: order.runner.user.whatsapp,
+            phone: order.runner.user.altPhone || order.runner.user.whatsapp,
           }
         : null,
     };

@@ -98,12 +98,10 @@ export function CreateOrderScreen() {
           setTempDesc(res.data.description);
         } else {
           setSavedAddress(null);
-          setShowLocationModal(true);
         }
       })
       .catch(() => {
         setSavedAddress(null);
-        setShowLocationModal(true);
       })
       .finally(() => {
         setHasLoadedAddress(true);
@@ -281,7 +279,6 @@ export function CreateOrderScreen() {
     }
   };
 
-  const miniMapCenter = useMemo((): [number, number] => [lat, lng], [lat, lng]);
   const modalMapCenter = useMemo((): [number, number] => [tempLat, tempLng], [tempLat, tempLng]);
 
   return (
@@ -554,46 +551,18 @@ export function CreateOrderScreen() {
 
           {/* Saved / Current Delivery Address Display */}
           <div style={{ marginBottom: '12px' }}>
-            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', margin: '0 0 10px 0' }}>
-              {addressDesc || 'جاري تحميل العنوان...'}
+            <p style={{ fontSize: '14px', fontWeight: 600, color: 'var(--text)', margin: '0 0 12px 0' }}>
+              {addressDesc || 'لم يتم تحديد عنوان بعد، اضغط على زر تحديد موقعي'}
             </p>
 
-            {/* 150px Non-interactive Mini Map */}
-            <div
-              style={{
-                height: '150px',
-                width: '100%',
-                borderRadius: 'var(--radius)',
-                overflow: 'hidden',
-                border: '1px solid var(--border)',
-                pointerEvents: 'none',
-                marginBottom: '12px',
-              }}
-            >
-              <MapContainer
-                center={miniMapCenter}
-                zoom={14}
-                dragging={false}
-                scrollWheelZoom={false}
-                doubleClickZoom={false}
-                zoomControl={false}
-                attributionControl={false}
-                style={{ height: '100%', width: '100%' }}
-              >
-                <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" />
-                <Marker position={miniMapCenter} icon={pinIcon} />
-                <RecenterMap lat={lat} lng={lng} />
-              </MapContainer>
-            </div>
-
-            {/* Change Location Button */}
+            {/* Set / Change Location Button - Opens the interactive map modal */}
             <button
               type="button"
               className="btn btn-outline btn-block"
               onClick={openLocationModal}
               style={{ fontWeight: 700, fontSize: '13px' }}
             >
-              🔄 تغيير الموقع لهذا الطلب
+              تحديد موقعي على الخريطة
             </button>
           </div>
         </div>
@@ -725,7 +694,7 @@ export function CreateOrderScreen() {
                 onClick={handleGetCurrentLocationForModal}
                 style={{ fontSize: '12px', padding: '4px 10px' }}
               >
-                📍 موقعي الحالي
+                موقعي الحالي
               </button>
             </div>
 

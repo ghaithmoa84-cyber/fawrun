@@ -12,31 +12,48 @@ import type {
   OrderCancelledPayload,
   OrderOutForDeliveryPayload,
 } from '@fawrun/shared-types';
+import { formatWhatsappUrl, formatTelUrl } from '../lib/phone';
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from './HomeScreen';
 
-// Ordered progression for the visual stepper
-const ORDER_PROGRESS_STEPS: OrderStatus[] = [
-  ORDER_STATUS.PENDING_REVIEW,
-  ORDER_STATUS.UNDER_REVIEW,
-  ORDER_STATUS.AWAITING_RUNNER,
-  ORDER_STATUS.ASSIGNED,
-  ORDER_STATUS.IN_PROGRESS,
-  ORDER_STATUS.OUT_FOR_DELIVERY,
-  ORDER_STATUS.DELIVERED,
+// Ordered 4-stage progression for the visual stepper
+interface ProgressStage {
+  id: number;
+  label: string;
+}
+
+const ORDER_4_STAGES: ProgressStage[] = [
+  { id: 1, label: 'مراجعة الطلب' },
+  { id: 2, label: 'تعيين المندوب' },
+  { id: 3, label: 'تجهيز الطلب' },
+  { id: 4, label: 'التوصيل والتسليم' },
 ];
 
-const STEP_LABELS: Record<OrderStatus, string> = {
-  [ORDER_STATUS.DRAFT]: 'مسودة',
-  [ORDER_STATUS.PENDING_REVIEW]: 'مراجعة',
-  [ORDER_STATUS.UNDER_REVIEW]: 'تدقيق',
-  [ORDER_STATUS.AWAITING_RUNNER]: 'بحث مندوب',
-  [ORDER_STATUS.AWAITING_PREFERRED_RUNNER]: 'مندوب مفضل',
-  [ORDER_STATUS.ASSIGNED]: 'تم التعيين',
-  [ORDER_STATUS.IN_PROGRESS]: 'جاري الشراء',
-  [ORDER_STATUS.OUT_FOR_DELIVERY]: 'بالطريق إليك',
-  [ORDER_STATUS.DELIVERED]: 'تم التسليم',
-  [ORDER_STATUS.CANCELLED]: 'ملغي',
-};
+function getStageIndex(status: OrderStatus): number {
+  if (
+    status === ORDER_STATUS.DRAFT ||
+    status === ORDER_STATUS.PENDING_REVIEW ||
+    status === ORDER_STATUS.UNDER_REVIEW
+  ) {
+    return 0;
+  }
+  if (
+    status === ORDER_STATUS.AWAITING_RUNNER ||
+    status === ORDER_STATUS.AWAITING_PREFERRED_RUNNER ||
+    status === ORDER_STATUS.ASSIGNED
+  ) {
+    return 1;
+  }
+  if (status === ORDER_STATUS.IN_PROGRESS) {
+    return 2;
+  }
+  if (
+    status === ORDER_STATUS.OUT_FOR_DELIVERY ||
+    status === ORDER_STATUS.DELIVERED
+  ) {
+    return 3;
+  }
+  return 0;
+}
 
 export function OrderDetailScreen() {
   const { id } = useParams<{ id: string }>();
@@ -138,7 +155,7 @@ export function OrderDetailScreen() {
       CLIENT_EVENTS.ORDER_DELIVERED,
       (payload) => {
         if (payload.orderId === id) {
-          setDeliveredMessage('🎉 تهانينا! تم تسليم طلبك بنجاح.');
+          setDeliveredMessage('تهانينا، تم تسليم طلبك بنجاح');
           void fetchOrderDetails();
         }
       },
@@ -149,7 +166,7 @@ export function OrderDetailScreen() {
       CLIENT_EVENTS.ORDER_CANCELLED,
       (payload) => {
         if (payload.orderId === id) {
-          setCancelledMessage(`تم إلغاء الطلب (${payload.reason}) من قِبل ${payload.cancelledBy}`);
+          setCancelledMessage(`تم إلغاء الطلب، السبب: ${payload.reason || 'إلغاء الطلب'}`);
           void fetchOrderDetails();
         }
       },
@@ -218,11 +235,9 @@ export function OrderDetailScreen() {
   const canRateOrder =
     currentStatus === ORDER_STATUS.DELIVERED && !order.rating;
 
-  // Calculate current step index for timeline
-  let activeStepIndex = ORDER_PROGRESS_STEPS.indexOf(currentStatus);
-  if (currentStatus === ORDER_STATUS.AWAITING_PREFERRED_RUNNER) {
-    activeStepIndex = ORDER_PROGRESS_STEPS.indexOf(ORDER_STATUS.AWAITING_RUNNER);
-  }
+  // 4-stage stepper state
+  const activeStageIdx = getStageIndex(currentStatus);
+  const isDelivered = currentStatus === ORDER_STATUS.DELIVERED;
 
   const isOutForDelivery =
     (outForDeliveryBanner || currentStatus === ORDER_STATUS.OUT_FOR_DELIVERY) &&
@@ -235,7 +250,7 @@ export function OrderDetailScreen() {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '16px' }}>
         <div>
           <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>تفاصيل الطلب</span>
-          <h1 className="page-title" style={{ marginBottom: 0 }}>#{order.orderNumber}</h1>
+          <h1 className="page-title" style={{ marginBottom: 0 }}>طلب رقم {order.orderNumber}</h1>
         </div>
         <span className={`badge ${ORDER_STATUS_BADGE[currentStatus]}`} style={{ padding: '6px 14px', fontSize: '13px' }}>
           <span className="badge-dot" />
@@ -259,8 +274,7 @@ export function OrderDetailScreen() {
             marginBottom: '16px',
           }}
         >
-          <span style={{ fontSize: '20px' }}>🛵</span>
-          <span>كابتنك في طريقه إليك — استعد للاستلام</span>
+          <span>مندوب التوصيل في طريقه إليك، يرجى الاستعداد للاستلام</span>
         </div>
       )}
 
@@ -279,11 +293,11 @@ export function OrderDetailScreen() {
         >
           <div>
             <div style={{ fontWeight: 800, fontSize: '14px', marginBottom: '2px' }}>
-              📢 تم تحديث رسوم الطلب!
+              تنبيه: تم تحديث رسوم الطلب
             </div>
             <div style={{ fontSize: '13px' }}>
-              تغيرت الرسوم من <strong>{feeNotification.oldFee} ل.س</strong> إلى{' '}
-              <strong>{feeNotification.newFee} ل.س</strong> ({feeNotification.reason})
+              تغيرت الرسوم من <strong>{feeNotification.oldFee} ليرة سورية</strong> إلى{' '}
+              <strong>{feeNotification.newFee} ليرة سورية</strong>، السبب: {feeNotification.reason}
             </div>
           </div>
           <button
@@ -313,7 +327,7 @@ export function OrderDetailScreen() {
         </div>
       )}
 
-      {/* Cancelled Banner */}
+      {/* Cancelled / Rejected Banner with Cancel Reason */}
       {(cancelledMessage || currentStatus === ORDER_STATUS.CANCELLED) && (
         <div
           className="card"
@@ -323,38 +337,67 @@ export function OrderDetailScreen() {
             color: 'var(--danger)',
           }}
         >
-          <div style={{ fontWeight: 800, fontSize: '15px', marginBottom: '4px' }}>
+          <div style={{ fontWeight: 800, fontSize: '15px', marginBottom: '6px' }}>
             الطلب ملغي
           </div>
-          <div style={{ fontSize: '13px' }}>
+          <div style={{ fontSize: '13px', marginBottom: order.cancelReason ? '10px' : '0' }}>
             {cancelledMessage ||
               `تم إلغاء هذا الطلب بتاريخ ${order.cancelledAt ? new Date(order.cancelledAt).toLocaleDateString('ar-SY') : ''}`}
           </div>
+          {order.cancelReason && (
+            <div
+              style={{
+                backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                padding: '10px 12px',
+                borderRadius: 'var(--radius-sm)',
+                fontSize: '13px',
+                color: 'var(--danger)',
+                fontWeight: 700,
+              }}
+            >
+              سبب الرفض: {order.cancelReason}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Visual Status Stepper */}
+      {/* Visual Status Stepper (Condensed to 4 steps) */}
       {currentStatus !== ORDER_STATUS.CANCELLED && (
         <div className="card" style={{ padding: '20px 14px' }}>
           <h2 style={{ fontSize: '14px', fontWeight: 700, color: 'var(--text-h)', marginBottom: '14px' }}>
             مراحل تنفيذ الطلب
           </h2>
           <div className="stepper">
-            {ORDER_PROGRESS_STEPS.map((step, idx) => {
-              const isCompleted = activeStepIndex > idx;
-              const isCurrent = activeStepIndex === idx;
+            {ORDER_4_STAGES.map((stage, idx) => {
+              const isCompleted = activeStageIdx > idx || (idx === 3 && isDelivered);
+              const isCurrent = activeStageIdx === idx && !isDelivered;
 
               let itemClass = '';
               if (isCompleted) itemClass = 'step-item--completed';
               else if (isCurrent) itemClass = 'step-item--current';
 
               return (
-                <div key={step} className={`step-item ${itemClass}`}>
+                <div key={stage.id} className={`step-item ${itemClass}`}>
                   <div className="step-node">
-                    {isCompleted ? '✓' : idx + 1}
+                    {isCompleted ? (
+                      <svg
+                        width="14"
+                        height="14"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                      >
+                        <polyline points="20 6 9 17 4 12" />
+                      </svg>
+                    ) : (
+                      stage.id
+                    )}
                   </div>
                   <span className="step-label">
-                    {STEP_LABELS[step]}
+                    {stage.label}
                   </span>
                 </div>
               );
@@ -363,23 +406,50 @@ export function OrderDetailScreen() {
         </div>
       )}
 
-      {/* Assigned Runner Details */}
+      {/* Assigned Runner Details with WhatsApp and Call buttons */}
       {order.runner && (
         <div className="card">
           <h2 className="section-title">الكابتن المندوب</h2>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: (order.runner.whatsapp || order.runner.phone) ? '12px' : 0 }}>
             <div>
               <div style={{ fontWeight: 700, fontSize: '15px', color: 'var(--text-h)' }}>
                 {order.runner.name}
               </div>
               <div style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
                 {order.runner.avgRating
-                  ? `★ ${order.runner.avgRating.toFixed(1)} (${order.runner.totalRatings} تقييم)`
+                  ? `تقييم المندوب: ${order.runner.avgRating.toFixed(1)} من 5 (${order.runner.totalRatings} تقييم)`
                   : 'كابتن معتمد جديد'}
               </div>
             </div>
             <span className="badge badge-assigned">مُعيّن للطلب</span>
           </div>
+
+          {(currentStatus === ORDER_STATUS.ASSIGNED ||
+            currentStatus === ORDER_STATUS.IN_PROGRESS ||
+            currentStatus === ORDER_STATUS.OUT_FOR_DELIVERY) &&
+            order.runner.whatsapp && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', marginTop: '10px' }}>
+                <a
+                  href={formatWhatsappUrl(
+                    order.runner.whatsapp,
+                    `مرحباً كابتن ${order.runner.name}، بخصوص طلبي رقم ${order.orderNumber}`,
+                  )}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="btn btn-outline btn-sm"
+                  style={{ borderColor: '#25D366', color: '#25D366', textAlign: 'center', justifyContent: 'center' }}
+                >
+                  واتساب المندوب
+                </a>
+                <a
+                  href={formatTelUrl(order.runner.phone || order.runner.whatsapp)}
+                  className="btn btn-outline btn-sm"
+                  style={{ borderColor: 'var(--primary)', color: 'var(--primary)', textAlign: 'center', justifyContent: 'center' }}
+                >
+                  اتصال بالمندوب
+                </a>
+              </div>
+            )}
         </div>
       )}
 
@@ -495,7 +565,7 @@ export function OrderDetailScreen() {
             className="btn btn-primary btn-block"
             onClick={() => navigate(`/orders/${order.id}/rating`)}
           >
-            ★ قيّم تجربة التوصيل والكابتن
+            تقييم تجربة التوصيل والمندوب
           </button>
         )}
 

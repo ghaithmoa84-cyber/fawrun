@@ -26,7 +26,7 @@ export function PendingVerificationPage() {
 
     const unsub = on(CLIENT_EVENTS.ACCOUNT_VERIFIED, () => {
       updateUserStatus('VERIFIED');
-      setToastMessage('🎉 تم تفعيل حسابك! مرحباً بك في فَوْراً');
+      setToastMessage('تم تفعيل حسابك بنجاح، مرحباً بك في فَوْراً');
       setTimeout(() => {
         navigate('/home', { replace: true });
       }, 2000);
@@ -38,7 +38,7 @@ export function PendingVerificationPage() {
         const res = await api.get('/customer/me');
         if (res.status === 200) {
           updateUserStatus('VERIFIED');
-          setToastMessage('🎉 تم تفعيل حسابك! مرحباً بك في فَوْراً');
+          setToastMessage('تم تفعيل حسابك بنجاح، مرحباً بك في فَوْراً');
           setTimeout(() => {
             navigate('/home', { replace: true });
           }, 2000);

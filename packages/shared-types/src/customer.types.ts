@@ -103,6 +103,12 @@ export type CustomerOrderListItem = {
   deliveredAt: Date | null;
   hasRating: boolean;
   canRate: boolean;
+  runner?: {
+    id: string;
+    name: string;
+    whatsapp: string;
+    phone?: string | null;
+  } | null;
 };
 
 export type CustomerOrderItem = {
@@ -190,6 +196,7 @@ export type CustomerOrderDetails = {
   updatedAt: Date;
   deliveredAt: Date | null;
   cancelledAt: Date | null;
+  cancelReason: string | null;
   items: CustomerOrderItem[];
   orderStores: CustomerOrderStore[];
   stores: StoreDetail[];
@@ -201,6 +208,8 @@ export type CustomerOrderDetails = {
     avgRating: number | null;
     totalRatings: number;
     status: (typeof RUNNER_STATUS_VALUES)[number];
+    whatsapp?: string | null;
+    phone?: string | null;
   } | null;
 };
 

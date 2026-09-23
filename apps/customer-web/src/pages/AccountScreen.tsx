@@ -55,6 +55,7 @@ export function AccountScreen() {
   const [lat, setLat] = useState<number>(DEFAULT_CENTER[0]);
   const [lng, setLng] = useState<number>(DEFAULT_CENTER[1]);
   const [addressDesc, setAddressDesc] = useState<string>('');
+  const [showMap, setShowMap] = useState<boolean>(false);
   const [savingAddress, setSavingAddress] = useState<boolean>(false);
   const [addressSuccess, setAddressSuccess] = useState<string | null>(null);
   const [addressError, setAddressError] = useState<string | null>(null);
@@ -223,7 +224,7 @@ export function AccountScreen() {
             className="btn btn-outline btn-sm"
             onClick={() => setIsEditingName(true)}
           >
-            ✏️ تعديل الاسم
+            تعديل الاسم
           </button>
         )}
 
@@ -274,44 +275,58 @@ export function AccountScreen() {
 
       {/* Saved Delivery Address Card */}
       <div className="card">
-        <h2 className="section-title">عنوان التوصيل الافتراضي</h2>
-        <p style={{ fontSize: '13px', color: 'var(--text-muted)', marginBottom: '12px' }}>
-          انقر على الخريطة لتحديد موقع منزلك أو عنوان التوصيل الافتراضي
-        </p>
-
-        <div className="map-container" style={{ height: '200px' }}>
-          <MapContainer
-            center={markerPosition}
-            zoom={13}
-            scrollWheelZoom={false}
-            style={{ height: '100%', width: '100%' }}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px' }}>
+          <div>
+            <h2 className="section-title" style={{ marginBottom: '4px' }}>عنوان التوصيل الافتراضي</h2>
+            <p style={{ fontSize: '13px', color: 'var(--text-muted)', margin: 0 }}>
+              {addressDesc ? `العنوان الحالي: ${addressDesc}` : 'لم يتم تحديد عنوان افتراضي بعد'}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="btn btn-outline btn-sm"
+            onClick={() => setShowMap((prev) => !prev)}
+            style={{ fontWeight: 700, fontSize: '13px' }}
           >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <Marker
-              position={markerPosition}
-              icon={pinIcon}
-              draggable={true}
-              eventHandlers={{
-                dragend: (e) => {
-                  const marker = e.target;
-                  const pos = marker.getLatLng();
-                  setLat(pos.lat);
-                  setLng(pos.lng);
-                },
-              }}
-            />
-            <MapClickHandler
-              onLocationChange={(newLat, newLng) => {
-                setLat(newLat);
-                setLng(newLng);
-              }}
-            />
-            <RecenterMap lat={lat} lng={lng} />
-          </MapContainer>
+            {showMap ? 'إخفاء الخريطة' : 'تحديد موقعي على الخريطة'}
+          </button>
         </div>
+
+        {showMap && (
+          <div className="map-container" style={{ height: '200px', marginBottom: '14px' }}>
+            <MapContainer
+              center={markerPosition}
+              zoom={13}
+              scrollWheelZoom={false}
+              style={{ height: '100%', width: '100%' }}
+            >
+              <TileLayer
+                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              />
+              <Marker
+                position={markerPosition}
+                icon={pinIcon}
+                draggable={true}
+                eventHandlers={{
+                  dragend: (e) => {
+                    const marker = e.target;
+                    const pos = marker.getLatLng();
+                    setLat(pos.lat);
+                    setLng(pos.lng);
+                  },
+                }}
+              />
+              <MapClickHandler
+                onLocationChange={(newLat, newLng) => {
+                  setLat(newLat);
+                  setLng(newLng);
+                }}
+              />
+              <RecenterMap lat={lat} lng={lng} />
+            </MapContainer>
+          </div>
+        )}
 
         <form onSubmit={handleSaveAddress} style={{ marginTop: '14px' }}>
           <div className="form-group">
