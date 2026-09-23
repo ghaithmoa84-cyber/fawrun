@@ -50,7 +50,7 @@ export function RegisterPage() {
 
   // Form Fields State
   const [name, setName] = useState('');
-  const [whatsapp, setWhatsapp] = useState('+963');
+  const [whatsapp, setWhatsapp] = useState('');
   const [altPhone, setAltPhone] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -95,12 +95,12 @@ export function RegisterPage() {
     }
 
     const trimmedPhone = whatsapp.trim();
-    if (!/^\+[1-9]\d{0,14}$/.test(trimmedPhone)) {
-      errors.whatsapp = 'يرجى إدخال رقم واتساب صالح بالصيغة الدولية (مثال: 963912345678+)';
+if (!/^09\d{8}$/.test(trimmedPhone)) {
+      errors.whatsapp = 'يرجى إدخل رقم واتساب صالح (مثال: 0912345678)';
     }
 
-    if (altPhone.trim() && !/^\+[1-9]\d{0,14}$/.test(altPhone.trim())) {
-      errors.altPhone = 'رقم الهاتف البديل يجب أن يكون بالصيغة الدولية إذا أُدخل';
+if (altPhone.trim() && !/^09\d{8}$/.test(altPhone.trim())) {
+      errors.altPhone = 'رقم الهاتف البديل يجب أن يكون بالصيغة السورية إذا أُدخل';
     }
 
     if (password.length < 8) {
@@ -231,7 +231,7 @@ export function RegisterPage() {
               type="tel"
               dir="ltr"
               className="input"
-              placeholder="+963912345678"
+              placeholder="0912345678"
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value)}
               required
@@ -251,7 +251,7 @@ export function RegisterPage() {
               type="tel"
               dir="ltr"
               className="input"
-              placeholder="+963987654321"
+              placeholder="0987654321"
               value={altPhone}
               onChange={(e) => setAltPhone(e.target.value)}
             />
@@ -393,3 +393,4 @@ export function RegisterPage() {
     </div>
   );
 }
+

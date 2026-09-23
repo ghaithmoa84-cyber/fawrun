@@ -25,14 +25,14 @@ beforeEach(async () => {
   await seedRunner(prisma);
   await seedCustomer(prisma);
   const request = getRequest();
-  adminToken = await loginAs(request, '+963999000001', 'Admin@12345');
-  runnerToken = await loginAs(request, '+963999000002', 'Runner@12345');
-  customerToken = await loginAs(request, '+963999000003', 'Customer@12345');
+  adminToken = await loginAs(request, '0999000001', 'Admin@12345');
+  runnerToken = await loginAs(request, '0999000002', 'Runner@12345');
+  customerToken = await loginAs(request, '0999000003', 'Customer@12345');
 
   const pendingCustomer = await prisma.user.create({
     data: {
       name: 'Pending Customer',
-      whatsapp: '+963999000004',
+      whatsapp: '0999000004',
       altPhone: null,
       passwordHash: await bcrypt.hash('Customer@12345', 12),
       role: UserRole.CUSTOMER,
@@ -45,7 +45,7 @@ beforeEach(async () => {
 
   pendingCustomerToken = await loginAs(
     request,
-    '+963999000004',
+    '0999000004',
     'Customer@12345',
   );
 });

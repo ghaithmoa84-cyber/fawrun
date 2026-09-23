@@ -93,7 +93,7 @@ async function runScenarioA() {
     await adminClient.put(`/admin/orders/${oId}/approve`, { isPeripheral: false });
     const rList = await adminClient.get('/admin/runners');
     const list = Array.isArray(rList.data) ? rList.data : (rList.data.data || []);
-    const rId = (list.find(r => r.whatsapp === '+963933333333') || list[0]).id;
+    const rId = (list.find(r => r.whatsapp === '0933333333') || list[0]).id;
     await adminClient.put(`/admin/orders/${oId}/assign-runner`, { runnerId: rId });
     activeOrderRes = await runnerClient.get('/runner/orders/active');
     order = activeOrderRes.data;
@@ -311,7 +311,7 @@ async function runScenarioB(runnerToken, adminToken, runnerUserId, _adminUserId)
   // Get runner ID
   const runnersListRes = await adminClient.get('/admin/runners');
   const runnersArray = Array.isArray(runnersListRes.data) ? runnersListRes.data : (runnersListRes.data.data || []);
-  const runner = runnersArray.find(r => r.whatsapp === '+963933333333');
+  const runner = runnersArray.find(r => r.whatsapp === '0933333333');
 
   // Admin assigns runner
   console.log(`✓ جاري تعيين المندوب (${runner.name}) للطلب #${createOrderRes.data.orderNumber}...`);

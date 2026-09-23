@@ -13,34 +13,17 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const formatPhoneToE164 = (rawPhone: string): string => {
-    const clean = rawPhone.trim().replace(/[\s-]/g, '');
-    if (clean.startsWith('+')) {
-      return clean;
-    }
-    if (clean.startsWith('09')) {
-      return `+963${clean.substring(1)}`;
-    }
-    if (clean.startsWith('9') && clean.length === 9) {
-      return `+963${clean}`;
-    }
-    if (clean.startsWith('963')) {
-      return `+${clean}`;
-    }
-    return clean;
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
+const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    const formattedPhone = formatPhoneToE164(whatsapp);
-    if (!formattedPhone || !formattedPhone.startsWith('+')) {
-      setError('يرجى إدخال رقم واتساب صالح بالصيغة الدولية (+963...)');
+    const trimmedPhone = whatsapp.trim();
+    if (!trimmedPhone || !/^09\d{8}$/.test(trimmedPhone)) {
+      setError('يرجى إدخل رقم واتساب صحيح (مثال: 0912345678)');
       return;
     }
 
-    if (!password) {
+if (!password) {
       setError('يرجى إدخال كلمة المرور');
       return;
     }
@@ -49,7 +32,7 @@ export default function LoginPage() {
       setLoading(true);
       const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1';
       const response = await axios.post<LoginResponse>(`${apiUrl}/auth/login`, {
-        whatsapp: formattedPhone,
+        whatsapp: trimmedPhone,
         password,
       });
 
@@ -85,16 +68,16 @@ export default function LoginPage() {
       }
 
       // Store in cookies for middleware
-      if (typeof document !== 'undefined') {
-        const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
-        const maxAge = 7 * 24 * 60 * 60; // 7 days
-        document.cookie = `accessToken=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax;${secure}`;
-        if (expiryMs) {
-          document.cookie = `tokenExpiry=${expiryMs}; path=/; max-age=${maxAge}; SameSite=Lax;${secure}`;
+if (typeof document !== 'undefined') {
+          const secure = process.env.NODE_ENV === 'production' ? ' Secure;' : '';
+          const maxAge = 7 * 24 * 60 * 60; // 7 days
+          document.cookie = `accessToken=${accessToken}; path=/; max-age=${maxAge}; SameSite=Lax;${secure}`;
+          if (expiryMs) {
+            document.cookie = `tokenExpiry=${expiryMs}; path=/; max-age=${maxAge}; SameSite=Lax;${secure}`;
+          }
         }
-      }
 
-      // Redirect to dashboard
+// Redirect to dashboard
       router.push('/dashboard');
     } catch (err: unknown) {
       if (axios.isAxiosError(err)) {
@@ -165,21 +148,18 @@ export default function LoginPage() {
                 رقم الواتساب الإداري
               </label>
               <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#00C1A7] focus-within:ring-2 focus-within:ring-[#00C1A7]/20 transition-all overflow-hidden bg-slate-50/50">
-                <span className="inline-flex items-center px-3.5 text-xs font-bold text-slate-500 bg-slate-100 border-l border-slate-300 select-none" dir="ltr">
-                  +963
-                </span>
                 <input
                   id="whatsapp"
                   type="text"
                   dir="ltr"
                   value={whatsapp}
                   onChange={(e) => setWhatsapp(e.target.value)}
-                  placeholder="09XXXXXXXX أو 9XXXXXXXX"
+                  placeholder="0912345678"
                   className="w-full px-3.5 py-2.5 text-sm bg-transparent outline-hidden text-slate-900 placeholder:text-slate-400 font-medium"
                   required
-                />
+/>
               </div>
-              <p className="text-[11px] text-slate-400 mt-1">يمكن إدخال الرقم بصيغة محلية (09) أو دولية (+963)</p>
+              <p className="text-[11px] text-slate-400 mt-1">أدخل رقم الواتساب بالصيغة السورية (مثال: 0912345678)</p>
             </div>
 
             {/* Password field */}
@@ -233,3 +213,11 @@ export default function LoginPage() {
     </div>
   );
 }
+
+
+
+
+
+
+
+

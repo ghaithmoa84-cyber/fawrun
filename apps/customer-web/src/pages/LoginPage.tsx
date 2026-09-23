@@ -6,7 +6,7 @@ import axios from 'axios';
 export function LoginPage() {
   const navigate = useNavigate();
   const { user, login, isAuthenticated, isLoading } = useAuth();
-  const [whatsapp, setWhatsapp] = useState('+963');
+  const [whatsapp, setWhatsapp] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -25,9 +25,9 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    const trimmedPhone = whatsapp.trim();
-    if (!/^\+[1-9]\d{0,14}$/.test(trimmedPhone)) {
-      setError('يرجى إدخال رقم واتساب صالح بالصيغة الدولية (مثال: 963912345678+)');
+const trimmedPhone = whatsapp.trim();
+    if (!/^09\d{8}$/.test(trimmedPhone)) {
+      setError('يرجى إدخل رقم واتساب صالح (مثال: 0912345678)');
       return;
     }
 
@@ -84,7 +84,7 @@ export function LoginPage() {
               dir="ltr"
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="+963912345678"
+              placeholder="0912345678"
               required
               autoComplete="tel"
             />

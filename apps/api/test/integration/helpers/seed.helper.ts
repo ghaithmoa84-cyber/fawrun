@@ -6,7 +6,7 @@ export async function seedAdmin(prisma: PrismaClient) {
   const user = await prisma.user.create({
     data: {
       name: 'Test Admin',
-      whatsapp: '+963999000001',
+      whatsapp: '0999000001',
       passwordHash: hash,
       role: UserRole.ADMIN,
       status: UserStatus.VERIFIED,
@@ -19,7 +19,7 @@ export async function seedAdmin(prisma: PrismaClient) {
 
 export async function seedRunner(
   prisma: PrismaClient,
-  whatsapp = '+963999000002',
+  whatsapp = '0999000002',
 ) {
   const hash = await bcrypt.hash('Runner@12345', 12);
   const user = await prisma.user.create({
@@ -41,7 +41,7 @@ export async function seedCustomer(prisma: PrismaClient) {
   const user = await prisma.user.create({
     data: {
       name: 'Test Customer',
-      whatsapp: '+963999000003',
+      whatsapp: '0999000003',
       passwordHash: hash,
       role: UserRole.CUSTOMER,
       status: UserStatus.VERIFIED,

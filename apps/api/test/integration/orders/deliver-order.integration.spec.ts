@@ -190,7 +190,7 @@ describe('deliverOrder — Integration', () => {
 
   it('should return 404 when wrong runner tries to deliver', async () => {
     await prepareOrderForDelivery();
-    const otherRunner = await seedRunner(prisma, '+963999000006');
+    const otherRunner = await seedRunner(prisma, '0999000006');
     const otherToken = await loginAs(
       request,
       otherRunner.whatsapp,

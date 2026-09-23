@@ -38,9 +38,9 @@ beforeEach(async () => {
   await seedRunner(prisma);
   await seedCustomer(prisma);
   const request = getRequest();
-  adminToken = await loginAs(request, '+963999000001', 'Admin@12345');
-  runnerToken = await loginAs(request, '+963999000002', 'Runner@12345');
-  customerToken = await loginAs(request, '+963999000003', 'Customer@12345');
+adminToken = await loginAs(request, '0999000001', 'Admin@12345');
+    runnerToken = await loginAs(request, '0999000002', 'Runner@12345');
+    customerToken = await loginAs(request, '0999000003', 'Customer@12345');
 });
 
 describe('POST /auth/register', () => {
@@ -50,7 +50,7 @@ describe('POST /auth/register', () => {
       .post('/api/v1/auth/register')
       .send({
         name: 'New Customer',
-        whatsapp: '+963999123456',
+        whatsapp: '0999123456',
         altPhone: null,
         password: 'Password@123',
         address: { lat: 33.5138, lng: 36.2765, description: 'Test Address' },
@@ -59,7 +59,7 @@ describe('POST /auth/register', () => {
     expect(res.status).toBe(201);
 
     const user = await prisma.user.findUnique({
-      where: { whatsapp: '+963999123456' },
+      where: { whatsapp: '0999123456' },
     });
     expect(user).not.toBeNull();
     expect(user!.status).toBe(UserStatus.PENDING_VERIFICATION);
@@ -78,7 +78,7 @@ describe('POST /auth/register', () => {
       .post('/api/v1/auth/register')
       .send({
         name: 'First User',
-        whatsapp: '+963999123456',
+        whatsapp: '0999123456',
         altPhone: null,
         password: 'Password@123',
         address: { lat: 33.5138, lng: 36.2765, description: 'Test' },
@@ -88,7 +88,7 @@ describe('POST /auth/register', () => {
       .post('/api/v1/auth/register')
       .send({
         name: 'Second User',
-        whatsapp: '+963999123456',
+        whatsapp: '0999123456',
         altPhone: null,
         password: 'Password@123',
         address: { lat: 33.5138, lng: 36.2765, description: 'Test' },
@@ -103,7 +103,7 @@ describe('POST /auth/login', () => {
     const request = getRequest();
     const res = await request
       .post('/api/v1/auth/login')
-      .send({ whatsapp: '+963999000003', password: 'Customer@12345' });
+      .send({ whatsapp: '0999000003', password: 'Customer@12345' });
 
     expect(res.status).toBe(200);
     expect(res.body.accessToken).toBeTruthy();
@@ -123,7 +123,7 @@ describe('POST /auth/login', () => {
     const request = getRequest();
     const res = await request
       .post('/api/v1/auth/login')
-      .send({ whatsapp: '+963999000003', password: 'WrongPassword1' });
+      .send({ whatsapp: '0999000003', password: 'WrongPassword1' });
 
     expect(res.status).toBe(401);
   });
@@ -133,7 +133,7 @@ describe('POST /auth/login', () => {
     await prisma.user.create({
       data: {
         name: 'Suspended User',
-        whatsapp: '+963999000007',
+whatsapp: '0999000007',
         passwordHash: hashedPassword,
         role: UserRole.CUSTOMER,
         status: UserStatus.SUSPENDED,
@@ -143,7 +143,7 @@ describe('POST /auth/login', () => {
     const request = getRequest();
     const res = await request
       .post('/api/v1/auth/login')
-      .send({ whatsapp: '+963999000007', password: 'Customer@12345' });
+      .send({ whatsapp: '0999000007', password: 'Customer@12345' });
 
     expect(res.status).toBe(401);
   });
@@ -154,7 +154,7 @@ describe('POST /auth/refresh', () => {
     const request = getRequest();
     const loginRes = await request
       .post('/api/v1/auth/login')
-      .send({ whatsapp: '+963999000003', password: 'Customer@12345' });
+      .send({ whatsapp: '0999000003', password: 'Customer@12345' });
 
     const oldAccessToken = loginRes.body.accessToken;
     const refreshToken = loginRes.body.refreshToken;
@@ -183,7 +183,7 @@ describe('POST /auth/logout', () => {
     const request = getRequest();
     const loginRes = await request
       .post('/api/v1/auth/login')
-      .send({ whatsapp: '+963999000003', password: 'Customer@12345' });
+      .send({ whatsapp: '0999000003', password: 'Customer@12345' });
 
     const refreshToken = loginRes.body.refreshToken;
 

@@ -11,7 +11,7 @@ export function PendingVerificationPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   const whatsapp = localStorage.getItem('userWhatsapp') || '';
-  const adminWhatsapp = import.meta.env.VITE_ADMIN_WHATSAPP || '+963XXXXXXXXX';
+  const adminWhatsapp = import.meta.env.VITE_ADMIN_WHATSAPP || '09XXXXXXXX';
 
   const msg = encodeURIComponent(`مرحباً، أرغب في تفعيل حسابي في منصة فَوْراً. رقمي: ${whatsapp}`);
   const whatsappUrl = `https://wa.me/${adminWhatsapp.replace('+', '')}?text=${msg}`;

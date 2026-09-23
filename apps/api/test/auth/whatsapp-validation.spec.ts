@@ -6,22 +6,22 @@ import {
   RegisterSchema,
 } from '@fawrun/shared-types';
 
-describe('F-9: WhatsApp E.164 validation (shared Zod schemas)', () => {
+describe('F-9: WhatsApp Syrian local validation (shared Zod schemas)', () => {
   describe('PhoneE164Schema', () => {
     it.each([
-      '+963912345678',
-      '+14155552671',
-      '+966501234567',
-      '+447700900000',
-    ])('accepts valid E.164 number %s', (value) => {
+      '0912345678',
+      '0991234567',
+      '0987654321',
+    ])('accepts valid Syrian number %s', (value) => {
       expect(PhoneE164Schema.parse(value)).toBe(value);
     });
 
     it.each([
-      ['missing leading +', '0912345678'],
-      ['internal whitespace', '+963912 345678'],
-      ['dashes', '+963-912-345-678'],
-      ['too many digits (>15)', '+9639123456789012345678'],
+      ['missing leading 0', '912345678'],
+      ['international format', '+963912345678'],
+      ['internal whitespace', '091234 5678'],
+      ['dashes', '0912-345-678'],
+      ['too many digits', '09123456789'],
       ['no country code', '12345678'],
       ['empty', ''],
     ])('rejects invalid number: %s', (_label, value) => {
@@ -37,36 +37,36 @@ describe('F-9: WhatsApp E.164 validation (shared Zod schemas)', () => {
       address: { lat: 33.5, lng: 36.6, description: 'Damascus' },
     };
 
-    it('accepts an E.164 whatsapp', () => {
-      expect(RegisterSchema.parse({ ...base, whatsapp: '+963912345678' }).whatsapp).toBe(
-        '+963912345678',
+    it('accepts a Syrian whatsapp', () => {
+      expect(RegisterSchema.parse({ ...base, whatsapp: '0912345678' }).whatsapp).toBe(
+        '0912345678',
       );
     });
 
-    it('rejects a non-E.164 whatsapp', () => {
-      expect(() => RegisterSchema.parse({ ...base, whatsapp: '0912345678' })).toThrow();
+    it('rejects an international whatsapp', () => {
+      expect(() => RegisterSchema.parse({ ...base, whatsapp: '+963912345678' })).toThrow();
     });
 
     it('rejects whatsapp with internal whitespace', () => {
       expect(() =>
-        RegisterSchema.parse({ ...base, whatsapp: '+963912 345678' }),
+        RegisterSchema.parse({ ...base, whatsapp: '091234 5678' }),
       ).toThrow();
     });
   });
 
   describe('LoginSchema', () => {
-    it('accepts an E.164 whatsapp', () => {
+    it('accepts a Syrian whatsapp', () => {
       expect(
         LoginSchema.parse({
-          whatsapp: '+963912345678',
+          whatsapp: '0912345678',
           password: 'securePass123',
         }).whatsapp,
-      ).toBe('+963912345678');
+      ).toBe('0912345678');
     });
 
-    it('rejects a local-format whatsapp', () => {
+    it('rejects an international whatsapp', () => {
       expect(() =>
-        LoginSchema.parse({ whatsapp: '0912345678', password: 'securePass123' }),
+        LoginSchema.parse({ whatsapp: '+963912345678', password: 'securePass123' }),
       ).toThrow();
     });
   });
@@ -77,31 +77,31 @@ describe('F-9: WhatsApp E.164 validation (shared Zod schemas)', () => {
       password: 'securePass123',
     };
 
-    it('accepts an E.164 whatsapp', () => {
-      expect(CreateRunnerSchema.parse({ ...base, whatsapp: '+963912345678' }).whatsapp).toBe(
-        '+963912345678',
+    it('accepts a Syrian whatsapp', () => {
+      expect(CreateRunnerSchema.parse({ ...base, whatsapp: '0912345678' }).whatsapp).toBe(
+        '0912345678',
       );
     });
 
-    it('accepts an E.164 altPhone when provided', () => {
+    it('accepts a Syrian altPhone when provided', () => {
       expect(
         CreateRunnerSchema.parse({
           ...base,
-          whatsapp: '+963912345678',
-          altPhone: '+966501234567',
+          whatsapp: '0912345678',
+          altPhone: '0987654321',
         }).altPhone,
-      ).toBe('+966501234567');
+      ).toBe('0987654321');
     });
 
-    it('rejects a non-E.164 whatsapp', () => {
-      expect(() => CreateRunnerSchema.parse({ ...base, whatsapp: '0912345678' })).toThrow();
+    it('rejects an international whatsapp', () => {
+      expect(() => CreateRunnerSchema.parse({ ...base, whatsapp: '+963912345678' })).toThrow();
     });
 
-    it('rejects a non-E.164 altPhone when provided', () => {
+    it('rejects a non-Syrian altPhone when provided', () => {
       expect(() =>
         CreateRunnerSchema.parse({
           ...base,
-          whatsapp: '+963912345678',
+          whatsapp: '0912345678',
           altPhone: '912-345',
         }),
       ).toThrow();

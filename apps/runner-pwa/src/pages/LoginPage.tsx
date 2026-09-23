@@ -14,9 +14,9 @@ export function LoginPage() {
     e.preventDefault();
     setError(null);
 
-    const whatsappTrim = whatsapp.trim();
-    if (!/^\+[1-9]\d{0,14}$/.test(whatsappTrim)) {
-      setError('رقم الواتساب يجب أن يكون بصيغة دولية (مثال: 963912345678+)');
+const whatsappTrim = whatsapp.trim();
+    if (!/^09\d{8}$/.test(whatsappTrim)) {
+      setError('رقم الواتساب يجب أن يكون بالصيغة السورية (مثال: 0912345678)');
       return;
     }
 
@@ -61,7 +61,7 @@ export function LoginPage() {
               dir="ltr"
               value={whatsapp}
               onChange={(e) => setWhatsapp(e.target.value)}
-              placeholder="+963912345678"
+              placeholder="0912345678"
               required
               autoComplete="tel"
             />

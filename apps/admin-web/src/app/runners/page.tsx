@@ -59,25 +59,16 @@ export default function RunnersPage() {
     fetchRunners(1);
   }, [fetchRunners]);
 
-  const formatPhoneToE164 = (rawPhone: string): string => {
-    const clean = rawPhone.trim().replace(/[\s-]/g, '');
-    if (clean.startsWith('+')) return clean;
-    if (clean.startsWith('09')) return `+963${clean.substring(1)}`;
-    if (clean.startsWith('9') && clean.length === 9) return `+963${clean}`;
-    if (clean.startsWith('963')) return `+${clean}`;
-    return clean;
-  };
-
   const handleCreateSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    const formattedPhone = formatPhoneToE164(createForm.whatsapp);
+    const trimmedPhone = createForm.whatsapp.trim();
 
     if (!createForm.name || createForm.name.length < 2) {
       showToast('يرجى إدخال اسم المندوب بشكل صحيح (حرفين على الأقل)', 'info');
       return;
     }
-    if (!formattedPhone || !formattedPhone.startsWith('+')) {
-      showToast('يرجى إدخال رقم واتساب صالح بالصيغة الدولية', 'info');
+if (!trimmedPhone || !/^09\d{8}$/.test(trimmedPhone)) {
+      showToast('يرجى إدخل رقم واتساب صحيح (مثال: 0912345678)', 'info');
       return;
     }
     if (!createForm.password || createForm.password.length < 8) {
@@ -89,7 +80,7 @@ export default function RunnersPage() {
       setCreateLoading(true);
       await api.post('/admin/runners', {
         name: createForm.name.trim(),
-        whatsapp: formattedPhone,
+        whatsapp: trimmedPhone,
         password: createForm.password,
       });
 
@@ -357,15 +348,12 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                   رقم الواتساب
                 </label>
                 <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#00C1A7] focus-within:ring-2 focus-within:ring-[#00C1A7]/20 overflow-hidden">
-                  <span className="inline-flex items-center px-3 text-xs font-bold text-slate-500 bg-slate-100 border-l border-slate-300 select-none" dir="ltr">
-                    +963
-                  </span>
                   <input
                     type="text"
                     dir="ltr"
                     value={createForm.whatsapp}
                     onChange={(e) => setCreateForm({ ...createForm, whatsapp: e.target.value })}
-                    placeholder="09XXXXXXXX"
+                    placeholder="0912345678"
                     className="w-full px-3.5 py-2.5 text-xs text-slate-900 outline-hidden bg-transparent"
                     required
                   />
@@ -492,3 +480,4 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
     </div>
   );
 }
+
