@@ -1,0 +1,30 @@
+# 04. جدول حالة كل الوحدات والتطبيقات (Module Status Inventory)
+
+| Module / Package / App | Location Path | Status | Key Components / Features Implemented | Test Coverage Status |
+|------------------------|---------------+--------|---------------------------------------|----------------------|
+| **`auth`** | [apps/api/src/modules/auth](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/auth) | COMPLETE | Register, Login, Refresh token, Logout, JWT RS256 token hashing, Throttler rate limiting | Unit + Integration Tested ([apps/api/test/integration/auth/auth.integration.spec.ts](file:///d:/FAWRUNF/FAWRUN/apps/api/test/integration/auth/auth.integration.spec.ts)) |
+| **`users`** | [apps/api/src/modules/users](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/users) | COMPLETE | Admin user management (FindAll, FindOne, Verify, Reject, Suspend) | Tested via Auth Integration Tests |
+| **`customers`** | [apps/api/src/modules/customers](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/customers) | COMPLETE | Customer profile update, delivery address management, available runners query | Tested in Order Flow |
+| **`runners`** | [apps/api/src/modules/runners](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/runners) | COMPLETE | Admin runner CRUD + Visibility toggle, Runner status toggle & profile query | State machine tested ([apps/api/test/state-machine/runner-state-machine.spec.ts](file:///d:/FAWRUNF/FAWRUN/apps/api/test/state-machine/runner-state-machine.spec.ts)) |
+| **`orders`** | [apps/api/src/modules/orders](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/orders) | COMPLETE | Split into modular services: CustomerOrders, AdminOrderQuery, AdminOrderCommand, RunnerOrders | Integration Tested ([apps/api/test/integration/orders/create-order.integration.spec.ts](file:///d:/FAWRUNF/FAWRUN/apps/api/test/integration/orders/create-order.integration.spec.ts)) |
+| **`receipts`** | [apps/api/src/modules/receipts](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/receipts) | COMPLETE | Cloudflare R2 Presigned URLs generation, receipt image metadata persistence & soft delete | Tested manually / R2 configured with dummy values in production; real values pending |
+| **`ratings`** | [apps/api/src/modules/ratings](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/ratings) | COMPLETE | 24hr rating window enforcement, runner average rating recalculation, private notes for admin | Unit Tested ([apps/api/test/ratings/ratings.service.spec.ts](file:///d:/FAWRUNF/FAWRUN/apps/api/test/ratings/ratings.service.spec.ts)) |
+| **`pricing`** | [apps/api/src/modules/pricing](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/pricing) | COMPLETE | Dynamic fee calculation engine (Base: 60, Peripheral: +40, Extra store: +20) | Tested inside Order Integration Tests |
+| **`ledger`** | [apps/api/src/modules/ledger](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/ledger) | COMPLETE | Financial ledger entries generation (ORDER_FEE_TOTAL, RUNNER_SHARE 75%, PLATFORM_SHARE 25%), Admin query | Unit Tested ([apps/api/test/ledger/ledger.service.spec.ts](file:///d:/FAWRUNF/FAWRUN/apps/api/test/ledger/ledger.service.spec.ts)) |
+| **`settlements`** | [apps/api/src/modules/settlements](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/settlements) | COMPLETE | Daily settlement closing (`closeDay`), mark settled (`markSettled`), cron helper utils | Unit Tested ([apps/api/test/settlements/settlements.cron.spec.ts](file:///d:/FAWRUNF/FAWRUN/apps/api/test/settlements/settlements.cron.spec.ts)) |
+| **`audit`** | [apps/api/src/modules/audit](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/audit) | COMPLETE | Append-only event logging for order state machine transitions & administrative actions | Tested via Order Integration Tests |
+| **`notifications`**| [apps/api/src/modules/notifications](file:///d:/FAWRUNF/FAWRUN/apps/api/src/modules/notifications)| COMPLETE | Internal notification dispatcher service stub for push/SMS/socket alerts | Covered by integration workflows |
+| **`websocket`** | [apps/api/src/websocket](file:///d:/FAWRUNF/FAWRUN/apps/api/src/websocket) | COMPLETE | Socket.IO Gateways (`/orders` and `/admin` namespaces) with JWT Guard (`WsJwtAuthGuard`) | E2E Manual Tested |
+| **`state-machine`** | [apps/api/src/state-machine](file:///d:/FAWRUNF/FAWRUN/apps/api/src/state-machine) | COMPLETE | Finite State Machines for Order, OrderStore, and Runner states with strict rules | Fully Unit Tested ([apps/api/test/state-machine/](file:///d:/FAWRUNF/FAWRUN/apps/api/test/state-machine)) |
+| **`shared-types`** | [packages/shared-types](file:///d:/FAWRUNF/FAWRUN/packages/shared-types) | COMPLETE | Shared Zod schemas & TypeScript types across API & Frontends | Fully Typechecked |
+| **`shared-constants`**| [packages/shared-constants](file:///d:/FAWRUNF/FAWRUN/packages/shared-constants)| COMPLETE | Shared status codes, fee constants, and role strings | Fully Typechecked |
+| **`apps/api`** | [apps/api](file:///d:/FAWRUNF/FAWRUN/apps/api) | COMPLETE | NestJS Backend application server | Unit + Integration Tested |
+| **`apps/admin-web`** | [apps/admin-web](file:///d:/FAWRUNF/FAWRUN/apps/admin-web) | MVP READY | Next.js 14 App Router Admin Dashboard (Orders, Users, Runners, Settlements, Ledger, Live WS) | Manual / E2E Verified |
+| **`apps/runner-pwa`** | [apps/runner-pwa](file:///d:/FAWRUNF/FAWRUN/apps/runner-pwa) | MVP READY | React + Vite Runner PWA (LoginPage, AvailablePage, ActiveOrderPage, Receipts Upload, Settlements) | Manual / E2E Verified |
+| **`apps/customer-web`**| [apps/customer-web](file:///d:/FAWRUNF/FAWRUN/apps/customer-web)| MVP READY | React + Vite Customer Web App (HomeScreen, Order Creation, Order Tracker, Rating Screen) | Manual / E2E Verified |
+| **Frontend Deployment** | — | COMPLETE | الواجهات الثلاث (Admin, Runner, Customer) منشورة على Vercel | Manual / E2E Verified |
+
+## تأكيد الإكمال
+- **settlements**: كامل — تم إغلاق اليوم التشغيلي وتحديث الحالة إلى SETTLED مع إنشاء إدخالات محاسبية ومراجع دورية حسب ساعة دمشق.
+- **ratings**: كامل — نافذة 24 ساعة، إعادة حساب متوسط التقييم للمندوب، ملاحظات خاصة بالإدارة.
+- **receipts**: كامل — توليد Presigned URLs لـ R2، حفظ بيانات الصورة، حذف ناعم.

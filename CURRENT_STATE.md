@@ -1,106 +1,41 @@
-# FAWRUN - Current State
+# FAWRUN — Current State
 
-## Last Updated
-2026-09-19 (Sprint 4 Pre-Sprint Check)
+> **آخر تحديث:** 2026-09-23
+> **المصدر الوحيد للحقيقة:** [PROJECT_STATUS.md](../PROJECT_STATUS.md) و [HANDOFF.md](../HANDOFF.md)
+> **مهم:** أي وكيل أو مطوّر يبدأ العمل يجب أن يقرأ هذا الملف كاملًا قبل أي تعديل.
 
-## Last Completed Sprint
-Sprint 2 — Order Core (PR #3 merged)
+## آخر Sprint مكتمل
+Sprint 5 — كامل.
 
-## Current Sprint
-Sprint 4 — Financial Ratings (branch: feature/sprint-4-financial-ratings)
+## الحالة العامة
+- **الواجهات الثلاث** (Admin Dashboard, Runner PWA, Customer Web) — منشورة على **Vercel**.
+- **وحدات settlements, ratings, receipts** — كاملة.
+- **Schema Drift** = 0 (آخر فحص: 2026-09-23).
+- **6 migrations** مُسجَّلة؛ الأخيرة `20260923154000_add_order_store_soft_delete`.
 
-## Sprint 1 Completion Status
-All 13 sub-tasks complete:
-- [x] 1.1 Monorepo setup (pnpm + Turborepo)
-- [x] 1.2 shared-constants package
-- [x] 1.3 shared-types package
-- [x] 1.4 NestJS skeleton + Prisma schema + first migration
-- [x] 1.5 Auth module: Register
-- [x] 1.6 Auth module: Login
-- [x] 1.7 Auth module: Refresh token
-- [x] 1.8 Auth module: Logout + JWT/Role Guards + Decorators
-- [x] 1.9 WhatsApp verification: VerifiedUserGuard
-- [x] 1.10 Admin: User management + account activation
-- [x] 1.11 WebSocket Gateway (orders + admin namespaces)
-- [x] 1.12 Rate limiting
-- [x] 1.13 CORS + Environment variables
+## البنية التحتية
+| المكوّن | التقنية | الاستضافة |
+|---|---|---|
+| API | NestJS 12 + Prisma 5.22 + Node 20 | Railway (Dockerfile, `node:20-slim`) |
+| Database | PostgreSQL | Railway (internal network) |
+| Admin Dashboard | Next.js 14.2 | Vercel |
+| Runner PWA | Vite + vite-plugin-pwa | Vercel |
+| Customer Web | Vite | Vercel |
 
-## Sprint 2 Completion Status (PR #3 merged)
+روابط الإنتاج — انظر [PROJECT_STATUS.md بند 1.1](https://github.com/ghaithmoa84-cyber/fawrun/blob/master/PROJECT_STATUS.md#11-حالة-الاستضافة-وقاعدة-البيانات--2026-09-23).
 
-### Implemented Modules
-- [x] 2.1 Order State Machine (apps/api/src/state-machine/)
-- [x] 2.1.1 Atomic transitions in transactions
-- [x] 2.2 OrderStore State Machine
-- [x] 2.3 Customer: create order (POST /api/v1/customer/orders)
-- [x] 2.4 Customer: list/get/cancel orders
-- [x] 2.5 Customer: profile + address + runners list
-- [x] 2.6 Admin: review/approve/reject orders
-- [x] 2.7 Admin: assign runner + cancel
-- [x] 2.8 Pricing Engine (PricingService.recalculateFee())
-- [x] 2.9 Audit Log integration
-- [x] 2.10 Leaflet + OpenStreetMap (frontend integration)
-- [x] 2.11 Admin Dashboard (Next.js) basic
+## جدول الأعمدة (Sprints 1–5)
+كل Sprint من 1 إلى 5 — **مكتمل**.
 
-### Implemented Endpoints (Sprint 1 + 2)
-Customer:
-- GET /api/v1/customer/me, PUT /api/v1/customer/me
-- GET /api/v1/customer/me/address, PUT /api/v1/customer/me/address
-- GET /api/v1/customer/runners
-- GET /api/v1/customer/orders, GET /api/v1/customer/orders/:id
-- POST /api/v1/customer/orders, DELETE /api/v1/customer/orders/:id
+لتفاصيل كل Sprint وأسبابها، انظر [HANDOFF.md](https://github.com/ghaithmoa84-cyber/fawrun/blob/master/HANDOFF.md).
 
-Runner:
-- GET /api/v1/runner/me, PUT /api/v1/runner/me/status
-- GET /api/v1/runner/orders/active
-- PUT /api/v1/runner/orders/:id/start
-- GET /api/v1/runner/orders/:id/stores
-- PUT /api/v1/runner/orders/:id/stores/:storeId/purchase
-- PUT /api/v1/runner/orders/:id/stores/:storeId/skip
-- PUT /api/v1/runner/orders/:id/proceed-to-delivery
-- PUT /api/v1/runner/orders/:id/deliver
+## قرارات لا تُنقَض (Don'ts)
+للقواعد الحرجة (ما لا يجب فعله أبدًا)، انظر [PROJECT_STATUS.md بند 2](https://github.com/ghaithmoa84-cyber/fawrun/blob/master/PROJECT_STATUS.md#2-قرارات-لا-تنقض- donts).
 
-Admin:
-- GET /api/v1/admin/orders, GET /api/v1/admin/orders/:id
-- GET /api/v1/admin/orders/:id/audit
-- PUT /api/v1/admin/orders/:id/approve
-- PUT /api/v1/admin/orders/:id/reject
-- PUT /api/v1/admin/orders/:id/start-review
-- PUT /api/v1/admin/orders/:id/assign-runner
-- PUT /api/v1/admin/orders/:id/cancel
-- GET /api/v1/admin/ledger
-- POST /api/v1/admin/settlements (close-settlement)
+## الأوامر السريعة
+للأوامر التشخيصية والعمليات اليومية، انظر [PROJECT_STATUS.md بند 4](https://github.com/ghaithmoa84-cyber/fawrun/blob/master/PROJECT_STATUS.md#35-اوامل-تشخيص-سريعة-railway-console).
 
-## Post-Review Fixes (Sprint 2, merged)
-Recent commits (2026-09-18):
-- 765fc5a — fix: customerNotified reflects actual delivery, Settlement FK quoting, Settlement TODO
-- 742b149 — fix: CodeRabbit fixes — approveOrder fee, BadRequestException, migration clauses, AdminOrderStore type, Logger, PR template
-- bcd1253 — refactor: split admin-orders into query/command services + fix migration constraint scope
-- 219ac91 — fix: CodeRabbit R2 — migration EXISTS check, BRIEF docs, pagination Zod validation
-- f224bb0 — fix: STATE-001 conditional updates, typecheck script, WS role from DB
-- 2457aff — fix: correct VerifiedUserGuard import, migration NOT VALID, brief section ref
-- 8415599 — fix: post-review fixes — VerifiedUserGuard on ledger, LogoutSchema to shared-types, settlement FK migration
+---
 
-## Architecture Decisions
-1. Architecture: Modular Monolith in Monorepo
-2. Stack: NestJS 12 + PostgreSQL + Prisma 5 + Socket.IO 4 + Zod 3 + JWT (RS256)
-3. Package Manager: pnpm 9 + Turborepo 2
-4. State Machine: Order/OrderStore/Runner state machines defined in spec
-5. Financial: Append-only Ledger, every financial op = LedgerEntry
-6. Pricing: Base 60 SYP, Peripheral +40, Extra store +20, Runner 75%/Platform 25%
-7. Auth: Access Token 2hr (JWT RS256), Refresh Token 64-byte (permanent, revocable in DB)
-8. Order Number: FW-XXXXXX from autoincrement seqNumber
-9. Error Format: { statusCode, error, message } per spec section 9.0
-10. Rate Limiting: 100/min default, 10/15min login, 3/hr register
-
-## Blockers
-- Settlement module not yet implemented (Sprint 4)
-- Ratings module not yet implemented (Sprint 4)
-- Receipts module not yet implemented (Sprint 3)
-- Frontends (admin-web, runner-pwa, android) not yet implemented (Sprints 3-5)
-- Cron job for settlement reminder not yet implemented (Sprint 4)
-
-## Next Actions
-1. Implement Sprint 4: Settlement + Ratings
-2. Implement Sprint 3: Runner execution flow (receipts, R2, proceed-to-delivery, deliver)
-3. Implement Sprint 5: Frontends (Admin Dashboard, Runner PWA, Android)
-4. Implement Sprint 6: QA + Launch
+**ملاحظة:** هذا الملف ملخص سريع. لكل تفاصيل معمارية، إعدادات، أخطاء معروفة وحلولها، وسجل الأحداث الكامل — ارجع إلى [PROJECT_STATUS.md](../PROJECT_STATUS.md).
+**نهاية الملف.**

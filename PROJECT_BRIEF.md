@@ -21,7 +21,7 @@ apps/api/src/state-machine/ - order / orderStore / runner machines
 apps/api/src/common/ - guards, decorators, filters, interceptors
 apps/admin-web/ - Next.js 14 (App Router)
 apps/runner-pwa/ - React 18 + Vite + PWA
-apps/android/ - Kotlin (Native Android)
+apps/customer-web/ - React + Vite
 packages/shared-types/ - DTOs + Zod schemas shared by all apps
 packages/shared-constants/ - shared enums + pricing constants
 
@@ -36,7 +36,7 @@ Password hashing: bcrypt (12 rounds)
 Auth: JWT RS256 - Access Token (2h) + Refresh Token (permanent, revocable)
 Admin dashboard: Next.js 14 (App Router)
 Runner interface: React 18 + Vite + PWA
-Customer app: Kotlin (Native Android)
+Customer app: Customer Web (Vite)
 Maps: OpenStreetMap + Leaflet (free, no API key)
 File storage: Cloudflare R2 (free up to 10GB, S3-compatible)
 Backend hosting: Railway (Node.js + PostgreSQL + WebSocket)
@@ -383,7 +383,7 @@ Sprint 1 - Foundation (2 weeks) - COMPLETED
 - Basic WebSocket gateway
 - Admin: user management + account activation
 
-Sprint 2 - Order Core (2 weeks) - NEXT
+Sprint 2 - Order Core (2 weeks) - COMPLETED
 - Complete Order State Machine
 - Customer: create order + free-text store names + location
 - Admin: review + approve + set peripheral + assign runner
@@ -391,7 +391,7 @@ Sprint 2 - Order Core (2 weeks) - NEXT
 - Audit Log
 - OpenStreetMap + Leaflet integration
 
-Sprint 3 - Execution Flow (2 weeks)
+Sprint 3 - Execution Flow (2 weeks) - COMPLETED
 - Runner: receive tasks + start execution
 - Runner: manage OrderStores (purchase, skip, add)
 - Runner: upload receipts (Cloudflare R2)
@@ -399,26 +399,18 @@ Sprint 3 - Execution Flow (2 weeks)
 - Complete WebSocket events + notification sounds
 - LedgerEntry for every completed order
 
-Sprint 4 - Financial + Ratings (1 week)
+Sprint 4 - Financial + Ratings (1 week) - COMPLETED
 - Complete Settlement module
 - Cron job for settlement reminder
 - Rating system (runner only)
 - Customer: order history + details
 - Runner: daily settlement report
 
-Sprint 5 - Frontends (3 weeks)
+Sprint 5 - Frontends (3 weeks) - COMPLETED
 - Admin Dashboard (Next.js) - 1 week
 - Runner PWA (React + Vite) - 1 week
-- Android App (Kotlin) - 1.5 weeks with review
-  Required screens (MVP):
-  - Login (WhatsApp + password)
-  - Home: create new order (free-text items, drag-drop map, notes, preferred runner)
-  - Order list with status filter
-  - Order details: status tracking, stores, items, runner
-  - Rating: send/edit runner rating (stars + note)
-  - Account: profile, change password, address
-  Uses the same /customer/* endpoints from section 8.
-  No online payments, no store catalog - stores are free text.
+- Customer Web (React + Vite) - 1 week
+- الواجهات الثلاث (Admin, Runner, Customer) منشورة على Vercel
 
 Sprint 6 - QA + Launch (1 week)
 - Integration tests for State Machine and Pricing

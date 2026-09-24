@@ -5,7 +5,6 @@ FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 - Backend: NestJS + PostgreSQL + Prisma + Socket.IO
 - Admin Dashboard: Next.js 14 (App Router)
 - Runner PWA: React + Vite + PWA
-- Customer App: Kotlin (Native Android)
 
 ## Coding Rules (Spec Section 17)
 
@@ -46,17 +45,12 @@ FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 1. code-architect runs /pre-sprint (runs pre-sprint-checklist)
 2. feature-dev implements endpoints
 3. test-engineer runs full local checklist
-4. /pr command: commit + push + create PR + wait for CodeRabbit
-5. CodeRabbit reviews on GitHub (not locally)
-6. Agent reads CodeRabbit comments and fixes them
-7. Merge to main
+4. دفع مباشر إلى master
 
 ### Git Rules
 - Semantic commits: feat:, fix:, refactor:, etc.
 - Branch per Sprint: feature/sprint-N-<description>
-- No direct push to main
-- Use /pr command to ensure full workflow
-- Wait for CodeRabbit review before merge
+- دفع مباشر إلى master
 
 ### Security Rules
 - No hardcoded secrets
@@ -75,18 +69,15 @@ Defined in `.agents/agents-reference.md` and `.kilo/agent/`:
 - @feature-dev — Endpoint implementation
 - @test-engineer — Tests, lint, typecheck, security checks
 - @debugger — Bug investigation (on-demand only)
-- @reviewer — CodeRabbit PR comment review & resolution
 
 ## Skills
 Active in `.agents/skills/`:
 - pre-sprint-checklist — Pre-Sprint validation (`.agents/skills/pre-sprint-checklist/SKILL.md`)
 - rollback-plan — Financial rollback documentation (`.agents/skills/rollback-plan/SKILL.md`)
-- coderabbit-workflow — PR workflow with CodeRabbit review (`.agents/skills/coderabbit-workflow/SKILL.md`)
 
 ## Commands
 - /pre-sprint — Run pre-sprint checklist
 - /rollback-plan — Create rollback plan for financial ops
-- /pr — Full PR workflow with CodeRabbit
 
 ## Commands Reference
 - pnpm build — Build all packages
@@ -95,4 +86,6 @@ Active in `.agents/skills/`:
 - pnpm typecheck — Type check all code
 - pnpm test — Run all tests
 - pnpm db:generate — Generate Prisma client
-- pnpm db:push — Push schema to DB
+- pnpm db:push — ⚠️ EMERGENCY ONLY — pushes schema to DB directly without a migration; causes schema drift. Use `prisma migrate deploy` instead (see [PROJECT_STATUS.md §1.2](PROJECT_STATUS.md))
+- node scripts/diff-schema.js — Detect schema drift against the live production DB
+- docs/runbook-schema-drift.md — Runbook for schema drift diagnosis
