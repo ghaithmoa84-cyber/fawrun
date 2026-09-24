@@ -36,10 +36,16 @@
 
 ---
 
-## الخطوة التالية (Next Action)
-1. تشغيل `pnpm lint` + `pnpm typecheck` + `pnpm test` محليًا.
-2. اختبار يدوي لكل الشاشات على الواجهات الثلاث.
+## الفحص المحلي (Local Checks)
+| الفحص | الحالة | التفاصيل |
+|---|---|---|
+| `pnpm lint` | ✅ نجح | 6/6 packages — 0 أخطاء |
+| `pnpm typecheck` | ✅ نجح | 6/6 packages |
+| `pnpm test` | ✅ نجح | 12 ملفات اختبار، 184 اختبارًا نجحوا جميعها |
 
+## الخطوة التالية (Next Action)
+1. ✅ تشغيل `pnpm lint` + `pnpm typecheck` + `pnpm test` محليًا — مكتمل.
+2. اختبار يدوي لكل الشاشات على الواجهات الثلاث (Admin, Runner, Customer).
 ---
 
 للتفاصيل الكاملة حول المعمارية، القرارات، الأخطاء المعروفة، وحلولها — ارجع إلى [PROJECT_STATUS.md](PROJECT_STATUS.md).
