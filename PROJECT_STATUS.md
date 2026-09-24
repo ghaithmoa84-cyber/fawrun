@@ -226,28 +226,7 @@ curl -I -X OPTIONS https://fawrun-api-production.up.railway.app/api/v1/auth/logi
 
 ## 7. قواعد العمل مع الوكلاء
 
-### قبل أي مهمة:
-1. **اقرأ هذا الملف كاملًا.**
-2. **راجع قسم Don'ts (بند 2).**
-3. **تحقق من المعمارية الحالية (بند 1).**
-
-### أثناء العمل:
-- **لا تُغيّر أكثر من شيء واحد في كل commit.**
-- **اكتب commit message يشرح السبب لا الفعل:**
-  ```
-  fix(settlements): use Admin.id for closedByAdminId FK
-
-  Root cause: JwtAuthGuard returned userId (User.id), but
-  Settlement.closedByAdminId FK references Admin(id).
-  ```
-- **بعد أي إصلاح، أضف صفًا جديدًا في جدول Playbook.**
-
-### بعد المهمة:
-- **حدّث هذا الملف** إن:
-  - أضفت متغيّر بيئة.
-  - غيّرت إعدادات Vercel/Railway.
-  - حللت خطأً جديدًا.
-  - اتخذت قرارًا معماريًا.
+لقواعد التعامل، تدفق العمل، قواعد Git، قواعد الأمان، وخطط التراجع — انظر [HANDOFF.md](HANDOFF.md#قواعد-التعامل).
 
 ---
 

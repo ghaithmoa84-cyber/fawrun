@@ -1,5 +1,8 @@
 # FAWRUN Coding Standards & Workflow
 
+> **ملاحظة:** القواعد الكاملة للعمل مع الوكلاء (قواعد التعامل) موجودة في [HANDOFF.md](HANDOFF.md).
+> هذا الملف هو المرجع السريع للمعايير والأدوات والأوامر.
+
 ## Project Overview
 FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 - Backend: NestJS + PostgreSQL + Prisma + Socket.IO
