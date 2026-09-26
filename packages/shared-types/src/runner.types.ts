@@ -92,6 +92,8 @@ export const ActiveOrderResponseSchema = z.object({
     anyStore: z.boolean(),
   })),
   orderStores: z.array(ActiveOrderStoreSchema),
+  activeOrdersCount: z.number().int().nonnegative(),
+  hasMoreActive: z.boolean(),
 }).nullable();
 
 export type ActiveOrderResponse = z.infer<typeof ActiveOrderResponseSchema>;

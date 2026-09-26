@@ -6,6 +6,9 @@ import {
   Logger,
 } from '@nestjs/common';
 import { Request, Response } from 'express';
+import { Prisma } from '@prisma/client';
+
+const { PrismaClientKnownRequestError } = Prisma;
 
 const HTTP_ERROR_MAP: Record<number, string> = {
   400: 'VALIDATION_ERROR',
@@ -44,6 +47,13 @@ export class AllExceptionsFilter implements ExceptionFilter {
           message = res.message as string;
         }
       }
+    // F1: P2002 → 409 (BUG-020, BUG-021)
+    } else if (
+      exception instanceof PrismaClientKnownRequestError &&
+      exception.code === 'P2002'
+    ) {
+      status = 409;
+      message = 'هذا السجل موجود مسبقًا';
     } else {
       this.logger.error(
         `Unhandled exception for ${request.method} ${request.url}`,

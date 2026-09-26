@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Headers } from '@nestjs/common';
+import { Body, Controller, Post, Headers, HttpCode, HttpStatus } from '@nestjs/common';
 import { AuthService } from './auth.service.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { RegisterSchema, LoginSchema, RefreshSchema } from '@fawrun/shared-types';
@@ -29,8 +29,10 @@ export class AuthController {
     return this.authService.login(dto, deviceInfo);
   }
 
+  // F11b: إرجاع 200 OK بدلاً من 201 Created لنقاط تجديد الجلسة
   @Post('refresh')
   @Public()
+  @HttpCode(HttpStatus.OK)
   refresh(@Body(new ZodValidationPipe(RefreshSchema)) dto: RefreshRequest) {
     return this.authService.refresh(dto);
   }

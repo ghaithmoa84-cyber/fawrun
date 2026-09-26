@@ -1,3 +1,4 @@
+// F5: i18n Arabic Zod messages
 import { z } from "zod";
 import { ORDER_STATUS_VALUES } from "./customer.types.js";
 import type {
@@ -8,7 +9,7 @@ import type {
 const nonEmptyString = z
   .string()
   .trim()
-  .min(1, "Field cannot be empty or whitespace");
+  .min(1, "الحقل لا يمكن أن يكون فارغًا");
 
 export const CreateOrderItemSchema = z.object({
   itemName: nonEmptyString,
@@ -24,7 +25,7 @@ export const DeliveryAddressSchema = z.object({
 });
 
 export const CreateOrderSchema = z.object({
-  items: z.array(CreateOrderItemSchema).min(1, "At least one item is required"),
+  items: z.array(CreateOrderItemSchema).min(1, "يجب إضافة مادة واحدة على الأقل"),
   notes: z.string().nullable(),
   preferredRunnerId: z.string().nullable(),
   waitForPreferred: z.boolean(),
@@ -358,7 +359,7 @@ export type PurchaseStoreResponse = z.infer<
 // ─────────────────────────────────────────────────────────────
 
 export const CreateOrderStoreSchema = z.object({
-  storeName: z.string().trim().min(1, 'storeName cannot be empty'),
+  storeName: z.string().trim().min(1, 'اسم المتجر لا يمكن أن يكون فارغًا'),
 });
 
 export type CreateOrderStoreRequest = z.infer<
@@ -400,9 +401,9 @@ export type DeleteOrderStoreResponse = z.infer<
 // ─────────────────────────────────────────────────────────────
 
 export const CreateRunnerOrderItemSchema = z.object({
-  itemName: z.string().trim().min(1, 'itemName cannot be empty'),
-  quantity: z.string().trim().min(1, 'quantity cannot be empty'),
-  orderStoreId: z.string().cuid('orderStoreId must be a valid cuid'),
+  itemName: z.string().trim().min(1, 'اسم المادة لا يمكن أن يكون فارغًا'),
+  quantity: z.string().trim().min(1, 'الكمية لا يمكن أن تكون فارغة'),
+  orderStoreId: z.string().cuid('معرف المتجر يجب أن يكون معرف cuid صحيح'),
 });
 
 export type CreateRunnerOrderItemRequest = z.infer<
@@ -439,9 +440,9 @@ export type Receipt = z.infer<typeof ReceiptSchema>;
 
 export const PresignedUrlRequestSchema = z.object({
   fileType: z.enum(['jpg', 'png'], {
-    message: 'fileType must be jpg or png',
+    message: 'نوع الملف يجب أن يكون jpg أو png',
   }),
-  fileSize: z.number().int().min(1, 'fileSize must be a positive integer'),
+  fileSize: z.number().int().min(1, 'حجم الملف يجب أن يكون عددًا صحيحًا موجبًا'),
 });
 
 export type PresignedUrlRequest = z.infer<
@@ -459,7 +460,7 @@ export type PresignedUrlResponse = z.infer<
 >;
 
 export const CreateReceiptRequestSchema = z.object({
-  r2Key: z.string().trim().min(1, 'r2Key cannot be empty'),
+  r2Key: z.string().trim().min(1, 'مفتاح r2Key لا يمكن أن يكون فارغًا'),
 });
 
 export type CreateReceiptRequest = z.infer<

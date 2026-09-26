@@ -1,8 +1,9 @@
+// F5: i18n Arabic Zod messages
 import { z } from 'zod';
 
 export const passwordSchema = z.string().min(8).max(72).refine(
   (val) => Buffer.byteLength(val, 'utf8') <= 72,
-  'Password must not exceed 72 bytes'
+  'كلمة المرور يجب ألا تتجاوز 72 بايت'
 );
 
 // Syrian local phone format: 09 followed by 8 digits, e.g. 0912345678.
