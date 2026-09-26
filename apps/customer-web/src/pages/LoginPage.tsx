@@ -71,7 +71,7 @@ export function LoginPage() {
           <img
             src="/logo.png"
             alt="FORERUN"
-            style={{ height: '60px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }}
+            style={{ height: '100px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }}
           />
           <h1 className="page-title" style={{ fontSize: '20px', marginBottom: '6px' }}>
             تسجيل دخول العميل

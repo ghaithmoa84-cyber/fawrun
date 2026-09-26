@@ -63,7 +63,7 @@ export function LoginPage() {
           <img
             src="/logo.png"
             alt="FORERUN"
-            style={{ height: '60px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }}
+            style={{ height: '100px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }}
           />
           <h1 className="brand-title">فَوْراً — تطبيق المندوب</h1>
           <p className="brand-subtitle">تسجيل الدخول لمتابعة واستلام الطلبات</p>
