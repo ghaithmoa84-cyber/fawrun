@@ -187,8 +187,8 @@ const USER_STATUS_DOT: Record<UserStatus, string> = {
             filteredUsers.map((u) => (
               <div key={u.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
                 {/* السطر الأول: الاسم + شارة الحالة */}
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 text-sm">{u.name}</span>
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                  <span className="min-w-0 break-words font-bold text-slate-900 text-sm">{u.name}</span>
                   <div>{getStatusBadge(u.status)}</div>
                 </div>
 

@@ -225,8 +225,8 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
             runners.map((r) => (
               <div key={r.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
                 {/* السطر الأول: الاسم + مفتاح الظهور */}
-                <div className="flex items-center justify-between">
-                  <span className="font-bold text-slate-900 text-sm">{r.name}</span>
+                <div className="flex items-start justify-between gap-2 flex-wrap">
+                  <span className="min-w-0 break-words font-bold text-slate-900 text-sm">{r.name}</span>
                   <div className="flex items-center gap-2">
                     <span className="text-xs text-slate-400">
                       {r.isVisible ? 'ظاهر' : 'مخفي'}
