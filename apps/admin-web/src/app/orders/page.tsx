@@ -153,7 +153,7 @@ export default function OrdersPage() {
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-hidden focus:border-[#00C1A7] w-full sm:w-auto"
+            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-hidden focus:border-[#7DDDD4] w-full sm:w-auto"
           />
           {dateFilter && (
             <button
@@ -172,7 +172,7 @@ export default function OrdersPage() {
           onClick={() => setStatusFilter('ALL')}
           className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
             statusFilter === 'ALL'
-              ? 'bg-[#00C1A7] text-white font-bold shadow-xs'
+              ? 'bg-[#7DDDD4] text-white font-bold shadow-xs'
               : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
           }`}
         >
@@ -184,7 +184,7 @@ export default function OrdersPage() {
             onClick={() => setStatusFilter(status)}
             className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
               statusFilter === status
-                ? 'bg-[#00C1A7] text-white font-bold shadow-xs'
+                ? 'bg-[#7DDDD4] text-white font-bold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
@@ -199,7 +199,7 @@ export default function OrdersPage() {
         <div className="sm:hidden p-4 space-y-3">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
-              <span className="w-5 h-5 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-5 h-5 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
               <span>جاري تحميل سجل الطلبات...</span>
             </div>
           ) : orders.length === 0 ? (
@@ -278,7 +278,7 @@ export default function OrdersPage() {
                 <tr>
                   <td colSpan={7} className="px-5 py-12 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-4 h-4 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
                       <span>جاري تحميل سجل الطلبات...</span>
                     </div>
                   </td>
@@ -296,7 +296,7 @@ export default function OrdersPage() {
                     onClick={() => router.push(`/orders/${order.id}`)}
                     className="hover:bg-slate-50/70 transition-colors cursor-pointer group"
                   >
-                    <td className="px-5 py-4 font-extrabold text-slate-900 group-hover:text-[#00C1A7] transition-colors" dir="ltr">
+                    <td className="px-5 py-4 font-extrabold text-slate-900 group-hover:text-[#7DDDD4] transition-colors" dir="ltr">
                       {order.orderNumber}
                     </td>
                     <td className="px-5 py-4 font-bold text-slate-800">
@@ -322,7 +322,7 @@ export default function OrdersPage() {
                     </td>
                     <td className="px-5 py-4 text-slate-500">{formatDate(order.createdAt)}</td>
                     <td className="px-5 py-4 text-center">
-                      <span className="inline-flex items-center gap-1 text-[#00C1A7] font-bold group-hover:underline">
+                      <span className="inline-flex items-center gap-1 text-[#7DDDD4] font-bold group-hover:underline">
                         عرض التفاصيل
                         <span className="text-xs">←</span>
                       </span>
@@ -363,3 +363,8 @@ export default function OrdersPage() {
     </div>
   );
 }
+
+
+
+
+

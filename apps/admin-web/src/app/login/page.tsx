@@ -103,7 +103,7 @@ if (typeof document !== 'undefined') {
     <div className="min-h-screen bg-slate-100 flex flex-col justify-center items-center p-4 relative overflow-hidden font-sans" dir="rtl">
       {/* Ambient background decoration */}
       <div className="absolute inset-0 pointer-events-none opacity-40">
-        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#00C1A7]/20 blur-3xl"></div>
+        <div className="absolute -top-40 -right-40 w-96 h-96 rounded-full bg-[#7DDDD4]/20 blur-3xl"></div>
         <div className="absolute -bottom-40 -left-40 w-96 h-96 rounded-full bg-blue-500/10 blur-3xl"></div>
       </div>
 
@@ -111,20 +111,20 @@ if (typeof document !== 'undefined') {
         {/* System operational badge */}
         <div className="mb-6 mx-auto w-fit flex items-center gap-2 px-4 py-1.5 rounded-full bg-white border border-slate-200 shadow-xs">
           <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#00C1A7] opacity-75"></span>
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#00C1A7]"></span>
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#7DDDD4] opacity-75"></span>
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-[#7DDDD4]"></span>
           </span>
           <span className="text-xs font-semibold text-slate-600">بوابة إدارة العمليات اللوجستية</span>
         </div>
 
         {/* Brand Header */}
         <div className="flex flex-col items-center text-center mb-6">
-          <div className="w-14 h-14 rounded-2xl bg-[#00C1A7] flex items-center justify-center text-white text-2xl font-black shadow-md mb-3">
+          <div className="w-14 h-14 rounded-2xl bg-[#7DDDD4] flex items-center justify-center text-white text-2xl font-black shadow-md mb-3">
             ⚡
           </div>
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-black text-slate-900 tracking-tight">FORERUN</h1>
-            <span className="text-sm bg-[#00C1A7]/10 text-[#008f7a] font-bold px-2 py-0.5 rounded">فَوْراً</span>
+            <span className="text-sm bg-[#7DDDD4]/10 text-[#3ABFB5] font-bold px-2 py-0.5 rounded">فَوْراً</span>
           </div>
           <p className="text-xs text-slate-500 mt-1">لوحة القيادة المركزية والتحكم اللوجستي</p>
         </div>
@@ -149,7 +149,7 @@ if (typeof document !== 'undefined') {
               <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="whatsapp">
                 رقم الواتساب الإداري
               </label>
-              <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#00C1A7] focus-within:ring-2 focus-within:ring-[#00C1A7]/20 transition-all overflow-hidden bg-slate-50/50">
+              <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#7DDDD4] focus-within:ring-2 focus-within:ring-[#7DDDD4]/20 transition-all overflow-hidden bg-slate-50/50">
                 <input
                   id="whatsapp"
                   type="text"
@@ -169,7 +169,7 @@ if (typeof document !== 'undefined') {
               <label className="block text-xs font-bold text-slate-700 mb-1.5" htmlFor="password">
                 كلمة المرور
               </label>
-              <div className="relative flex items-center rounded-xl border border-slate-300 focus-within:border-[#00C1A7] focus-within:ring-2 focus-within:ring-[#00C1A7]/20 transition-all bg-slate-50/50">
+              <div className="relative flex items-center rounded-xl border border-slate-300 focus-within:border-[#7DDDD4] focus-within:ring-2 focus-within:ring-[#7DDDD4]/20 transition-all bg-slate-50/50">
                 <input
                   id="password"
                   type={showPassword ? 'text' : 'password'}
@@ -193,7 +193,7 @@ if (typeof document !== 'undefined') {
             <button
               type="submit"
               disabled={loading}
-              className="w-full mt-2 py-3 px-4 bg-[#00C1A7] hover:bg-[#00a892] active:bg-[#008f7a] text-white font-bold rounded-xl text-sm shadow-md shadow-[#00C1A7]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              className="w-full mt-2 py-3 px-4 bg-[#7DDDD4] hover:bg-[#5CCFC5] active:bg-[#3ABFB5] text-white font-bold rounded-xl text-sm shadow-md shadow-[#7DDDD4]/20 transition-all disabled:opacity-60 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading ? (
                 <>
@@ -215,6 +215,11 @@ if (typeof document !== 'undefined') {
     </div>
   );
 }
+
+
+
+
+
 
 
 

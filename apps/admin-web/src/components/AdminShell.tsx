@@ -128,12 +128,14 @@ export function AdminShell({ children }: AdminShellProps) {
         {/* Brand Header */}
         <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-[#00C1A7] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-              ⚡
-            </div>
+            <img
+              src="/logo.png"
+              alt="FORERUN"
+              className="h-10 w-auto object-contain"
+            />
             <div>
               <div className="flex items-center gap-1.5">
-                <span className="font-extrabold text-lg text-[#00C1A7] tracking-tight">FORERUN</span>
+                <span className="font-extrabold text-lg text-[#7DDDD4] tracking-tight">FORERUN</span>
                 <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">فَوْراً</span>
               </div>
               <div className="text-[11px] text-slate-500 font-medium">لوحة الإدارة المركزية</div>
@@ -164,11 +166,11 @@ export function AdminShell({ children }: AdminShellProps) {
                 onClick={() => setDrawerOpen(false)}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
-                    ? 'bg-[#00C1A7]/10 text-[#008f7a] font-semibold shadow-xs'
+                    ? 'bg-[#7DDDD4]/10 text-[#3ABFB5] font-semibold shadow-xs'
                     : 'text-slate-600 hover:bg-slate-100 hover:text-slate-900'
                 }`}
               >
-                <span className={isActive ? 'text-[#00C1A7]' : 'text-slate-500'}>{item.icon}</span>
+                <span className={isActive ? 'text-[#7DDDD4]' : 'text-slate-500'}>{item.icon}</span>
                 <span>{item.label}</span>
               </Link>
             );
@@ -202,7 +204,11 @@ export function AdminShell({ children }: AdminShellProps) {
             </button>
 
             <div className="flex items-center gap-2">
-              <h1 className="text-base font-bold text-slate-800">FORERUN Admin</h1>
+              <img
+                src="/logo.png"
+                alt="FORERUN"
+                className="h-7 w-auto object-contain"
+              />
               <span className="text-xs text-slate-400 hidden sm:inline">|</span>
               <span className="text-xs text-slate-500 hidden sm:inline">نظام إدارة التوصيل والعمليات</span>
             </div>
@@ -210,7 +216,7 @@ export function AdminShell({ children }: AdminShellProps) {
 
           <div className="flex items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2 bg-slate-100 py-1.5 px-3 rounded-lg text-xs font-medium text-slate-700">
-              <span className="w-2 h-2 rounded-full bg-[#00C1A7]"></span>
+              <span className="w-2 h-2 rounded-full bg-[#7DDDD4]"></span>
               <span>مرحباً، {adminName}</span>
             </div>
 
@@ -235,3 +241,8 @@ export function AdminShell({ children }: AdminShellProps) {
     </div>
   );
 }
+
+
+
+
+

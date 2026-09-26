@@ -201,7 +201,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md shadow-[#00C1A7]/20 transition-all cursor-pointer"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#7DDDD4] hover:bg-[#5CCFC5] text-white font-bold rounded-xl text-xs shadow-md shadow-[#7DDDD4]/20 transition-all cursor-pointer"
         >
           <span className="text-base font-black">+</span>
           <span>إضافة مندوب جديد</span>
@@ -214,7 +214,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
         <div className="sm:hidden p-4 space-y-3">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
-              <span className="w-5 h-5 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-5 h-5 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
               <span>جاري تحميل بيانات أسطول المندوبين...</span>
             </div>
           ) : runners.length === 0 ? (
@@ -236,7 +236,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                       onClick={() => handleToggleVisibility(r)}
                       disabled={togglingId === r.id}
                       className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-50 ${
-                        r.isVisible ? 'bg-[#00C1A7]' : 'bg-slate-300'
+                        r.isVisible ? 'bg-[#7DDDD4]' : 'bg-slate-300'
                       }`}
                       title={r.isVisible ? 'ظاهر للعملاء' : 'مخفي عن العملاء'}
                     >
@@ -304,7 +304,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                 <tr>
                   <td colSpan={6} className="px-5 py-12 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-4 h-4 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
                       <span>جاري تحميل بيانات أسطول المندوبين...</span>
                     </div>
                   </td>
@@ -338,7 +338,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                         onClick={() => handleToggleVisibility(r)}
                         disabled={togglingId === r.id}
                         className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-50 ${
-                          r.isVisible ? 'bg-[#00C1A7]' : 'bg-slate-300'
+                          r.isVisible ? 'bg-[#7DDDD4]' : 'bg-slate-300'
                         }`}
                         title={r.isVisible ? 'ظاهر للعملاء' : 'مخفي عن العملاء'}
                       >
@@ -415,7 +415,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                   value={createForm.name}
                   onChange={(e) => setCreateForm({ ...createForm, name: e.target.value })}
                   placeholder="الاسم الثلاثي"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7DDDD4] focus:ring-2 focus:ring-[#7DDDD4]/20 text-xs text-slate-900 outline-hidden"
                   required
                 />
               </div>
@@ -424,7 +424,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                 <label className="block text-xs font-bold text-slate-700 mb-1.5">
                   رقم الواتساب
                 </label>
-                <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#00C1A7] focus-within:ring-2 focus-within:ring-[#00C1A7]/20 overflow-hidden">
+                <div className="relative flex rounded-xl border border-slate-300 focus-within:border-[#7DDDD4] focus-within:ring-2 focus-within:ring-[#7DDDD4]/20 overflow-hidden">
                   <input
                     type="text"
                     dir="ltr"
@@ -446,7 +446,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                   value={createForm.password}
                   onChange={(e) => setCreateForm({ ...createForm, password: e.target.value })}
                   placeholder="8 محارف على الأقل"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7DDDD4] focus:ring-2 focus:ring-[#7DDDD4]/20 text-xs text-slate-900 outline-hidden"
                   required
                 />
               </div>
@@ -463,7 +463,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                 <button
                   type="submit"
                   disabled={createLoading}
-                  className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#7DDDD4] hover:bg-[#5CCFC5] text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {createLoading && (
                     <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -499,7 +499,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                   type="text"
                   value={editForm.name}
                   onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7DDDD4] focus:ring-2 focus:ring-[#7DDDD4]/20 text-xs text-slate-900 outline-hidden"
                   required
                 />
               </div>
@@ -513,7 +513,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                   value={editForm.password}
                   onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
                   placeholder="••••••••"
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7DDDD4] focus:ring-2 focus:ring-[#7DDDD4]/20 text-xs text-slate-900 outline-hidden"
                 />
               </div>
 
@@ -526,7 +526,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                   onChange={(e) => setEditForm({ ...editForm, notes: e.target.value })}
                   rows={3}
                   placeholder="ملاحظات حول المندوب، المنطقة، أو الدراجة/المركبة..."
-                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#00C1A7] focus:ring-2 focus:ring-[#00C1A7]/20 text-xs text-slate-900 outline-hidden resize-none"
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 focus:border-[#7DDDD4] focus:ring-2 focus:ring-[#7DDDD4]/20 text-xs text-slate-900 outline-hidden resize-none"
                 />
               </div>
 
@@ -542,7 +542,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
                 <button
                   type="submit"
                   disabled={editLoading}
-                  className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50 flex items-center gap-1.5"
+                  className="px-4 py-2 bg-[#7DDDD4] hover:bg-[#5CCFC5] text-white text-xs font-bold rounded-xl shadow-md disabled:opacity-50 flex items-center gap-1.5"
                 >
                   {editLoading && (
                     <span className="w-3.5 h-3.5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
@@ -557,4 +557,9 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
     </div>
   );
 }
+
+
+
+
+
 

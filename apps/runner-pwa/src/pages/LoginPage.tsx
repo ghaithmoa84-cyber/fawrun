@@ -59,8 +59,12 @@ export function LoginPage() {
   return (
     <div className="login-container">
       <div className="login-card card">
-        <div className="login-brand">
-          <div className="brand-badge">FORERUN</div>
+        <div className="login-brand" style={{ textAlign: 'center', marginBottom: '24px' }}>
+          <img
+            src="/logo.png"
+            alt="FORERUN"
+            style={{ height: '60px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }}
+          />
           <h1 className="brand-title">فَوْراً — تطبيق المندوب</h1>
           <p className="brand-subtitle">تسجيل الدخول لمتابعة واستلام الطلبات</p>
         </div>

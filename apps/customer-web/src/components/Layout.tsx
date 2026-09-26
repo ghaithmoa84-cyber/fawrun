@@ -134,10 +134,12 @@ export function Layout() {
 
       {/* Top Header */}
       <header className="app-header">
-        <NavLink to="/home" className="app-header__brand">
-          <span className="brand-dot" />
-          <span className="brand-name">FORERUN</span>
-          <span className="brand-sub">فَوْراً</span>
+        <NavLink to="/home" className="app-header__brand" style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <img
+            src="/logo.png"
+            alt="FORERUN"
+            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+          />
         </NavLink>
 
         {user && (

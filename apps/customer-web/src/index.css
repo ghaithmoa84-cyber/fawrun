@@ -1,7 +1,9 @@
 :root {
-  --primary: #00C1A7;
-  --primary-hover: #00a892;
-  --primary-bg: rgba(0, 193, 167, 0.1);
+  --primary: #7DDDD4;
+  --primary-hover: #5CCFC5;
+  --primary-dark: #3ABFB5;
+  --primary-bg: rgba(125, 221, 212, 0.1);
+  --secondary: #1E3A5F;
   --accent: #f97316;
   --accent-bg: rgba(249, 115, 22, 0.1);
   --text: #1e293b;
