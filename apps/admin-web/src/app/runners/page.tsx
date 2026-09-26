@@ -193,7 +193,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900">إدارة المندوبين والكباتن</h1>
           <p className="text-xs text-slate-500 mt-1">متابعة جاهزية الأسطول، التقييمات، والظهور في التطبيق</p>
@@ -201,7 +201,7 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
 
         <button
           onClick={() => setIsCreateOpen(true)}
-          className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md shadow-[#00C1A7]/20 transition-all cursor-pointer"
+          className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md shadow-[#00C1A7]/20 transition-all cursor-pointer"
         >
           <span className="text-base font-black">+</span>
           <span>إضافة مندوب جديد</span>
@@ -210,7 +210,84 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
 
       {/* Main Table Card */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Cards View (sm:hidden) */}
+        <div className="sm:hidden p-4 space-y-3">
+          {loading ? (
+            <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+              <span className="w-5 h-5 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+              <span>جاري تحميل بيانات أسطول المندوبين...</span>
+            </div>
+          ) : runners.length === 0 ? (
+            <div className="py-10 text-center text-slate-400 text-xs">
+              لا يوجد مناديب مسجلين في المنصة حتى الآن.
+            </div>
+          ) : (
+            runners.map((r) => (
+              <div key={r.id} className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3">
+                {/* السطر الأول: الاسم + مفتاح الظهور */}
+                <div className="flex items-center justify-between">
+                  <span className="font-bold text-slate-900 text-sm">{r.name}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs text-slate-400">
+                      {r.isVisible ? 'ظاهر' : 'مخفي'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggleVisibility(r)}
+                      disabled={togglingId === r.id}
+                      className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-hidden disabled:opacity-50 ${
+                        r.isVisible ? 'bg-[#00C1A7]' : 'bg-slate-300'
+                      }`}
+                      title={r.isVisible ? 'ظاهر للعملاء' : 'مخفي عن العملاء'}
+                    >
+                      <span
+                        className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
+                          r.isVisible ? '-translate-x-5' : 'translate-x-0'
+                        }`}
+                      />
+                    </button>
+                  </div>
+                </div>
+
+                {/* WhatsApp */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">واتساب:</span>
+                  <span className="font-mono font-medium text-slate-800" dir="ltr">{r.whatsapp}</span>
+                </div>
+
+                {/* الحالة التشغيلية */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">الحالة:</span>
+                  <div>{getStatusBadge(r.status)}</div>
+                </div>
+
+                {/* التقييم */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">التقييم:</span>
+                  <div className="flex items-center gap-1 text-slate-700 font-bold">
+                    <span className="text-amber-400 text-sm">★</span>
+                    <span>{r.avgRating ? r.avgRating.toFixed(1) : 'جديد'}</span>
+                    <span className="text-slate-400 font-normal text-[11px]">
+                      ({r.totalRatings} تقييم)
+                    </span>
+                  </div>
+                </div>
+
+                {/* زر التعديل */}
+                <button
+                  type="button"
+                  onClick={() => handleOpenEdit(r)}
+                  className="w-full py-2 text-xs font-bold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-lg border border-slate-200 transition-colors text-center inline-flex items-center justify-center"
+                >
+                  تعديل البيانات
+                </button>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table (hidden sm:block) */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-right text-xs">
             <thead className="bg-slate-50/75 border-b border-slate-200 text-slate-600 font-bold">
               <tr>
@@ -288,25 +365,25 @@ const RUNNER_STATUS_DOT: Record<RunnerStatus, string> = {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
-          <div>
+        <div className="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 bg-slate-50/50">
+          <div className="text-center sm:text-right w-full sm:w-auto">
             إجمالي المندوبين: <span className="font-bold text-slate-800">{meta.total}</span> (صفحة{' '}
             <span className="font-bold text-slate-800">{meta.page}</span> من{' '}
             <span className="font-bold text-slate-800">{meta.totalPages || 1}</span>)
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => fetchRunners(meta.page - 1)}
               disabled={meta.page <= 1 || loading}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed justify-center inline-flex items-center"
             >
               السابق
             </button>
             <button
               onClick={() => fetchRunners(meta.page + 1)}
               disabled={meta.page >= meta.totalPages || loading}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed justify-center inline-flex items-center"
             >
               التالي
             </button>

@@ -284,7 +284,7 @@ export default function SettlementsPage() {
             <p className="page-subtitle">إدارة تسويات المندوبين اليومية والسجل المالي للمنصة</p>
           </div>
           <button
-            className="btn btn-primary"
+            className="btn btn-primary w-full sm:w-auto"
             onClick={() => setCloseDayModal({ open: true, date: today })}
           >
             إغلاق يوم
@@ -293,7 +293,7 @@ export default function SettlementsPage() {
       </div>
 
       {/* Navigation Tabs */}
-      <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
+      <div className="overflow-x-auto" style={{ display: 'flex', gap: '8px', marginBottom: '24px', borderBottom: '1px solid var(--border)', paddingBottom: '8px' }}>
         <button
           className={`btn ${activeTab === 'settlements' ? 'btn-primary' : 'btn-secondary'}`}
           onClick={() => setActiveTab('settlements')}
@@ -355,7 +355,7 @@ export default function SettlementsPage() {
                 ✓ لا توجد تسويات معلقة حالياً، جميع التسويات مُسَوّاة!
               </div>
             ) : (
-              <div className="table-container">
+              <div className="table-container overflow-x-auto">
                 <table>
                   <thead>
                     <tr>
@@ -404,7 +404,7 @@ export default function SettlementsPage() {
           </div>
 
           {/* فلاتر التسويات */}
-          <div className="filters">
+          <div className="filters flex-wrap">
             <div className="filter-group" style={{ flex: '0 0 150px' }}>
               <label className="label">الحالة</label>
               <select
@@ -471,7 +471,7 @@ export default function SettlementsPage() {
               </div>
             ) : (
               <>
-                <div className="table-container">
+                <div className="table-container overflow-x-auto">
                   <table>
                     <thead>
                       <tr>
@@ -517,7 +517,7 @@ export default function SettlementsPage() {
                 {meta.totalPages > 1 && (
                   <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
                     <button
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-secondary btn-sm min-w-[80px]"
                       onClick={() => handlePageChange(meta.page - 1)}
                       disabled={meta.page === 1}
                     >
@@ -527,7 +527,7 @@ export default function SettlementsPage() {
                       صفحة {meta.page} من {meta.totalPages} (إجمالي: {meta.total})
                     </span>
                     <button
-                      className="btn btn-secondary btn-sm"
+                      className="btn btn-secondary btn-sm min-w-[80px]"
                       onClick={() => handlePageChange(meta.page + 1)}
                       disabled={meta.page === meta.totalPages}
                     >
@@ -571,7 +571,7 @@ export default function SettlementsPage() {
             </div>
           ) : (
             <>
-              <div className="table-container">
+              <div className="table-container overflow-x-auto">
                 <table>
                   <thead>
                     <tr>
@@ -612,7 +612,7 @@ export default function SettlementsPage() {
               {ledgerMeta.totalPages > 1 && (
                 <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '24px' }}>
                   <button
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm min-w-[80px]"
                     onClick={() => setLedgerMeta((prev) => ({ ...prev, page: prev.page - 1 }))}
                     disabled={ledgerMeta.page === 1}
                   >
@@ -622,7 +622,7 @@ export default function SettlementsPage() {
                     صفحة {ledgerMeta.page} من {ledgerMeta.totalPages} (إجمالي: {ledgerMeta.total})
                   </span>
                   <button
-                    className="btn btn-secondary btn-sm"
+                    className="btn btn-secondary btn-sm min-w-[80px]"
                     onClick={() => setLedgerMeta((prev) => ({ ...prev, page: prev.page + 1 }))}
                     disabled={ledgerMeta.page === ledgerMeta.totalPages}
                   >

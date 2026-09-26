@@ -243,21 +243,21 @@ export default function OrderDetailPage() {
               #{order.orderNumber}
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-3">
             <h1 className="text-xl font-black text-slate-900" dir="ltr">
               طلب #{order.orderNumber}
             </h1>
-            <span className={`px-3 py-1 rounded-full text-xs font-extrabold border ${ORDER_STATUS_STYLE[order.status]}`}>
+            <span className={`px-3 py-1 rounded-full text-xs font-extrabold border w-fit ${ORDER_STATUS_STYLE[order.status]}`}>
               {ORDER_STATUS_LABEL[order.status]}
             </span>
           </div>
         </div>
 
         {/* Dynamic Action Buttons based on Status */}
-        <div className="flex flex-wrap items-center gap-2">
+        <div className="flex flex-col sm:flex-row flex-wrap items-stretch sm:items-center gap-2 w-full sm:w-auto">
           {(order.status === 'PENDING_REVIEW' || order.status === 'UNDER_REVIEW') && (
-            <div className="flex items-center gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200">
-              <label className="flex items-center gap-1.5 text-xs font-bold text-slate-700 cursor-pointer">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 sm:gap-3 bg-slate-50 p-2 rounded-xl border border-slate-200 w-full sm:w-auto">
+              <label className="flex items-center justify-center sm:justify-start gap-1.5 text-xs font-bold text-slate-700 cursor-pointer py-1">
                 <input
                   type="checkbox"
                   checked={isPeripheralChecked}
@@ -270,7 +270,7 @@ export default function OrderDetailPage() {
               <button
                 onClick={handleApprove}
                 disabled={actionLoading}
-                className="px-3.5 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-3.5 py-2 sm:py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg text-xs shadow-xs disabled:opacity-50"
               >
                 اعتماد الطلب
               </button>
@@ -278,7 +278,7 @@ export default function OrderDetailPage() {
               <button
                 onClick={() => setIsRejectOpen(true)}
                 disabled={actionLoading}
-                className="px-3.5 py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-lg text-xs disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-3.5 py-2 sm:py-1.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-lg text-xs disabled:opacity-50"
               >
                 رفض
               </button>
@@ -287,11 +287,11 @@ export default function OrderDetailPage() {
 
           {(order.status === 'AWAITING_RUNNER' ||
             order.status === 'AWAITING_PREFERRED_RUNNER') && (
-            <div className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 w-full sm:w-auto">
               <select
                 value={selectedRunnerId}
                 onChange={(e) => setSelectedRunnerId(e.target.value)}
-                className="px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-hidden focus:border-[#00C1A7]"
+                className="w-full sm:w-auto px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-hidden focus:border-[#00C1A7]"
               >
                 <option value="">-- اختيار مندوب للتعيين --</option>
                 {availableRunners.map((r) => (
@@ -304,7 +304,7 @@ export default function OrderDetailPage() {
               <button
                 onClick={handleAssignRunner}
                 disabled={actionLoading || !selectedRunnerId}
-                className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md disabled:opacity-50"
               >
                 تعيين المندوب
               </button>
@@ -315,7 +315,7 @@ export default function OrderDetailPage() {
             <button
               onClick={() => setIsCancelOpen(true)}
               disabled={actionLoading}
-              className="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl text-xs transition-all disabled:opacity-50"
+              className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold rounded-xl text-xs transition-all disabled:opacity-50"
             >
               إلغاء الطلب إدارياً
             </button>
@@ -455,7 +455,7 @@ export default function OrderDetailPage() {
                 key={store.id}
                 className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-3"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="font-bold text-slate-900 text-sm">🏪 {store.storeName}</span>
                     {store.isAnyStore && (
@@ -475,11 +475,11 @@ export default function OrderDetailPage() {
                 </div>
 
                 {/* Items in store */}
-                <div className="divide-y divide-slate-200/60 bg-white rounded-xl border border-slate-200/80 px-4 py-2">
+                <div className="divide-y divide-slate-200/60 bg-white rounded-xl border border-slate-200/80 px-4 py-2 overflow-x-auto">
                   {store.items.map((item) => (
                     <div
                       key={item.id}
-                      className="py-2.5 flex items-center justify-between text-xs"
+                      className="py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs"
                     >
                       <div>
                         <span className={`font-bold ${item.isCancelled ? 'line-through text-slate-400' : 'text-slate-800'}`}>
@@ -535,9 +535,9 @@ export default function OrderDetailPage() {
           </div>
         ) : (
           /* Fallback if items are directly on order */
-          <div className="divide-y divide-slate-100 bg-slate-50 rounded-xl p-4">
+          <div className="divide-y divide-slate-100 bg-slate-50 rounded-xl p-4 overflow-x-auto">
             {order.items.map((item) => (
-              <div key={item.id} className="py-2.5 flex items-center justify-between text-xs">
+              <div key={item.id} className="py-2.5 flex flex-wrap items-center justify-between gap-2 text-xs">
                 <span className={`font-bold ${item.isCancelled ? 'line-through text-slate-400' : 'text-slate-800'}`}>
                   {item.itemName}
                 </span>
@@ -565,20 +565,20 @@ export default function OrderDetailPage() {
       {/* Ratings Section */}
       {order.ratings && order.ratings.length > 0 && (
         <div className="bg-white rounded-2xl border border-slate-200 p-6 shadow-xs space-y-4">
-          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex items-center justify-between">
+          <h2 className="text-base font-bold text-slate-900 border-b border-slate-100 pb-3 flex flex-wrap items-center justify-between gap-2">
             <span>تقييمات الطلب (Customer Ratings)</span>
             <span className="text-amber-500 font-bold text-xs">
               ★ {order.ratings.length} تقييم
             </span>
           </h2>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {order.ratings.map((rating) => (
               <div
                 key={rating.id}
                 className="p-4 rounded-xl border border-slate-200 bg-slate-50/50 space-y-2"
               >
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-slate-800 text-xs">
                     {rating.storeNameRated ? `🏪 تقييم متجر: ${rating.storeNameRated}` : '🏃 تقييم المندوب'}
                   </span>
@@ -613,14 +613,15 @@ export default function OrderDetailPage() {
             {auditLogs.map((log) => (
               <div key={log.id} className="relative">
                 <span className="absolute -right-[23px] top-1 w-3 h-3 rounded-full bg-[#00C1A7] border-2 border-white shadow-xs"></span>
-                <div className="flex items-center justify-between text-xs">
+                <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-bold text-slate-800">{log.event}</span>
                   <span className="text-slate-400 font-mono text-[11px]">
                     {formatDate(log.createdAt)}
                   </span>
                 </div>
-                <div className="text-xs text-slate-500 mt-0.5">
-                  بواسطة: <span className="font-semibold text-slate-700">{log.actorRole}</span>
+                <div className="text-xs text-slate-500 mt-0.5 flex flex-wrap items-center gap-1">
+                  <span>بواسطة:</span>
+                  <span className="font-semibold text-slate-700">{log.actorRole}</span>
                   {log.fromStatus && log.toStatus && (
                     <span className="mr-2">
                       ({log.fromStatus} → {log.toStatus})
