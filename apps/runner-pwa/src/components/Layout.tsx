@@ -45,7 +45,7 @@ export function Layout() {
           <img
             src="/logo.png"
             alt="FORERUN"
-            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+            style={{ height: '44px', width: 'auto', objectFit: 'contain' }}
           />
         </div>
 

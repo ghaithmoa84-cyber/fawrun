@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import Image from 'next/image';
 import api from '@/lib/api';
 import { AdminWebSocketListener } from '@/components/AdminWebSocketListener';
 
@@ -128,10 +129,13 @@ export function AdminShell({ children }: AdminShellProps) {
         {/* Brand Header */}
         <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img
+            <Image
               src="/logo.png"
               alt="FORERUN"
-              className="h-10 w-auto object-contain"
+              width={160}
+              height={64}
+              className="h-16 w-auto object-contain"
+              priority
             />
             <div>
               <div className="flex items-center gap-1.5">
@@ -204,10 +208,13 @@ export function AdminShell({ children }: AdminShellProps) {
             </button>
 
             <div className="flex items-center gap-2">
-              <img
+              <Image
                 src="/logo.png"
                 alt="FORERUN"
-                className="h-7 w-auto object-contain"
+                width={120}
+                height={32}
+                className="h-8 w-auto object-contain"
+                priority
               />
               <span className="text-xs text-slate-400 hidden sm:inline">|</span>
               <span className="text-xs text-slate-500 hidden sm:inline">نظام إدارة التوصيل والعمليات</span>
