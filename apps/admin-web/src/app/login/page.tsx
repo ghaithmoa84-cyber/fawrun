@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import type { LoginResponse } from '@fawrun/shared-types';
+import { SyrianPhoneSchema, type LoginResponse } from '@fawrun/shared-types';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -17,9 +17,11 @@ const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
+    // F8: توحيد تحقق الهاتف (BUG-012)
     const trimmedPhone = whatsapp.trim();
-    if (!trimmedPhone || !/^09\d{8}$/.test(trimmedPhone)) {
-      setError('يرجى إدخل رقم واتساب صحيح (مثال: 0912345678)');
+    const phoneResult = SyrianPhoneSchema.safeParse(trimmedPhone);
+    if (!phoneResult.success) {
+      setError(phoneResult.error.errors[0].message);
       return;
     }
 

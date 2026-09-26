@@ -482,6 +482,27 @@ export class AdminOrderCommandService {
           );
         }
 
+        // F2: منع الإسناد لمندوب لديه طلب نشط (BUG-017)
+        const activeOrdersCount = await tx.order.count({
+          where: {
+            runnerId,
+            status: {
+              in: [
+                'ASSIGNED',
+                'IN_PROGRESS',
+                'OUT_FOR_DELIVERY',
+                'AWAITING_PREFERRED_RUNNER',
+              ],
+            },
+          },
+        });
+
+        if (activeOrdersCount > 0) {
+          throw new ConflictException(
+            'لا يمكن إسناد الطلب للمندوب لوجود طلب نشط قيد التنفيذ لديه مسبقًا',
+          );
+        }
+
         const transitionResult = this.orderStateMachine.transition(
           order.status as OrderStatus,
           'ASSIGNED',
@@ -501,6 +522,22 @@ export class AdminOrderCommandService {
         if (updated.count === 0) {
           throw new UnprocessableEntityException('RUNNER_NOT_AVAILABLE');
         }
+
+        // F3: تسجيل RUNNER_STATUS_CHANGED عند الإسناد (BUG-018)
+        await this.auditService.log(
+          {
+            actorId: adminId,
+            actorRole: 'ADMIN',
+            event: 'RUNNER_STATUS_CHANGED',
+            fromStatus: runner.status,
+            toStatus: 'ON_MISSION',
+            meta: {
+              runnerId,
+              orderId,
+            },
+          },
+          tx,
+        );
 
         const updatedOrder = await tx.order.updateMany({
           where: { id: order.id, status: order.status },

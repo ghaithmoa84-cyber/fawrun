@@ -32,7 +32,8 @@ export class AuthService {
     });
 
     if (existing) {
-      throw new ConflictException('User with this WhatsApp number already exists');
+      // F6c: تعريب رسالة التسجيل المكرر (BUG-025)
+      throw new ConflictException('رقم الواتساب هذا مسجل مسبقًا');
     }
 
     const passwordHash = await bcrypt.hash(dto.password, CONFIG.BCRYPT_ROUNDS);
@@ -103,7 +104,8 @@ export class AuthService {
     });
 
     if (!user || user.isDeleted) {
-      throw new UnauthorizedException('Invalid credentials');
+      // F6: تعريب رسالة المصادقة (BUG-014)
+      throw new UnauthorizedException('رقم الواتساب أو كلمة المرور غير صحيحة');
     }
 
     if (user.status === 'SUSPENDED') {
@@ -111,13 +113,15 @@ export class AuthService {
     }
 
     if (user.status === 'REJECTED') {
-      throw new UnauthorizedException('Account is not active');
+      // F6b: تعريب رسالة REJECTED (BUG-024)
+      throw new UnauthorizedException('حسابك غير مفعّل — يرجى التواصل مع الإدارة');
     }
 
     const passwordValid = await bcrypt.compare(dto.password, user.passwordHash);
 
     if (!passwordValid) {
-      throw new UnauthorizedException('Invalid credentials');
+      // F6: تعريب رسالة المصادقة (BUG-014)
+      throw new UnauthorizedException('رقم الواتساب أو كلمة المرور غير صحيحة');
     }
 
     const accessToken = this.jwtService.sign(
@@ -175,7 +179,8 @@ export class AuthService {
     // Format: selector:secret
     const [selector, secret] = dto.refreshToken.split(':');
     if (!selector || !secret) {
-      throw new UnauthorizedException('Invalid refresh token format');
+      // F6c: تعريب رسالة صيغة الرمز (BUG-025)
+      throw new UnauthorizedException('صيغة رمز التجديد غير صحيحة');
     }
 
     return await this.prisma.$transaction(async (tx) => {
@@ -185,12 +190,13 @@ export class AuthService {
       });
 
       if (!token) {
-        throw new UnauthorizedException('Invalid or expired refresh token');
+        // F6c: تعريب رسالة رمز التجديد (BUG-025)
+        throw new UnauthorizedException('رمز التجديد غير صالح أو منتهي الصلاحية');
       }
 
       const isValid = await bcrypt.compare(secret, token.tokenHash);
       if (!isValid) {
-        throw new UnauthorizedException('Invalid or expired refresh token');
+        throw new UnauthorizedException('رمز التجديد غير صالح أو منتهي الصلاحية');
       }
 
       const user = token.user;
@@ -200,7 +206,8 @@ export class AuthService {
       }
 
       if (user.isDeleted || user.status === 'REJECTED') {
-        throw new UnauthorizedException('Account is not active');
+        // F6c: تعريب رسالة REJECTED في refresh (BUG-025)
+        throw new UnauthorizedException('حسابك غير مفعّل — يرجى التواصل مع الإدارة');
       }
 
       const updateResult = await tx.refreshToken.updateMany({
@@ -209,7 +216,7 @@ export class AuthService {
       });
 
       if (updateResult.count !== 1) {
-        throw new UnauthorizedException('Invalid or expired refresh token');
+        throw new UnauthorizedException('رمز التجديد غير صالح أو منتهي الصلاحية');
       }
 
       const newSecret = randomBytes(32).toString('hex');

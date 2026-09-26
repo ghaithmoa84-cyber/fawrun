@@ -3,13 +3,14 @@ import { useAuth } from '../hooks/useAuth';
 export function SuspendedPage() {
   const { logout } = useAuth();
   const whatsapp = localStorage.getItem('userWhatsapp') || '';
-  const adminWhatsapp = import.meta.env.VITE_ADMIN_WHATSAPP || '09XXXXXXXX';
+  // F9: لا fallback وهمي — إخفاء زر الواتساب إن غاب المتغير (BUG-003)
+  const adminWhatsapp = import.meta.env.VITE_ADMIN_WHATSAPP;
 
-  const cleanedPhone = adminWhatsapp.replace('+', '').replace(/\s/g, '');
+  const cleanedPhone = adminWhatsapp ? adminWhatsapp.replace('+', '').replace(/\s/g, '') : '';
   const msg = encodeURIComponent(
     `مرحباً، تم تعليق حسابي في منصة فَوْراً وأرغب في مراجعة الإدارة بخصوص ذلك. رقمي المسجل: ${whatsapp || '...'}`
   );
-  const whatsappUrl = `https://wa.me/${cleanedPhone}?text=${msg}`;
+  const whatsappUrl = cleanedPhone ? `https://wa.me/${cleanedPhone}?text=${msg}` : '#';
 
   return (
     <div
@@ -51,31 +52,47 @@ export function SuspendedPage() {
         </p>
 
         {/* WhatsApp Contact Button */}
-        <a
-          href={whatsappUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: '10px',
-            width: '100%',
-            padding: '16px',
-            backgroundColor: '#25D366',
-            color: '#ffffff',
-            borderRadius: 'var(--radius)',
-            fontSize: '16px',
-            fontWeight: 800,
-            textDecoration: 'none',
-            boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
-            marginBottom: '20px',
-            transition: 'transform 0.15s ease',
-          }}
-        >
-          <span style={{ fontSize: '20px' }}>📱</span>
-          <span>تواصل مع الإدارة عبر واتساب</span>
-        </a>
+        {adminWhatsapp ? (
+          <a
+            href={whatsappUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '10px',
+              width: '100%',
+              padding: '16px',
+              backgroundColor: '#25D366',
+              color: '#ffffff',
+              borderRadius: 'var(--radius)',
+              fontSize: '16px',
+              fontWeight: 800,
+              textDecoration: 'none',
+              boxShadow: '0 4px 14px rgba(37, 211, 102, 0.4)',
+              marginBottom: '20px',
+              transition: 'transform 0.15s ease',
+            }}
+          >
+            <span style={{ fontSize: '20px' }}>📱</span>
+            <span>تواصل مع الإدارة عبر واتساب</span>
+          </a>
+        ) : (
+          <div
+            style={{
+              padding: '14px',
+              backgroundColor: 'var(--bg-muted, #f1f5f9)',
+              color: 'var(--text-muted)',
+              borderRadius: 'var(--radius)',
+              fontSize: '14px',
+              fontWeight: 600,
+              marginBottom: '20px',
+            }}
+          >
+            يرجى التواصل مع الإدارة عبر القنوات الرسمية
+          </div>
+        )}
 
         {/* Info Box */}
         <div

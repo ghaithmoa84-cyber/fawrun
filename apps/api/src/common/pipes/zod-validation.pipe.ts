@@ -46,6 +46,52 @@ const ENGLISH_FALLBACK_MESSAGES: Record<string, string> = {
   'Password must not exceed 72 bytes': 'كلمة المرور يجب ألا تتجاوز 72 بايت',
 };
 
+// F4: تعريب مسارات الحقول (BUG-011)
+const FIELD_NAME_MAP: Record<string, string> = {
+  items: 'المواد',
+  itemName: 'اسم المادة',
+  quantity: 'الكمية',
+  customStoreName: 'اسم المتجر المخصص',
+  anyStore: 'أي متجر',
+  notes: 'الملاحظات',
+  preferredRunnerId: 'المندوب المفضل',
+  waitForPreferred: 'انتظار المندوب المفضل',
+  deliveryAddress: 'عنوان التوصيل',
+  deliveryLat: 'خط العرض',
+  deliveryLng: 'خط الطول',
+  deliveryDesc: 'وصف العنوان',
+  storeName: 'اسم المتجر',
+  reason: 'السبب',
+  page: 'رقم الصفحة',
+  limit: 'الحد الأقصى',
+  password: 'كلمة المرور',
+  whatsapp: 'رقم الواتساب',
+  name: 'الاسم',
+  altPhone: 'الهاتف البديل',
+  stars: 'التقييم',
+  note: 'الملاحظة',
+  address: 'العنوان',
+  lat: 'خط العرض',
+  lng: 'خط الطول',
+  description: 'الوصف',
+  id: 'المعرف',
+  storeId: 'معرف المتجر',
+};
+
+function formatLocalizedPath(path: (string | number)[]): string {
+  if (!path.length) return '';
+  let result = '';
+  for (const segment of path) {
+    if (typeof segment === 'number' || /^\d+$/.test(String(segment))) {
+      result += `[${segment}]`;
+    } else {
+      const translated = FIELD_NAME_MAP[String(segment)] ?? String(segment);
+      result = result.length > 0 ? `${result}.${translated}` : translated;
+    }
+  }
+  return result;
+}
+
 @Injectable()
 export class ZodValidationPipe implements PipeTransform {
   constructor(private readonly schema: ZodSchema) {}
@@ -57,10 +103,10 @@ export class ZodValidationPipe implements PipeTransform {
         .map((err) => {
           const rawMessage = err.message;
           const localizedMessage = ENGLISH_FALLBACK_MESSAGES[rawMessage] ?? rawMessage;
-          const path = err.path.join('.');
+          const path = formatLocalizedPath(err.path);
           return path ? `${path}: ${localizedMessage}` : localizedMessage;
         })
-        .join(', ');
+        .join('، ');
       throw new BadRequestException(errorMessages);
     }
     return result.data;

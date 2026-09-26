@@ -5,14 +5,12 @@ import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
-import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
-import { z } from 'zod';
-
-const PaginationQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-});
-type PaginationQueryRequest = z.infer<typeof PaginationQuerySchema>;
+import {
+  CuidParamSchema,
+  type CuidParamRequest,
+  PaginationQuerySchema,
+  type PaginationQueryRequest,
+} from '@fawrun/shared-types';
 
 @Controller('admin/users')
 @UseGuards(VerifiedUserGuard, RolesGuard)

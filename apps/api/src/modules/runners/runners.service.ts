@@ -187,6 +187,17 @@ export class RunnersService {
       return null;
     }
 
+    // F2: كشف الطلبات النشطة المخفية (BUG-017)
+    const activeOrdersCount = await this.prisma.order.count({
+      where: {
+        runnerId: runner.id,
+        status: {
+          in: ['ASSIGNED', 'IN_PROGRESS', 'OUT_FOR_DELIVERY'],
+        },
+      },
+    });
+    const hasMoreActive = activeOrdersCount > 1;
+
     return {
       id: activeOrder.id,
       orderNumber: activeOrder.orderNumber!,
@@ -236,6 +247,8 @@ export class RunnersService {
           uploadedAt: receipt.uploadedAt.toISOString(),
         })),
       })),
+      activeOrdersCount,
+      hasMoreActive,
     };
   }
 

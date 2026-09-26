@@ -15,15 +15,11 @@ import {
   type UpdateRunnerRequest,
   type UpdateVisibilityRequest,
   type RunnerStatusUpdate,
+  CuidParamSchema,
+  type CuidParamRequest,
+  PaginationQuerySchema,
+  type PaginationQueryRequest,
 } from '@fawrun/shared-types';
-import { CuidParamSchema, type CuidParamRequest } from '@fawrun/shared-types';
-import { z } from 'zod';
-
-const PaginationQuerySchema = z.object({
-  page: z.coerce.number().int().min(1).default(1),
-  limit: z.coerce.number().int().min(1).max(100).default(20),
-});
-type PaginationQueryRequest = z.infer<typeof PaginationQuerySchema>;
 
 @Controller('admin/runners')
 @UseGuards(VerifiedUserGuard, RolesGuard)
