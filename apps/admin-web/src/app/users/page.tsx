@@ -148,7 +148,7 @@ const USER_STATUS_DOT: Record<UserStatus, string> = {
             onClick={() => setStatusFilter('ALL')}
             className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
               statusFilter === 'ALL'
-                ? 'bg-[#00C1A7] text-white font-bold shadow-xs'
+                ? 'bg-[#7DDDD4] text-white font-bold shadow-xs'
                 : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
             }`}
           >
@@ -160,7 +160,7 @@ const USER_STATUS_DOT: Record<UserStatus, string> = {
               onClick={() => setStatusFilter(status)}
               className={`px-3 py-1.5 rounded-lg whitespace-nowrap transition-all ${
                 statusFilter === status
-                  ? 'bg-[#00C1A7] text-white font-bold shadow-xs'
+                  ? 'bg-[#7DDDD4] text-white font-bold shadow-xs'
                   : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
               }`}
             >
@@ -176,7 +176,7 @@ const USER_STATUS_DOT: Record<UserStatus, string> = {
         <div className="sm:hidden p-4 space-y-3">
           {loading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
-              <span className="w-5 h-5 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-5 h-5 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
               <span>جاري تحميل قائمة العملاء...</span>
             </div>
           ) : filteredUsers.length === 0 ? (
@@ -267,7 +267,7 @@ const USER_STATUS_DOT: Record<UserStatus, string> = {
                 <tr>
                   <td colSpan={5} className="px-5 py-12 text-center text-slate-400">
                     <div className="flex items-center justify-center gap-2">
-                      <span className="w-4 h-4 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+                      <span className="w-4 h-4 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
                       <span>جاري تحميل قائمة العملاء...</span>
                     </div>
                   </td>
@@ -440,3 +440,8 @@ const USER_STATUS_DOT: Record<UserStatus, string> = {
     </div>
   );
 }
+
+
+
+
+

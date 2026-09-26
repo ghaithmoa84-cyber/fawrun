@@ -68,11 +68,11 @@ export function LoginPage() {
     <div className="login-wrapper" style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '20px' }}>
       <div className="card" style={{ maxWidth: '420px', width: '100%', padding: '32px 24px', boxShadow: 'var(--shadow-lg)' }}>
         <div style={{ textAlign: 'center', marginBottom: '28px' }}>
-          <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <span className="brand-dot" style={{ width: '16px', height: '16px' }} />
-            <span className="brand-name" style={{ fontSize: '26px' }}>FORERUN</span>
-            <span className="brand-sub">فَوْراً</span>
-          </div>
+          <img
+            src="/logo.png"
+            alt="FORERUN"
+            style={{ height: '60px', width: 'auto', objectFit: 'contain', marginBottom: '12px' }}
+          />
           <h1 className="page-title" style={{ fontSize: '20px', marginBottom: '6px' }}>
             تسجيل دخول العميل
           </h1>

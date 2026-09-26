@@ -42,9 +42,11 @@ export function Layout() {
       {/* Top Header */}
       <header className="app-header">
         <div className="app-header__brand">
-          <span className="brand-dot" />
-          <span className="brand-name">FORERUN</span>
-          <span className="brand-sub">فَوْراً</span>
+          <img
+            src="/logo.png"
+            alt="FORERUN"
+            style={{ height: '32px', width: 'auto', objectFit: 'contain' }}
+          />
         </div>
 
         {user && (

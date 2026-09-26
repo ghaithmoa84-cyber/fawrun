@@ -204,7 +204,7 @@ export default function OrderDetailPage() {
   if (loading) {
     return (
       <div className="py-20 flex flex-col items-center justify-center gap-3">
-        <span className="w-6 h-6 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+        <span className="w-6 h-6 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
         <span className="text-xs font-bold text-slate-500">جاري تحميل تفاصيل الطلب...</span>
       </div>
     );
@@ -219,10 +219,10 @@ export default function OrderDetailPage() {
         <p className="text-sm font-bold text-slate-800">
           {error || 'تعذّر تحميل الطلب'}
         </p>
-        <button
-          onClick={fetchOrderData}
-          className="px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs transition-colors shadow-xs"
-        >
+<button
+              onClick={fetchOrderData}
+              className="px-4 py-2 bg-[#7DDDD4] hover:bg-[#5CCFC5] text-white font-bold rounded-xl text-xs transition-colors shadow-xs"
+            >
           إعادة المحاولة
         </button>
       </div>
@@ -262,7 +262,7 @@ export default function OrderDetailPage() {
                   type="checkbox"
                   checked={isPeripheralChecked}
                   onChange={(e) => setIsPeripheralChecked(e.target.checked)}
-                  className="rounded text-[#00C1A7] focus:ring-[#00C1A7]"
+                  className="rounded text-[#7DDDD4] focus:ring-[#7DDDD4]"
                 />
                 <span>منطقة نائية (طرفية)</span>
               </label>
@@ -291,7 +291,7 @@ export default function OrderDetailPage() {
               <select
                 value={selectedRunnerId}
                 onChange={(e) => setSelectedRunnerId(e.target.value)}
-                className="w-full sm:w-auto px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-hidden focus:border-[#00C1A7]"
+                className="w-full sm:w-auto px-3 py-2 bg-white border border-slate-300 rounded-xl text-xs font-bold text-slate-800 outline-hidden focus:border-[#7DDDD4]"
               >
                 <option value="">-- اختيار مندوب للتعيين --</option>
                 {availableRunners.map((r) => (
@@ -304,7 +304,7 @@ export default function OrderDetailPage() {
               <button
                 onClick={handleAssignRunner}
                 disabled={actionLoading || !selectedRunnerId}
-                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-xl text-xs shadow-md disabled:opacity-50"
+                className="w-full sm:w-auto inline-flex items-center justify-center px-4 py-2 bg-[#7DDDD4] hover:bg-[#5CCFC5] text-white font-bold rounded-xl text-xs shadow-md disabled:opacity-50"
               >
                 تعيين المندوب
               </button>
@@ -410,7 +410,7 @@ export default function OrderDetailPage() {
 
             <div className="flex justify-between text-sm font-black text-slate-900 pt-3 border-t border-slate-100">
               <span>الإجمالي:</span>
-              <span className="text-[#008f7a]">{formatCurrency(order.totalFee)}</span>
+              <span className="text-[#3ABFB5]">{formatCurrency(order.totalFee)}</span>
             </div>
           </div>
         </div>
@@ -518,7 +518,7 @@ export default function OrderDetailPage() {
                         <div
                           key={rec.id}
                           onClick={() => setPreviewImage(rec.imageUrl)}
-                          className="w-20 h-20 rounded-xl overflow-hidden border border-slate-300 hover:border-[#00C1A7] cursor-pointer shadow-xs shrink-0 transition-all"
+                          className="w-20 h-20 rounded-xl overflow-hidden border border-slate-300 hover:border-[#7DDDD4] cursor-pointer shadow-xs shrink-0 transition-all"
                         >
                           <img
                             src={rec.imageUrl}
@@ -612,7 +612,7 @@ export default function OrderDetailPage() {
           <div className="relative pl-4 space-y-4 border-r-2 border-slate-200 pr-4 mr-2">
             {auditLogs.map((log) => (
               <div key={log.id} className="relative">
-                <span className="absolute -right-[23px] top-1 w-3 h-3 rounded-full bg-[#00C1A7] border-2 border-white shadow-xs"></span>
+                <span className="absolute -right-[23px] top-1 w-3 h-3 rounded-full bg-[#7DDDD4] border-2 border-white shadow-xs"></span>
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs">
                   <span className="font-bold text-slate-800">{log.event}</span>
                   <span className="text-slate-400 font-mono text-[11px]">

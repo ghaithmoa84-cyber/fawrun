@@ -373,7 +373,7 @@ export default function DashboardPage() {
         <div className="overflow-x-auto">
           {ordersLoading && pendingOrders.length === 0 ? (
             <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
-              <span className="w-6 h-6 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+              <span className="w-6 h-6 border-2 border-[#7DDDD4] border-t-transparent rounded-full animate-spin"></span>
               <span>جاري تحميل الطلبات الواردة...</span>
             </div>
           ) : pendingOrders.length === 0 ? (
@@ -400,7 +400,7 @@ export default function DashboardPage() {
                       key={order.id}
                       className={`transition-colors duration-500 ${
                         isHighlighted
-                          ? 'bg-[#00C1A7]/15 ring-2 ring-[#00C1A7]'
+                          ? 'bg-[#7DDDD4]/15 ring-2 ring-[#7DDDD4]'
                           : 'hover:bg-slate-50/80'
                       }`}
                     >
@@ -424,7 +424,7 @@ export default function DashboardPage() {
                       <td className="py-3.5 px-4 text-left">
                         <Link
                           href={`/orders/${order.id}`}
-                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#00C1A7] hover:bg-[#00a892] text-white font-bold rounded-lg text-xs shadow-xs transition-transform active:scale-95"
+                          className="inline-flex items-center gap-1 px-3 py-1.5 bg-[#7DDDD4] hover:bg-[#5CCFC5] text-white font-bold rounded-lg text-xs shadow-xs transition-transform active:scale-95"
                         >
                           <span>راجع</span>
                           <span>←</span>
@@ -512,7 +512,7 @@ export default function DashboardPage() {
               </div>
               <Link
                 href="/settlements"
-                className="text-[11px] font-bold text-[#00C1A7] hover:underline mt-1 inline-block"
+                className="text-[11px] font-bold text-[#7DDDD4] hover:underline mt-1 inline-block"
               >
                 إدارة التسويات المعلقة ←
               </Link>
@@ -523,3 +523,7 @@ export default function DashboardPage() {
     </div>
   );
 }
+
+
+
+
