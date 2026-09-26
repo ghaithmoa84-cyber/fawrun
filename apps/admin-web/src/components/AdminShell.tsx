@@ -62,7 +62,12 @@ export function AdminShell({ children }: AdminShellProps) {
   const pathname = usePathname();
   const [adminName, setAdminName] = useState<string>('المدير');
   const [isLoggingOut, setIsLoggingOut] = useState<boolean>(false);
+  const [drawerOpen, setDrawerOpen] = useState<boolean>(false);
   const isLoginPage = pathname === '/login';
+
+  useEffect(() => {
+    setDrawerOpen(false);
+  }, [pathname]);
 
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -105,20 +110,47 @@ export function AdminShell({ children }: AdminShellProps) {
     <div className="min-h-screen bg-slate-50 text-slate-800 flex" dir="rtl">
       <AdminWebSocketListener />
 
-      {/* Sidebar */}
-      <aside className="w-64 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-sm z-20">
+      {/* Backdrop for mobile drawer */}
+      {drawerOpen && (
+        <div
+          className="fixed inset-0 bg-slate-900/40 backdrop-blur-xs z-30 md:hidden transition-opacity"
+          onClick={() => setDrawerOpen(false)}
+          aria-hidden="true"
+        />
+      )}
+
+      {/* Sidebar / Mobile Drawer */}
+      <aside
+        className={`fixed inset-y-0 right-0 z-40 w-64 bg-white border-l border-slate-200 flex flex-col shrink-0 shadow-xl md:shadow-sm md:static md:translate-x-0 transition-transform duration-300 ease-in-out ${
+          drawerOpen ? 'translate-x-0' : 'translate-x-full md:translate-x-0'
+        }`}
+      >
         {/* Brand Header */}
-        <div className="h-16 px-6 border-b border-slate-200 flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-[#00C1A7] text-white flex items-center justify-center font-bold text-lg shadow-sm">
-            ⚡
-          </div>
-          <div>
-            <div className="flex items-center gap-1.5">
-              <span className="font-extrabold text-lg text-[#00C1A7] tracking-tight">FORERUN</span>
-              <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">فَوْراً</span>
+        <div className="h-16 px-6 border-b border-slate-200 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-[#00C1A7] text-white flex items-center justify-center font-bold text-lg shadow-sm">
+              ⚡
             </div>
-            <div className="text-[11px] text-slate-500 font-medium">لوحة الإدارة المركزية</div>
+            <div>
+              <div className="flex items-center gap-1.5">
+                <span className="font-extrabold text-lg text-[#00C1A7] tracking-tight">FORERUN</span>
+                <span className="text-xs bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded font-medium">فَوْراً</span>
+              </div>
+              <div className="text-[11px] text-slate-500 font-medium">لوحة الإدارة المركزية</div>
+            </div>
           </div>
+
+          {/* Close button on mobile */}
+          <button
+            type="button"
+            onClick={() => setDrawerOpen(false)}
+            className="md:hidden p-1.5 rounded-lg text-slate-400 hover:text-slate-600 hover:bg-slate-100 transition-colors"
+            aria-label="إغلاق القائمة"
+          >
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
         </div>
 
         {/* Navigation Links */}
@@ -129,6 +161,7 @@ export function AdminShell({ children }: AdminShellProps) {
               <Link
                 key={item.href}
                 href={item.href}
+                onClick={() => setDrawerOpen(false)}
                 className={`flex items-center gap-3 px-3.5 py-2.5 rounded-lg text-sm font-medium transition-all ${
                   isActive
                     ? 'bg-[#00C1A7]/10 text-[#008f7a] font-semibold shadow-xs'
@@ -152,16 +185,30 @@ export function AdminShell({ children }: AdminShellProps) {
       </aside>
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0">
+      <div className="flex-1 flex flex-col min-w-0 w-full">
         {/* Top Header */}
-        <header className="h-16 bg-white border-b border-slate-200 px-6 flex items-center justify-between shadow-xs sticky top-0 z-10">
-          <div className="flex items-center gap-2">
-            <h1 className="text-base font-bold text-slate-800">FORERUN Admin</h1>
-            <span className="text-xs text-slate-400">|</span>
-            <span className="text-xs text-slate-500">نظام إدارة التوصيل والعمليات</span>
+        <header className="h-16 bg-white border-b border-slate-200 px-4 md:px-6 flex items-center justify-between shadow-xs sticky top-0 z-10">
+          <div className="flex items-center gap-3">
+            {/* Hamburger Button for mobile */}
+            <button
+              type="button"
+              onClick={() => setDrawerOpen(true)}
+              className="md:hidden p-2 -mr-2 rounded-lg text-slate-600 hover:text-slate-900 hover:bg-slate-100 transition-colors"
+              aria-label="فتح القائمة الجانبية"
+            >
+              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 6h16M4 12h16M4 18h16" />
+              </svg>
+            </button>
+
+            <div className="flex items-center gap-2">
+              <h1 className="text-base font-bold text-slate-800">FORERUN Admin</h1>
+              <span className="text-xs text-slate-400 hidden sm:inline">|</span>
+              <span className="text-xs text-slate-500 hidden sm:inline">نظام إدارة التوصيل والعمليات</span>
+            </div>
           </div>
 
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-2 md:gap-4">
             <div className="flex items-center gap-2 bg-slate-100 py-1.5 px-3 rounded-lg text-xs font-medium text-slate-700">
               <span className="w-2 h-2 rounded-full bg-[#00C1A7]"></span>
               <span>مرحباً، {adminName}</span>
@@ -181,7 +228,7 @@ export function AdminShell({ children }: AdminShellProps) {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto">
           <div className="max-w-7xl mx-auto w-full">{children}</div>
         </main>
       </div>

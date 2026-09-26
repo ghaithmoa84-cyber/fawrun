@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import api from '@/lib/api';
 import { useToast } from '@/components/Toast';
@@ -138,7 +139,7 @@ export default function OrdersPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
           <h1 className="text-2xl font-black text-slate-900">إدارة الطلبات والعمليات</h1>
           <p className="text-xs text-slate-500 mt-1">
@@ -147,12 +148,12 @@ export default function OrdersPage() {
         </div>
 
         {/* Date Filter */}
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
           <input
             type="date"
             value={dateFilter}
             onChange={(e) => setDateFilter(e.target.value)}
-            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-hidden focus:border-[#00C1A7]"
+            className="px-3 py-2 bg-white border border-slate-200 rounded-xl text-xs font-medium text-slate-700 outline-hidden focus:border-[#00C1A7] w-full sm:w-auto"
           />
           {dateFilter && (
             <button
@@ -192,9 +193,74 @@ export default function OrdersPage() {
         ))}
       </div>
 
-      {/* Orders Table */}
+      {/* Orders Container */}
       <div className="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
+        {/* Mobile Cards (sm:hidden) */}
+        <div className="sm:hidden p-4 space-y-3">
+          {loading ? (
+            <div className="py-12 flex flex-col items-center justify-center gap-2 text-slate-400 text-xs">
+              <span className="w-5 h-5 border-2 border-[#00C1A7] border-t-transparent rounded-full animate-spin"></span>
+              <span>جاري تحميل سجل الطلبات...</span>
+            </div>
+          ) : orders.length === 0 ? (
+            <div className="py-10 text-center text-slate-400 text-xs">
+              لا توجد طلبات تطابق معايير البحث الحالية.
+            </div>
+          ) : (
+            orders.map((order) => (
+              <div
+                key={order.id}
+                className="bg-white rounded-xl border border-slate-200 p-4 shadow-xs space-y-3"
+              >
+                {/* السطر الأول: رقم الطلب + شارة الحالة */}
+                <div className="flex items-center justify-between">
+                  <span className="font-mono font-bold text-slate-900 text-sm" dir="ltr">
+                    #{order.orderNumber}
+                  </span>
+                  <div>{getStatusBadge(order.status)}</div>
+                </div>
+
+                {/* السطر الثاني: العميل */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">العميل</span>
+                  <span className="font-bold text-slate-800">{order.customerName || 'عميل'}</span>
+                </div>
+
+                {/* السطر الثالث: المندوب */}
+                <div className="flex justify-between items-center text-xs">
+                  <span className="text-slate-500 font-medium">المندوب</span>
+                  <span className="font-semibold text-slate-700">
+                    {order.runnerName ? (
+                      `🏃 ${order.runnerName}`
+                    ) : order.preferredRunner?.name ? (
+                      <span className="text-purple-600 font-medium">⭐ المفضل: {order.preferredRunner.name}</span>
+                    ) : (
+                      <span className="text-slate-400 italic">لم يُعيّن</span>
+                    )}
+                  </span>
+                </div>
+
+                {/* السطر الرابع: الرسوم + التاريخ */}
+                <div className="flex justify-between items-center text-xs pt-2 border-t border-slate-100">
+                  <span className="font-bold text-slate-900">{formatCurrency(order.totalFee)}</span>
+                  <span className="text-slate-400 text-[11px] font-mono">{formatDate(order.createdAt)}</span>
+                </div>
+
+                {/* زر التفاصيل */}
+                <Link
+                  href={`/orders/${order.id}`}
+                  className="w-full inline-flex items-center justify-center px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-700 text-xs font-bold rounded-lg border border-slate-200 transition-colors"
+                >
+                  <span>عرض التفاصيل</span>
+                  <span className="text-xs mr-1">←</span>
+                </Link>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* Desktop Table (hidden sm:block) */}
+        <div className="hidden sm:block overflow-x-auto">
           <table className="w-full text-right text-xs">
             <thead className="bg-slate-50/75 border-b border-slate-200 text-slate-600 font-bold">
               <tr>
@@ -269,25 +335,25 @@ export default function OrdersPage() {
         </div>
 
         {/* Pagination Footer */}
-        <div className="px-5 py-4 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500 bg-slate-50/50">
-          <div>
+        <div className="px-5 py-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-slate-500 bg-slate-50/50">
+          <div className="text-center sm:text-right w-full sm:w-auto">
             إجمالي الطلبات: <span className="font-bold text-slate-800">{meta.total}</span> (صفحة{' '}
             <span className="font-bold text-slate-800">{meta.page}</span> من{' '}
             <span className="font-bold text-slate-800">{meta.totalPages || 1}</span>)
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-center gap-2 w-full sm:w-auto">
             <button
               onClick={() => fetchOrders(meta.page - 1)}
               disabled={meta.page <= 1 || loading}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed justify-center inline-flex items-center"
             >
               السابق
             </button>
             <button
               onClick={() => fetchOrders(meta.page + 1)}
               disabled={meta.page >= meta.totalPages || loading}
-              className="px-3 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full sm:w-auto px-4 py-1.5 bg-white border border-slate-200 rounded-lg font-bold text-slate-700 hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed justify-center inline-flex items-center"
             >
               التالي
             </button>
