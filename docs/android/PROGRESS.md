@@ -305,7 +305,7 @@ must be corrected to match `Color.kt` during Compose implementation.
   4. **Register:** `RegisterScreen` + `RegisterViewModel` with full client-side validation, Al-Qanjara address stub (`lat = 35.5234`, `lng = 35.9876`), and routing to pending verification.
   5. **Pending Verification:** `PendingVerificationScreen` + `PendingVerificationViewModel` with status warning badge, WhatsApp direct button (`wa.me`), and logout.
   6. **Suspended:** `SuspendedScreen` + `SuspendedViewModel` with danger badge, support contact button, and logout.
-  7. **Home (Stub):** `HomeScreen` + `HomeViewModel` displaying personalized greeting, verified badge, Sprint 1.5 coming soon notice, and logout.
+  7. **Home (Stub):** `HomeScreen` + `HomeViewModel` displaying personalized greeting, verified badge, Sprint 2 coming soon notice, and logout.
 - **Session Expiration Event Handling:**
   - `MainActivity` injects `@Singleton TokenRefreshManager` and provides it to `ForerunNavGraph`.
   - When silent refresh fails (`handleSessionExpired()`), `sessionExpiredEvent` emits and automatically resets navigation backstack directly to `Routes.LOGIN`.
@@ -327,7 +327,7 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 **Repository:** `github.com/ghaithmoa84-cyber/forerun`
 **Active branch:** `feature/android-sprint-1-4-auth-flow`
-**Next Sprint:** Sprint 1.5 (Grocery Catalog & Ordering)
+**Next Sprint:** Sprint 2 (Home + Address + Create Order)
 
 
 
