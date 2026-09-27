@@ -65,10 +65,10 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
 
-    // Moshi
+    // Moshi (codegen via KSP - no reflection)
     implementation(libs.moshi.core)
-    implementation(libs.moshi.kotlin)
     ksp(libs.moshi.kotlin.codegen)
+
 
     // Secure Storage
     implementation(libs.androidx.security.crypto)

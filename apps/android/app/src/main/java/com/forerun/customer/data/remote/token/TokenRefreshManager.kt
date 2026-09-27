@@ -1,17 +1,22 @@
 package com.forerun.customer.data.remote.token
 
+import com.forerun.customer.core.network.ApiResponse
 import com.forerun.customer.core.storage.TokenStorage
+import com.forerun.customer.data.remote.api.AuthApi
+import com.forerun.customer.data.remote.dto.auth.RefreshRequest
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.sync.Mutex
 import kotlinx.coroutines.sync.withLock
 import javax.inject.Inject
+import javax.inject.Provider
 import javax.inject.Singleton
 
 @Singleton
 class TokenRefreshManager @Inject constructor(
-    private val tokenStorage: TokenStorage
+    private val tokenStorage: TokenStorage,
+    private val authApiProvider: Provider<AuthApi>
 ) {
     private val refreshMutex = Mutex()
 
@@ -26,9 +31,7 @@ class TokenRefreshManager @Inject constructor(
         return (expiry - now) < tenMinutesMillis
     }
 
-    suspend fun refreshTokenIfNeeded(
-        performRefresh: (suspend (refreshToken: String) -> Boolean)? = null
-    ): Boolean {
+    suspend fun refreshTokenIfNeeded(): Boolean {
         if (!shouldRefresh()) {
             return true
         }
@@ -45,21 +48,23 @@ class TokenRefreshManager @Inject constructor(
                 return@withLock false
             }
 
-            if (performRefresh != null) {
-                try {
-                    val success = performRefresh(refreshToken)
-                    if (!success) {
-                        handleSessionExpired()
-                        return@withLock false
+            return@withLock try {
+                val authApi = authApiProvider.get()
+                when (val response = authApi.refresh(RefreshRequest(refreshToken))) {
+                    is ApiResponse.Success -> {
+                        tokenStorage.setAccessToken(response.data.accessToken)
+                        tokenStorage.setRefreshToken(response.data.refreshToken)
+                        tokenStorage.setTokenExpiry(System.currentTimeMillis() + 2 * 3600 * 1000L)
+                        true
                     }
-                    true
-                } catch (_: Exception) {
-                    handleSessionExpired()
-                    false
+                    is ApiResponse.Error -> {
+                        handleSessionExpired()
+                        false
+                    }
                 }
-            } else {
-                // In Sprint 1.3, actual network refresh wiring is in place
-                true
+            } catch (_: Exception) {
+                handleSessionExpired()
+                false
             }
         }
     }
@@ -69,3 +74,4 @@ class TokenRefreshManager @Inject constructor(
         _sessionExpiredEvent.tryEmit(Unit)
     }
 }
+

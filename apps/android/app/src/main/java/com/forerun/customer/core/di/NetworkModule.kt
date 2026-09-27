@@ -6,7 +6,6 @@ import com.forerun.customer.core.network.interceptor.AuthInterceptor
 import com.forerun.customer.core.network.interceptor.HeaderInterceptor
 import com.forerun.customer.core.network.interceptor.RefreshInterceptor
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,10 +26,9 @@ object NetworkModule {
     @Provides
     @Singleton
     fun provideMoshi(): Moshi {
-        return Moshi.Builder()
-            .addLast(KotlinJsonAdapterFactory())
-            .build()
+        return Moshi.Builder().build()
     }
+
 
     @Provides
     @Singleton

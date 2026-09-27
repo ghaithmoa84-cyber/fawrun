@@ -24,19 +24,25 @@ class RefreshInterceptor @Inject constructor(
             if (!isRetry && !isAuthEndpoint) {
                 response.close()
 
-                val newAccessToken = tokenStorage.getAccessToken()
-                if (newAccessToken != null) {
-                    val retryRequest = request.newBuilder()
-                        .header("Authorization", "Bearer $newAccessToken")
-                        .header(HEADER_RETRY_AFTER_REFRESH, "true")
-                        .build()
-                    return chain.proceed(retryRequest)
-                } else {
-                    tokenRefreshManager.handleSessionExpired()
+                val refreshed = kotlinx.coroutines.runBlocking {
+                    tokenRefreshManager.refreshTokenIfNeeded()
                 }
+
+                if (refreshed) {
+                    val newAccessToken = tokenStorage.getAccessToken()
+                    if (newAccessToken != null) {
+                        val retryRequest = request.newBuilder()
+                            .header("Authorization", "Bearer $newAccessToken")
+                            .header(HEADER_RETRY_AFTER_REFRESH, "true")
+                            .build()
+                        return chain.proceed(retryRequest)
+                    }
+                }
+                tokenRefreshManager.handleSessionExpired()
             } else if (isRetry) {
                 tokenRefreshManager.handleSessionExpired()
             }
+
         }
 
         return response

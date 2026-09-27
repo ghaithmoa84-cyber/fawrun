@@ -1,7 +1,7 @@
 package com.forerun.customer.core.network
 
+import com.squareup.moshi.JsonClass
 import com.squareup.moshi.Moshi
-import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
 import kotlinx.coroutines.runBlocking
 import okhttp3.OkHttpClient
 import okhttp3.mockwebserver.MockResponse
@@ -20,16 +20,16 @@ class ApiCallAdapterTest {
 
     private lateinit var mockWebServer: MockWebServer
     private lateinit var testApi: TestApi
-    private val moshi = Moshi.Builder()
-        .addLast(KotlinJsonAdapterFactory())
-        .build()
+    private val moshi = Moshi.Builder().build()
 
     interface TestApi {
         @GET("test")
         suspend fun getData(): ApiResponse<TestData>
     }
 
+    @JsonClass(generateAdapter = true)
     data class TestData(val name: String)
+
 
     @Before
     fun setup() {
