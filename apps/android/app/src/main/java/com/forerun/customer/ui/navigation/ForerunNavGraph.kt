@@ -1,14 +1,20 @@
 package com.forerun.customer.ui.navigation
 
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import com.forerun.customer.data.remote.token.TokenRefreshManager
+import com.forerun.customer.ui.auth.login.LoginScreen
+import com.forerun.customer.ui.auth.register.RegisterScreen
+import com.forerun.customer.ui.auth.status.PendingVerificationScreen
+import com.forerun.customer.ui.auth.status.SuspendedScreen
+import com.forerun.customer.ui.home.HomeScreen
+import com.forerun.customer.ui.onboarding.OnboardingScreen
+import com.forerun.customer.ui.splash.SplashDestination
+import com.forerun.customer.ui.splash.SplashScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -24,22 +30,33 @@ object Routes {
 fun ForerunNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
-    startDestination: String = Routes.SPLASH
+    startDestination: String = Routes.SPLASH,
+    tokenRefreshManager: TokenRefreshManager? = null
 ) {
+    if (tokenRefreshManager != null) {
+        LaunchedEffect(tokenRefreshManager) {
+            tokenRefreshManager.sessionExpiredEvent.collect {
+                navController.navigate(Routes.LOGIN) {
+                    popUpTo(0) { inclusive = true }
+                }
+            }
+        }
+    }
+
     NavHost(
         navController = navController,
         startDestination = startDestination,
         modifier = modifier
     ) {
         composable(Routes.SPLASH) {
-            com.forerun.customer.ui.splash.SplashScreen(
+            SplashScreen(
                 onNavigate = { destination ->
                     val targetRoute = when (destination) {
-                        com.forerun.customer.ui.splash.SplashDestination.Onboarding -> Routes.ONBOARDING
-                        com.forerun.customer.ui.splash.SplashDestination.Login -> Routes.LOGIN
-                        com.forerun.customer.ui.splash.SplashDestination.Home -> Routes.HOME
-                        com.forerun.customer.ui.splash.SplashDestination.PendingVerification -> Routes.PENDING_VERIFICATION
-                        com.forerun.customer.ui.splash.SplashDestination.Suspended -> Routes.SUSPENDED
+                        SplashDestination.Onboarding -> Routes.ONBOARDING
+                        SplashDestination.Login -> Routes.LOGIN
+                        SplashDestination.Home -> Routes.HOME
+                        SplashDestination.PendingVerification -> Routes.PENDING_VERIFICATION
+                        SplashDestination.Suspended -> Routes.SUSPENDED
                     }
                     navController.navigate(targetRoute) {
                         popUpTo(Routes.SPLASH) { inclusive = true }
@@ -48,7 +65,7 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.ONBOARDING) {
-            com.forerun.customer.ui.onboarding.OnboardingScreen(
+            OnboardingScreen(
                 onNavigateToLogin = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(Routes.ONBOARDING) { inclusive = true }
@@ -57,7 +74,7 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.LOGIN) {
-            com.forerun.customer.ui.auth.login.LoginScreen(
+            LoginScreen(
                 onNavigateToHome = {
                     navController.navigate(Routes.HOME) {
                         popUpTo(Routes.LOGIN) { inclusive = true }
@@ -79,7 +96,7 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.REGISTER) {
-            com.forerun.customer.ui.auth.register.RegisterScreen(
+            RegisterScreen(
                 onNavigateToPending = {
                     navController.navigate(Routes.PENDING_VERIFICATION) {
                         popUpTo(Routes.LOGIN) { inclusive = false }
@@ -91,7 +108,7 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.PENDING_VERIFICATION) {
-            com.forerun.customer.ui.auth.status.PendingVerificationScreen(
+            PendingVerificationScreen(
                 onNavigateToLogin = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
@@ -100,7 +117,7 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.SUSPENDED) {
-            com.forerun.customer.ui.auth.status.SuspendedScreen(
+            SuspendedScreen(
                 onNavigateToLogin = {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
@@ -109,9 +126,13 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.HOME) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Home Stub")
-            }
+            HomeScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
     }
 }

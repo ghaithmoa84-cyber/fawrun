@@ -37,6 +37,9 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var authApi: AuthApi
 
+    @Inject
+    lateinit var tokenRefreshManager: com.forerun.customer.data.remote.token.TokenRefreshManager
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.dark(
@@ -54,7 +57,10 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    ForerunNavGraph(navController = navController)
+                    ForerunNavGraph(
+                        navController = navController,
+                        tokenRefreshManager = tokenRefreshManager
+                    )
                 }
             }
         }
