@@ -32,9 +32,20 @@ fun ForerunNavGraph(
         modifier = modifier
     ) {
         composable(Routes.SPLASH) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Splash Screen Stub")
-            }
+            com.forerun.customer.ui.splash.SplashScreen(
+                onNavigate = { destination ->
+                    val targetRoute = when (destination) {
+                        com.forerun.customer.ui.splash.SplashDestination.Onboarding -> Routes.ONBOARDING
+                        com.forerun.customer.ui.splash.SplashDestination.Login -> Routes.LOGIN
+                        com.forerun.customer.ui.splash.SplashDestination.Home -> Routes.HOME
+                        com.forerun.customer.ui.splash.SplashDestination.PendingVerification -> Routes.PENDING_VERIFICATION
+                        com.forerun.customer.ui.splash.SplashDestination.Suspended -> Routes.SUSPENDED
+                    }
+                    navController.navigate(targetRoute) {
+                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Routes.ONBOARDING) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {

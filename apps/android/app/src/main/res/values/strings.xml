@@ -1,5 +1,69 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <!-- App Branding -->
     <string name="app_name">فَوْراً</string>
     <string name="app_name_latin" translatable="false">FORERUN</string>
+    <string name="splash_tagline">طلبك لعندك… فَوْراً</string>
+
+    <!-- Onboarding -->
+    <string name="onboarding_skip">تخطي</string>
+    <string name="onboarding_next">التالي</string>
+    <string name="onboarding_start">ابدأ الآن</string>
+    <string name="onboarding_title_1">طلبات البقالة في دقائق</string>
+    <string name="onboarding_desc_1">اكتب طلبك بالشكل الذي يناسبك، وسيتولى الكابتن شراء وتوصيل كل ما تحتاجه.</string>
+    <string name="onboarding_title_2">كباتن موثوقون وأسعار واضحة</string>
+    <string name="onboarding_desc_2">أسعار المنتجات كما هي في المحل تماماً مع رسوم توصيل ثابتة وشفافة.</string>
+    <string name="onboarding_title_3">تتبع مباشر وتواصل سريع</string>
+    <string name="onboarding_desc_3">تتبع حالة طلبك لحظة بلحظة وتواصل مع الكابتن مباشرة عبر الواتساب أو الاتصال.</string>
+
+    <!-- Auth Common -->
+    <string name="phone_number_label">رقم الواتساب</string>
+    <string name="phone_number_hint">09xxxxxxxx</string>
+    <string name="password_label">كلمة المرور</string>
+    <string name="password_hint">••••••••</string>
+    <string name="logout">تسجيل الخروج</string>
+
+    <!-- Login -->
+    <string name="login_title">تسجيل الدخول</string>
+    <string name="login_subtitle">أهلاً بك مجدداً في فَوْراً</string>
+    <string name="login_button">تسجيل الدخول</string>
+    <string name="dont_have_account">ليس لديك حساب؟</string>
+    <string name="register_action">إنشاء حساب جديد</string>
+
+    <!-- Register -->
+    <string name="register_title">إنشاء حساب جديد</string>
+    <string name="register_subtitle">انضم إلى فَوْراً واستمتع بتوصيل سريع</string>
+    <string name="name_label">الاسم الكامل</string>
+    <string name="name_hint">مثال: أحمد محمد</string>
+    <string name="alt_phone_label">رقم بديل (اختياري)</string>
+    <string name="alt_phone_hint">09xxxxxxxx</string>
+    <string name="address_label">عنوان التوصيل (القنجرة)</string>
+    <string name="address_hint">مثال: القنجرة - جانب البلدية</string>
+    <string name="register_button">إنشاء الحساب</string>
+    <string name="already_have_account">لديك حساب بالفعل؟</string>
+    <string name="login_action">تسجيل الدخول</string>
+
+    <!-- Form Validation -->
+    <string name="error_phone_invalid">رقم الواتساب يجب أن يبدأ بـ 09 ويتكون من 10 أرقام</string>
+    <string name="error_password_short">كلمة المرور يجب أن تكون 8 أحرف على الأقل</string>
+    <string name="error_name_short">الاسم يجب أن يكون حرفين على الأقل</string>
+    <string name="error_address_required">عنوان التوصيل مطلوب</string>
+    <string name="error_network">تعذر الاتصال بالخادم، يرجى التحقق من اتصال الإنترنت</string>
+    <string name="error_generic">حدث خطأ، يرجى المحاولة لاحقاً</string>
+
+    <!-- Pending Verification -->
+    <string name="pending_title">الحساب قيد المراجعة</string>
+    <string name="pending_desc">شكراً لتسجيلك في فَوْراً! حسابك الآن قيد التحقق من قِبل إدارة فَوْراً. لتسريع عملية التفعيل يرجى التواصل معنا مباشرة عبر واتساب.</string>
+    <string name="contact_whatsapp">تواصل عبر واتساب</string>
+
+    <!-- Suspended -->
+    <string name="suspended_title">الحساب معطّل</string>
+    <string name="suspended_desc">تم تعليق هذا الحساب مؤقتاً. إذا كنت تعتقد أن هناك خطأ، يرجى التواصل مع إدارة فَوْراً لحل المشكلة.</string>
+    <string name="contact_support">التواصل مع الدعم</string>
+
+    <!-- Home Stub -->
+    <string name="home_welcome">أهلاً بك، %1$s!</string>
+    <string name="home_subtitle">خدمة التوصيل السريع في القنجرة</string>
+    <string name="home_status_verified">حسابك موثّق وجاهز لتقديم الطلبات</string>
+    <string name="home_new_order_coming_soon">خدمة إنشاء الطلبات قيد التجهيز</string>
 </resources>
