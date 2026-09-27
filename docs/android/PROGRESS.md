@@ -1,62 +1,44 @@
-# FORERUN Android — دليل التقدم والقرارات
+# FORERUN Android — Progress & Decisions Log
 
-> **الغرض:** مرجع شامل لكل ما تم إنجازه في تطبيق Android.
-> **الجمهور:** المطوّر، الوكيل، أي طرف ينضم للمشروع.
-> **آخر تحديث:** Sprint 1.2 + إصلاح statusBarColor
-
----
-
-## 1. نظرة عامة
-
-**FORERUN** (فَوْراً) — منصة توصيل بقالة محلية في القنجرة، سوريا.
-
-### الحالة الراهنة
-
-| المكوّن | الحالة |
-|---------|--------|
-| Backend (NestJS) | ✅ يعمل في الإنتاج على Railway |
-| Admin Dashboard | ✅ يعمل على Vercel |
-| Runner PWA | ✅ يعمل على Vercel |
-| Customer Web | ✅ يعمل على Vercel |
-| **Android App** | 🟡 **قيد التطوير — Sprint 1.2 مكتمل** |
-
-### الهدف من Android
-
-بديل أصلي لتطبيق `customer-web` الحالي، بلغة Kotlin و Jetpack Compose.
+> **Purpose:** Track what has been built, what decisions were made,
+> and what comes next.
+> **Last updated:** After Sprint 1.2 + statusBarColor fix
 
 ---
 
-## 2. القرارات الاستراتيجية المُثبَّتة
+## Current Status
 
-| # | القرار | التفصيل |
-|---|--------|---------|
-| 1 | **الاسم** | `FORERUN` بالإنجليزية، `فَوْراً` بالعربية |
-| 2 | **Package Name** | `com.forerun.customer` |
-| 3 | **Repository** | `github.com/ghaithmoa84-cyber/forerun` (أُعيد تسميته) |
-| 4 | **minSdk** | API 26 (Android 8.0) |
-| 5 | **targetSdk / compileSdk** | 35 |
-| 6 | **الخدمات في v1** | البقالة فقط. الطرود/راكب = روابط واتساب (خارج التطبيق) |
-| 7 | **Firebase** | معتمد لـ FCM (Push Notifications) |
-| 8 | **الخرائط** | MapLibre + OpenStreetMap (مجاني، متوافق مع الويب) |
-| 9 | **Offline** | متصل دائماً (لا offline-first في v1) |
-| 10 | **التوزيع** | APK مباشر (لا Google Play في v1) |
-| 11 | **الفريق** | وكيل AI واحد |
+| Component | Status |
+|-----------|--------|
+| **Sprint 1.1** — Skeleton | ✅ Complete |
+| **Sprint 1.2** — Design System | ✅ Complete |
+| **Fix** — statusBarColor deprecation | ✅ Complete |
+| **Sprint 1.3** — Hilt + Networking | ⏳ Next |
+| **Sprint 1.4** — Auth Flow | ⏳ Pending |
+| **Sprints 2-6** — Features | ⏳ Pending |
+
+**Active branch:** `feature/android-sprint-1-1-skeleton`
+**Last commit:** `198f997` (edge-to-edge fix)
+**APK size:** 12.36 MB
 
 ---
 
-## 3. البيئة التطويرية
+## Environment
 
-### المتطلبات المثبَّتة
+| Component | Path / Value |
+|-----------|--------------|
+| JDK 21 | `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` |
+| Android SDK | `C:\Users\Dell User\AppData\Local\Android\Sdk` |
+| Android Studio | `C:\Program Files\Android\Android Studio` |
+| Terminal | MINGW64 (Git Bash) inside Antigravity |
+| IDE | Antigravity (primary) + Android Studio (preview) |
+| minSdk / targetSdk | 26 / 35 |
+| Kotlin | 2.0.21 |
+| AGP | 8.7.3 |
+| Gradle | 8.11.1 |
+| Compose BOM | 2024.12.01 |
 
-| المكوّن | المسار |
-|---------|--------|
-| **JDK 21** | `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` |
-| **Android SDK** | `C:\Users\Dell User\AppData\Local\Android\Sdk` |
-| **Android Studio** | `C:\Program Files\Android\Android Studio` |
-| **Terminal** | MINGW64 (Git Bash) داخل Antigravity |
-| **Antigravity** | بيئة التطوير الرئيسية |
-
-### إعدادات `~/.bashrc`
+### `~/.bashrc` Setup
 
 ```bash
 # === FORERUN Android Environment ===
@@ -67,326 +49,249 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-t
 # === End FORERUN Android ===
 ```
 
-### الأوامر الأساسية
+### Common Commands
 
 ```bash
-# البناء
 cd apps/android
-./gradlew clean assembleDebug
+./gradlew clean assembleDebug     # build APK
+./gradlew lint                    # lint
+./gradlew test                    # unit tests
 
-# APK الناتج
-ls -la app/build/outputs/apk/debug/app-debug.apk
-
-# التحقق من JAVA
-java -version   # يجب أن يعرض 21.x
+ls -la app/build/outputs/apk/debug/app-debug.apk   # check APK
+java -version                     # verify JDK 21
 ```
 
-### ⚠️ ملاحظات بيئية
-
-- **JDK 25 (JBR من Android Studio)** غير متوافق مع AGP 8.7 → نستخدم JDK 21
-- **`buildToolsVersion`** محذوف — AGP يختار تلقائياً
-- **`local.properties`** في `apps/android/` (gitignored)
-- **`google-services.json`** لم يُضف بعد (يُضاف في Sprint FCM)
-
 ---
 
-## 4. الشاشات المُصمَّمة (Stitch)
+## Sprint 1.1 — Skeleton ✅
 
-**18 شاشة جاهزة كمرجع بصري:**
+**Completed:** First session
 
-| # | الشاشة | ملاحظات |
-|---|--------|---------|
-| 1 | Splash | auto-dismiss بعد 1.5s |
-| 2-4 | Onboarding (3 شاشات) | من نحن، مندوبون موثوقون، كل ما تحتاجه |
-| 5 | Home (default) | للمستخدم بلا طلبات |
-| 6 | Home (active order) | CTA يصبح FAB |
-| 7 | Sign Up | 3 حقول فقط |
-| 8 | Pending Verification | مع polling + WebSocket |
-| 9 | Login | WhatsApp + password |
-| 10 | Suspended | حساب موقوف |
-| 11-14 | Create Order (4 states) | Quick + Structured + Location Modal + Loading |
-| 15-17 | Order Detail (3 states) | Active + Delivered + Cancelled+Modal |
-| 18 | Orders List | List + Empty + Skeleton |
-
-**ملاحظة:** تصاميم Stitch مرجع عام. عند بناء Compose، تُصحَّح الألوان (بعض الشاشات أنتجت ألواناً داكنة بدل `#00C1A7`).
-
----
-
-## 5. Design System (المُطبَّق في Compose)
-
-### الألوان (`Color.kt`)
-
-| الاسم | القيمة | الاستخدام |
-|-------|--------|-----------|
-| `ForerunGreen` | `#00C1A7` | Primary |
-| `ForerunGreenDark` | `#008F7D` | Gradient end |
-| `ForerunGreenLight` | `#E6F9F6` | Soft backgrounds |
-| `WhatsAppGreen` | `#25D366` | أزرار الواتساب |
-| `ForerunBackground` | `#FFFFFF` | الخلفية |
-| `ForerunSoftSurface` | `#F1F5F9` | بطاقات ثانوية |
-| `ForerunBorder` | `#E2E8F0` | الحدود |
-| `ForerunTextPrimary` | `#0F172A` | النص الأساسي |
-| `ForerunTextMuted` | `#64748B` | النص الثانوي |
-| `ForerunDanger` | `#EF4444` | الأخطاء |
-| `ForerunWarning` | `#F59E0B` | التحذيرات |
-| `ForerunSuccess` | `#10B981` | النجاح |
-
-### الخطوط
-
-- **Cairo** — 4 أوزان: Regular (400), Medium (500), SemiBold (600), Bold (700)
-- الملفات في `app/src/main/res/font/`
-- **ملاحظة:** Cairo يغطي العربية واللاتينية معاً
-
-### Typography Scale
-
-| الاسم | الحجم | الوزن |
-|-------|-------|-------|
-| `displayLarge` | 32sp | Bold |
-| `headlineMedium` | 24sp | Bold |
-| `headlineSmall` | 20sp | SemiBold |
-| `titleLarge` | 18sp | SemiBold |
-| `titleMedium` | 16sp | SemiBold |
-| `bodyLarge` | 16sp | Normal |
-| `bodyMedium` | 14sp | Normal |
-| `bodySmall` | 12sp | Normal |
-| `labelLarge` | 14sp | Bold |
-| `labelMedium` | 12sp | SemiBold |
-| `labelSmall` | 11sp | Medium |
-
-### المسافات (`Dimens.kt`)
-
-- **Grid:** 4dp
-- **القيم:** 2, 4, 8, 10, 12, 16, 20, 24, 32, 48
-- **Screen margin:** 16dp
-- **Card padding:** 16dp
-- **Button height:** 52dp / 56dp
-
-### Corner Radii
-
-- Small: 8dp
-- Medium: 12dp
-- Large: 16dp
-- XLarge: 20dp
-- Pill: 999dp
-
----
-
-## 6. بنية مشروع Android
-
-```
-apps/android/
-├── settings.gradle.kts
-├── build.gradle.kts                (root)
-├── gradle.properties
-├── local.properties                (gitignored)
-├── .gitignore
-├── gradle/
-│   ├── libs.versions.toml
-│   └── wrapper/
-├── gradlew
-├── gradlew.bat
-└── app/
-    ├── build.gradle.kts
-    ├── proguard-rules.pro
-    └── src/main/
-        ├── AndroidManifest.xml
-        ├── java/com/forerun/customer/
-        │   ├── ForerunApp.kt
-        │   ├── MainActivity.kt
-        │   └── ui/theme/
-        │       ├── Color.kt
-        │       ├── Type.kt
-        │       ├── Dimens.kt
-        │       └── Theme.kt
-        └── res/
-            ├── font/
-            │   ├── cairo_regular.ttf
-            │   ├── cairo_medium.ttf
-            │   ├── cairo_semibold.ttf
-            │   └── cairo_bold.ttf
-            ├── values/
-            │   ├── strings.xml
-            │   ├── colors.xml
-            │   └── themes.xml
-            └── mipmap-anydpi-v26/
-                └── ic_launcher.xml
-```
-
-### الإصدارات المُثبَّتة
-
-| المكوّن | الإصدار |
-|---------|---------|
-| Kotlin | 2.0.21 |
-| AGP | 8.7.3 |
-| Gradle | 8.11.1 |
-| Compose BOM | 2024.12.01 |
-| Material 3 | (من BOM) |
-| JDK | 21 |
-| minSdk | 26 |
-| targetSdk | 35 |
-| compileSdk | 35 |
-
----
-
-## 7. Sprints المُنجزة
-
-### Sprint 1.1 — Skeleton ✅
-
-**التاريخ:** جلسة واحدة
-
-**المُخرَج:**
-- مشروع Android كامل
-- Compose جاهز
-- Build ناجح
+**Deliverables:**
+- Full Android project structure
+- Compose set up
+- `./gradlew assembleDebug` succeeds
 - APK: 12.27 MB
-- Push للفرع: `feature/android-sprint-1-1-skeleton`
-- Commit: `3b91d1e` (scaffold) + `7b076b5` (design system)
+- Branch: `feature/android-sprint-1-1-skeleton`
+- Commits: `3b91d1e` (initial), `7b076b5` (design system)
 
-**المشاكل المُواجهة:**
-- `buildToolsVersion = "36.0.0"` مع `compileSdk = 35` — غير قياسي → حُذف السطر
-- AGP اختار `build-tools;34.0.0` تلقائياً — لا مشكلة
+**Issues encountered:**
+- `buildToolsVersion = "36.0.0"` with `compileSdk = 35` — non-standard
+- **Fix:** Removed the line; AGP auto-selected `build-tools;34.0.0`
 
-### Sprint 1.2 — Design System ✅
+---
 
-**التاريخ:** جلسة واحدة
+## Sprint 1.2 — Design System ✅
 
-**المُخرَج:**
-- Cairo fonts (4 أوزان، ~41 KB لكل واحد)
-- `Color.kt` — 15 لون
-- `Type.kt` — 11 نمط
-- `Dimens.kt` — نظام مسافات
+**Completed:** Second session
+
+**Deliverables:**
+- Cairo font (4 weights: Regular, Medium, SemiBold, Bold)
+- Each ~41 KB in `res/font/`
+- `Color.kt` — 15 colors
+- `Type.kt` — 11 text styles
+- `Dimens.kt` — spacing + radii
 - `Theme.kt` — `ForerunTheme`
-- `MainActivity` — DesignSystemPreview
-- APK: 12.36 MB (+90 KB للخطوط)
+- `MainActivity.kt` — `DesignSystemPreview` composable
+- APK: 12.36 MB (+90 KB for fonts)
 
-### Fix — statusBarColor Deprecation ✅
+**Files created:**
+```
+app/src/main/java/com/forerun/customer/ui/theme/
+├── Color.kt
+├── Type.kt
+├── Dimens.kt
+└── Theme.kt
+```
 
-**التاريخ:** جلسة واحدة
+---
 
-**المُخرَج:**
-- `enableEdgeToEdge` في `MainActivity`
-- حذف `WindowCompat` من `Theme.kt`
-- APK: 12.36 MB (بلا تغيير)
+## Fix — statusBarColor Deprecation ✅
+
+**Completed:** Third session
+
+**Change:**
+- Migrated from `Window.statusBarColor` (deprecated in Android 15) to `enableEdgeToEdge()`
+- Removed `WindowCompat` usage from `Theme.kt`
+- Added `enableEdgeToEdge()` in `MainActivity.onCreate()`
+
+**Result:**
+- Warning disappeared from build
+- APK unchanged: 12.36 MB
 - Commit: `198f997`
 
 ---
 
-## 8. المشاكل المُواجهة وحلولها
+## Problems Encountered & Solutions
 
-| المشكلة | السبب | الحل |
-|---------|-------|------|
-| `java: command not found` | JAVA_HOME غير محدَّد | إعداد `~/.bashrc` |
-| `Unsupported class file major version` (متوقع) | JDK 25 من Android Studio JBR | تثبيت JDK 21 منفصل |
-| `buildToolsVersion = "36.0.0"` مع SDK 35 | تعارض إصدارات | حذف السطر |
-| `statusBarColor is deprecated` | Android 15 API change | `enableEdgeToEdge` |
-| `gradle wrapper` مفقود | لم يكن موجوداً | تنزيل يدوي من GitHub |
-| Repo name `fawrun` مع اسم داخلي `forerun` | عدم اتساق | `gh repo rename` |
-
----
-
-## 9. حالة Backend الحالي
-
-### Endpoints المُتاحة
-
-| الفئة | العدد | المسار الأساسي |
-|-------|-------|----------------|
-| Auth | 4 | `/api/v1/auth/*` |
-| Customer | 5 | `/api/v1/customer/*` |
-| Customer Orders | 4 | `/api/v1/customer/orders/*` |
-| Ratings | 2 | `/api/v1/customer/orders/:id/ratings` |
-| Admin | 20+ | `/api/v1/admin/*` |
-| Runner | 15+ | `/api/v1/runner/*` |
-| Settlements | 5 | `/api/v1/*/settlements/*` |
-
-### WebSocket
-
-- **Namespace:** `/orders`
-- **Auth:** `{ token }` في `auth` payload
-- **Room تلقائي:** `customer:{userId}`
-- **Events للعميل:** 8 (status_changed, runner_assigned, fee_updated, store_purchased, out_for_delivery, delivered, cancelled, account_verified)
-
-### State Machine
-
-- 10 حالات Order
-- 3 حالات OrderStore
-- 3 حالات Runner
-- كل transition عبر `OrderStateMachine.transition()`
-
-### قيود
-
-- **Backend = بقالة فقط.** لا يدعم الطرود/راكب.
-- **`items.min(1)`** — لا يمكن إنشاء Order بلا مواد
-- **لا `serviceType`** في Order
-- **`LedgerEntry`** يحمل `orderId` اختياري + `meta` JSON
+| Problem | Cause | Solution |
+|---------|-------|----------|
+| `java: command not found` | JAVA_HOME not set in bash | Configured `~/.bashrc` |
+| JDK 25 from Android Studio JBR | Incompatible with AGP 8.7 | Installed Temurin JDK 21 |
+| `buildToolsVersion = "36.0.0"` mismatch | Manual pinning conflict | Removed the line |
+| `gradle wrapper` missing | Not in repo | Downloaded from GitHub |
+| Repo name `fawrun` vs `forerun` | Naming inconsistency | `gh repo rename` |
+| `statusBarColor is deprecated` | Android 15 API change | `enableEdgeToEdge()` |
 
 ---
 
-## 10. الخطوات القادمة
+## Design System Summary
 
-### Sprint 1.3 — Hilt + Networking (3-4 أيام)
+### Colors
 
-- إضافة Hilt + Retrofit + OkHttp + Moshi
+| Name | Value |
+|------|-------|
+| Primary | `#00C1A7` (mint green) |
+| Primary Dark | `#008F7D` |
+| Primary Light | `#E6F9F6` |
+| WhatsApp Green | `#25D366` |
+| Background | `#FFFFFF` |
+| Soft Surface | `#F1F5F9` |
+| Border | `#E2E8F0` |
+| Text Primary | `#0F172A` |
+| Text Muted | `#64748B` |
+| Danger | `#EF4444` |
+| Warning | `#F59E0B` |
+| Success | `#10B981` |
+
+### Typography
+
+**Font:** Cairo (400/500/600/700)
+
+**Scale:** 11 styles from 11sp (labelSmall) to 32sp (displayLarge)
+
+### Spacing
+
+4dp grid: 2, 4, 8, 10, 12, 16, 20, 24, 32, 48
+
+### Corner Radii
+
+8 / 12 / 16 / 20 / pill (999)
+
+---
+
+## Backend Status (unchanged)
+
+- **Production:** Railway (`forerun-api-production.up.railway.app`)
+- **Database:** PostgreSQL
+- **WebSocket:** Socket.IO on `/orders` namespace
+- **Auth:** JWT RS256, access 2h + refresh (rotated)
+- **Endpoints:** 55+ under `/api/v1/`
+- **State Machine:** 10 order states, enforced server-side
+- **Limitation:** Backend is grocery-only. No `serviceType` field.
+
+**WebSocket events for customer (8):**
+- `order:status_changed`
+- `order:runner_assigned`
+- `order:fee_updated`
+- `order:store_purchased`
+- `order:out_for_delivery`
+- `order:delivered`
+- `order:cancelled`
+- `account:verified`
+
+---
+
+## Screens Designed (Google Stitch)
+
+**18 screens ready as visual reference:**
+
+1. Splash
+2. Onboarding — Identity
+3. Onboarding — Trust
+4. Onboarding — Services
+5. Home (default)
+6. Home (with active order)
+7. Sign Up
+8. Pending Verification
+9. Login
+10. Suspended
+11. Create Order — Quick Mode
+12. Create Order — Structured Mode
+13. Create Order — Location Modal
+14. Create Order — Submit Loading
+15. Order Detail — Active
+16. Order Detail — Delivered
+17. Order Detail — Cancelled
+18. Orders List (List + Empty + Skeleton)
+
+**Note:** Stitch designs are a visual reference, not a spec. Colors
+must be corrected to match `Color.kt` during Compose implementation.
+
+---
+
+## Decisions Log
+
+| Date | Decision | Reason |
+|------|----------|--------|
+| Session 1 | Rename FAWRUN → FORERUN | User preference |
+| Session 1 | Package: `com.forerun.customer` | Final |
+| Session 2 | Maps: MapLibre + OSM | Free, no credit card |
+| Session 2 | WebSocket: Socket.IO client | Backend uses Socket.IO |
+| Session 3 | Firebase for FCM | Industry standard, free |
+| Session 3 | No Room / no offline | Always-online in v1 |
+| Session 3 | Services: grocery only | Packages/rides via WhatsApp |
+| Session 4 | Direct APK distribution | No Play Store |
+| Session 4 | Design System: mint green + Cairo | Matches brand |
+
+---
+
+## Next: Sprint 1.3
+
+**Goal:** Build networking layer + DI.
+
+**Deliverables:**
+- Hilt configured
+- Retrofit + OkHttp + Moshi
 - Interceptors: Auth, Refresh, Logging, Header
-- `ApiResponse<T>` + `ResultWrapper<T>`
-- Encrypted storage للتوكنات
-- Test: login من الـ app
+- `ApiResponse<T>` wrapper + custom CallAdapter
+- `ErrorMapper`
+- Encrypted storage for tokens
+- Test login request works against backend
 
-### Sprint 1.4 — Auth Flow (4-5 أيام)
+**Estimated:** 3-4 days.
 
+---
+
+## Next: Sprint 1.4
+
+**Goal:** Auth flow end-to-end.
+
+**Screens:**
 - Splash
-- Onboarding (3 شاشات، يُعرض مرة واحدة)
+- Onboarding (3 screens, shown once via DataStore)
 - Login
 - Register
 - Pending Verification
-- Navigation بسيط
 
-### Sprint 2+ (لاحقاً)
+**Deliverables:**
+- Navigation set up
+- ViewModels + UiStates
+- Integration with backend auth endpoints
+- First real APK that logs in
 
-- Home + Address Setup
-- Create Order
-- Orders List + Detail
-- Rating + Account
-- FCM + MapLibre
-- Testing + APK release
+**Estimated:** 4-5 days.
 
 ---
 
-## 11. ملاحظات للمطورين المستقبليين
+## Contact & Handoff
 
-### قواعد صارمة
+**Repository:** `github.com/ghaithmoa84-cyber/forerun`
+**Active branch:** `feature/android-sprint-1-1-skeleton`
+**Next session:** Continue from Sprint 1.3
 
-1. **Server is source of truth** — لا حساب رسوم في Android
-2. **كل حالة عبر State Machine** — لا mutation مباشر
-3. **`shared-types` أولاً** — لأي DTO جديد (Kotlin translation يدوي)
-4. **RTL طبيعي** — Compose يتعامل معه تلقائياً عند `supportsRtl="true"`
-5. **Cairo إلزامي** — لا خط بديل
-6. **الألوان من `Color.kt` فقط** — لا hardcoded hex
-7. **المسافات من `Dimens.kt`** — لا `16.dp` مباشر
+**Reference documents:**
+- `AGENTS.md` — rules and standards
+- `PROJECT_BRIEF.md` — project overview
+- `MASTER-SPEC.md` (this folder) — Android spec
+- `FAWRUN — MVP Technical Specification.txt` — original spec (archive)
 
-### Git Workflow
-
-- **Branch per Sprint:** `feature/android-sprint-N-<description>`
-- **Semantic commits:** `feat(android):`, `fix(android):`, `chore(android):`
-- **Push إلى remote** بعد كل sprint
-- **مراجعة قبل merge إلى master**
-
-### التواصل مع Backend
-
-- **Base URL (Debug):** `http://10.0.2.2:3000/api/v1` (emulator)
-- **Base URL (Release):** `https://forerun-api.up.railway.app/api/v1` (يُحدَّث لاحقاً)
-- **WebSocket:** `ws://10.0.2.2:3000/orders` (debug)
-
-### قيود معروفة
-
-- **BUG-016:** `deliver` idempotency path غير قابل للوصول
-- **Settlement idempotency TODO:** طلبات مسلَّمة قد لا تدخل التسوية في حالات نادرة
-- **Firebase Setup:** يحتاج `google-services.json` قبل Sprint FCM
-- **MapLibre Setup:** يحتاج اختبار على جهاز حقيقي
+**Any session resuming work must:**
+1. Read MASTER-SPEC.md first
+2. Verify `java -version` shows 21.x
+3. Verify branch is up to date: `git pull`
+4. Continue from the "Next" section above
 
 ---
 
-## نهاية الوثيقة
-
-**آخر commit على الفرع:** `198f997`
-**ال الفرع النشط:** `feature/android-sprint-1-1-skeleton`
-**الحالة:** جاهز لبدء Sprint 1.3
+**End of PROGRESS.md**
