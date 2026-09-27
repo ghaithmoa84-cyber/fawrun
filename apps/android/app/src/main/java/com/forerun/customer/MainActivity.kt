@@ -17,13 +17,24 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import android.util.Log
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.lifecycleScope
+import com.forerun.customer.core.network.ApiResponse
+import com.forerun.customer.data.remote.api.AuthApi
+import com.forerun.customer.data.remote.dto.auth.LoginRequest
 import com.forerun.customer.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
+
+    @Inject
+    lateinit var authApi: AuthApi
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -41,15 +52,41 @@ class MainActivity : ComponentActivity() {
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DesignSystemPreview()
+                    DesignSystemPreview(
+                        onTestLoginClick = { testLogin() }
+                    )
+                }
+            }
+        }
+    }
+
+    private fun testLogin() {
+        lifecycleScope.launch {
+            Log.d("ForerunAuthTest", "Initiating login test...")
+            val response = authApi.login(
+                LoginRequest(
+                    whatsapp = "0900000000",
+                    password = "testpassword"
+                )
+            )
+            when (response) {
+                is ApiResponse.Success -> {
+                    val tokenPreview = response.data.accessToken.take(10)
+                    Log.d("ForerunAuthTest", "Login SUCCESS: token received: $tokenPreview... user=${response.data.user.name}")
+                }
+                is ApiResponse.Error -> {
+                    Log.d("ForerunAuthTest", "Login ERROR: code=${response.statusCode}, error=${response.error}, message=${response.message}")
                 }
             }
         }
     }
 }
 
+
 @Composable
-private fun DesignSystemPreview() {
+private fun DesignSystemPreview(
+    onTestLoginClick: () -> Unit = {}
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -107,6 +144,17 @@ private fun DesignSystemPreview() {
         ) {
             Text("Button Outlined", style = MaterialTheme.typography.labelLarge)
         }
+
+        // Temporary Test Login Button (Sprint 1.3)
+        Button(
+            onClick = onTestLoginClick,
+            modifier = Modifier.fillMaxWidth().height(Dimens.ButtonHeightLarge),
+            colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary),
+            shape = RoundedCornerShape(Dimens.RadiusPill)
+        ) {
+            Text("Test Login", style = MaterialTheme.typography.labelLarge)
+        }
+
 
         Spacer(Modifier.height(Dimens.Space48))
     }
