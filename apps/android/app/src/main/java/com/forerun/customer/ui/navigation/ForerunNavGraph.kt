@@ -57,9 +57,26 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.LOGIN) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Login Stub")
-            }
+            com.forerun.customer.ui.auth.login.LoginScreen(
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToPending = {
+                    navController.navigate(Routes.PENDING_VERIFICATION) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToSuspended = {
+                    navController.navigate(Routes.SUSPENDED) {
+                        popUpTo(Routes.LOGIN) { inclusive = true }
+                    }
+                },
+                onNavigateToRegister = {
+                    navController.navigate(Routes.REGISTER)
+                }
+            )
         }
         composable(Routes.REGISTER) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
