@@ -1,19 +1,15 @@
 # FORERUN — Handoff
 
-> **آخر تحديث:** 2026-09-24
+> **آخر تحديث:** 2026-09-27
 > **المصدر الوحيد للحقيقة:** [PROJECT_STATUS.md](PROJECT_STATUS.md)
-> **الحالة العامة للمشروع:** [CURRENT_STATE.md](CURRENT_STATE.md)
 
 ---
 
 ## آخر Commit
-| الحقل | القيمة |
-|---|---|
-| **Hash** | `b102dcfcf121781be80f5aeb2ce19cc4c832f025` |
-| **الرسالة** | `docs: sync documentation with current state` |
-| **الملفات** | AGENTS.md, CURRENT_STATE.md, PROJECT_BRIEF.md, docs/02–04–06–07 |
-
----
+للحصول على تفاصيل آخر commit وتأريخ التغييرات، شغّل:
+```bash
+git log -1 --stat
+```
 
 ## حالة الإنتاج (Production)
 | المكوّن | الحالة | ملاحظات |

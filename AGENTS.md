@@ -1,7 +1,7 @@
 # FORERUN Coding Standards & Workflow
 
 > **ملاحظة:** الحالة الحالية للمشروع وآخر جلسة مراجعة موثّقة في
-> [docs/review/HANDOFF-TO-NEXT-SESSION.md](docs/review/HANDOFF-TO-NEXT-SESSION.md).
+> [PROJECT_STATUS.md](PROJECT_STATUS.md).
 > راجعها قبل أي عمل. هذا الملف هو المرجع للمعايير والأدوات والأوامر.
 
 ## Project Overview

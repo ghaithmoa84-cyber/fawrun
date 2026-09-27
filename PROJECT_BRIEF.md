@@ -521,7 +521,7 @@ This file is a condensed English summary of the FORERUN project, intended for an
 
 For the full detail, refer to:
 - FORERUN - MVP Technical Specification.txt (the authoritative spec, mostly Arabic)
-- CURRENT_STATE.md (current sprint status)
+- PROJECT_STATUS.md (current project and sprint status)
 - AGENTS.md (coding standards and workflow)
 - .kilo/agent/*.md, .kilo/command/*.md, .kilo/skills/*/SKILL.md (agent/command/skill definitions)
 

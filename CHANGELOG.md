@@ -5,6 +5,25 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-09-27 18:10 — Repository cleanup & documentation alignment
+
+**الملفات والدوال المعدّلة:**
+- `AGENTS.md` — تصحيح المرجع المكسور لـ `PROJECT_STATUS.md`
+- `HANDOFF.md` — تحديث الـ commit hash المعتمد وإزالة رابط `CURRENT_STATE.md` المحذوف
+- `PROJECT_BRIEF.md` — تحديث المراجع إلى `PROJECT_STATUS.md`
+- `.kilo/agent/code-architect.md` — توجيه المخرجات إلى `PROJECT_STATUS.md`
+- `docs/07-environment-audit.md` — توضيح آلية قراءة مفاتيح JWT من `.env` والمجلد الاحتياطي
+- `apps/android/.gitignore` — إضافة `build/` و `app/build/` لمخرجات البناء
+- **الملفات المحذوفة:** `private.pem`, `public.pem`, `railpack.json`, `.tmp-patch-tty.js`, `build-output.txt`, `test-output.txt`, `apps/api/.tmp-answers.txt`, `apps/api/.env.local`, `apps/runner-pwa/test-scenarios.mjs`, `CURRENT_STATE.md`, `.kilo/plans/1789831012062-sprint-4-review-plan.md`, `.kilo/worktrees/exclusive-ring`
+
+**السبب:**
+تطهير المستودع من المخلفات المؤقتة والملفات الميتة، وحذف المفاتيح والإعدادات المضللة، وتوحيد مرجع التوثيق على `PROJECT_STATUS.md`.
+
+**الأوامر والنتائج:**
+- `pnpm typecheck` → 6/6 packages successful
+- `pnpm lint` → 6/6 packages successful
+- `pnpm test` → 12 test files passed, 184 tests passed
+
 ### 2026-09-19 12:54 — Customer order details: full details mapping (feature-dev)
 
 **الملفات والدوال المعدّلة:**
