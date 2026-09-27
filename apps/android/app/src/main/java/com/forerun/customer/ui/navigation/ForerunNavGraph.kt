@@ -48,9 +48,13 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.ONBOARDING) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Onboarding Stub")
-            }
+            com.forerun.customer.ui.onboarding.OnboardingScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(Routes.ONBOARDING) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Routes.LOGIN) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
