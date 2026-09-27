@@ -77,6 +77,9 @@ dependencies {
     // Secure Storage
     implementation(libs.androidx.security.crypto)
 
+    // DataStore (Preferences)
+    implementation(libs.androidx.datastore.preferences)
+
     // Coroutines
     implementation(libs.kotlinx.coroutines.core)
     implementation(libs.kotlinx.coroutines.android)
@@ -85,5 +88,6 @@ dependencies {
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
+    testImplementation(libs.turbine)
 }
 

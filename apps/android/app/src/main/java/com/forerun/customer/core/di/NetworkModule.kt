@@ -29,6 +29,16 @@ object NetworkModule {
         return Moshi.Builder().build()
     }
 
+    @Provides
+    @Singleton
+    fun provideTokenRefreshManager(
+        tokenStorage: com.forerun.customer.core.storage.TokenStorage,
+        authApiProvider: javax.inject.Provider<com.forerun.customer.data.remote.api.AuthApi>
+    ): com.forerun.customer.data.remote.token.TokenRefreshManager {
+        return com.forerun.customer.data.remote.token.TokenRefreshManager(tokenStorage, authApiProvider)
+    }
+
+
 
     @Provides
     @Singleton
