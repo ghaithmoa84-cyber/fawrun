@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <color name="forerun_green">#00C1A7</color>
+    <color name="forerun_green_dark">#008F7D</color>
+    <color name="forerun_white">#FFFFFF</color>
+</resources>

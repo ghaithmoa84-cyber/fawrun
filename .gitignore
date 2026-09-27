@@ -29,3 +29,6 @@ coverage/
 build-output.txt
 test-output.txt
 apps/api/.tmp-answers.txt
+.idea/
+.gradle/
+
