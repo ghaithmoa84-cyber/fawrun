@@ -13,11 +13,12 @@
 | **Sprint 1.1** — Skeleton | ✅ Complete |
 | **Sprint 1.2** — Design System | ✅ Complete |
 | **Fix** — statusBarColor deprecation | ✅ Complete |
-| **Sprint 1.3** — Hilt + Networking | ⏳ Next |
-| **Sprint 1.4** — Auth Flow | ⏳ Pending |
+| **Sprint 1.3** — Hilt + Networking | ✅ Complete |
+| **Sprint 1.4** — Auth Flow | ⏳ Next |
 | **Sprints 2-6** — Features | ⏳ Pending |
 
-**Active branch:** `feature/android-sprint-1-1-skeleton`
+**Active branch:** `feature/android-sprint-1-3-networking`
+
 **Last commit:** `198f997` (edge-to-edge fix)
 **APK size:** 12.36 MB
 
@@ -236,20 +237,29 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
-## Next: Sprint 1.3
+## Sprint 1.3 — Hilt + Networking ✅
 
-**Goal:** Build networking layer + DI.
+**Completed:** Session 5
+**Branch:** `feature/android-sprint-1-3-networking`
 
 **Deliverables:**
-- Hilt configured
-- Retrofit + OkHttp + Moshi
-- Interceptors: Auth, Refresh, Logging, Header
-- `ApiResponse<T>` wrapper + custom CallAdapter
-- `ErrorMapper`
-- Encrypted storage for tokens
-- Test login request works against backend
-
-**Estimated:** 3-4 days.
+- Hilt DI configured with KSP (`hilt-android`, `hilt-compiler` 2.53.1)
+- Retrofit 2.11.0 + OkHttp 4.12.0 + Moshi 1.15.1 (codegen via KSP)
+- `ApiResponse<T>` sealed interface (`Success`, `Error`) with custom `ApiCallAdapter` & `ApiCallAdapterFactory`
+- Interceptors:
+  1. `HeaderInterceptor` (`Accept-Language: ar-SY`, `X-Client: android`)
+  2. `AuthInterceptor` (`Authorization: Bearer <token>`)
+  3. `RefreshInterceptor` (single refresh attempt on 401, `X-Retry-After-Refresh: true`)
+  4. `HttpLoggingInterceptor` (BODY on debug, NONE on release)
+- Secure token storage via `EncryptedSharedPreferences` (`TokenStorage` + `EncryptedTokenStorage`)
+- `TokenRefreshManager` with `Mutex` for concurrent request synchronization
+- `UiError` sealed hierarchy + `ErrorMapper` with localized Arabic error mapping
+- Hilt Modules: `NetworkModule`, `StorageModule`, `ApiModule`
+- API Interfaces: `AuthApi` (`login`, `refresh`, `logout`) + `CustomerApi` (`me`)
+- DTOs strictly aligned with `shared-types` and MVP Tech Spec
+- Unit test suite for `ApiCallAdapter` (via `MockWebServer`) and `ErrorMapper` (6 passing tests)
+- Temporary "Test Login" button integrated in `MainActivity.kt` with secure masked token logging
+- Production Base URL verified & fixed: `https://fawrun-api-production.up.railway.app/api/v1/`
 
 ---
 
@@ -277,8 +287,9 @@ must be corrected to match `Color.kt` during Compose implementation.
 ## Contact & Handoff
 
 **Repository:** `github.com/ghaithmoa84-cyber/forerun`
-**Active branch:** `feature/android-sprint-1-1-skeleton`
-**Next session:** Continue from Sprint 1.3
+**Active branch:** `feature/android-sprint-1-3-networking`
+**Next session:** Continue with Sprint 1.4 (Auth Flow)
+
 
 **Reference documents:**
 - `AGENTS.md` — rules and standards
