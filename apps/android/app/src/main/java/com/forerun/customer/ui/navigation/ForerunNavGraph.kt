@@ -91,14 +91,22 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.PENDING_VERIFICATION) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Pending Verification Stub")
-            }
+            com.forerun.customer.ui.auth.status.PendingVerificationScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Routes.SUSPENDED) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Suspended Stub")
-            }
+            com.forerun.customer.ui.auth.status.SuspendedScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
         }
         composable(Routes.HOME) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
