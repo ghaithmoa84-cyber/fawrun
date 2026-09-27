@@ -79,9 +79,16 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.REGISTER) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text("Register Stub")
-            }
+            com.forerun.customer.ui.auth.register.RegisterScreen(
+                onNavigateToPending = {
+                    navController.navigate(Routes.PENDING_VERIFICATION) {
+                        popUpTo(Routes.LOGIN) { inclusive = false }
+                    }
+                },
+                onNavigateToLogin = {
+                    navController.popBackStack()
+                }
+            )
         }
         composable(Routes.PENDING_VERIFICATION) {
             Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
