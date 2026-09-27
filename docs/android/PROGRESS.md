@@ -321,6 +321,24 @@ must be corrected to match `Color.kt` during Compose implementation.
   - `./gradlew clean assembleDebug`: successful clean build.
   - APK Size: **14.93 MB** (well below the 16.0 MB maximum budget).
 
+### Known Issues & Technical Debt
+
+#### BUG-ANDROID-001: ADMIN_WHATSAPP Placeholder
+- **File:** `PendingVerificationScreen.kt:118`
+- **Value:** `963951111111` (placeholder)
+- **Impact:** زر "فتح WhatsApp" في PendingVerification يوجّه لرقم غير حقيقي.
+- **Fix:** استبداله بالرقم الإنتاجي قبل أول APK يُوزَّع.
+- **Blocker:** يجب الحصول على الرقم الحقيقي من الإدارة.
+
+### Test Fixtures
+
+#### Test Fixture: Production Test Account
+- **whatsapp:** `0999999999`
+- **userId:** `cmuk9n8e1000624il3fg7soqp`
+- **status:** `PENDING_VERIFICATION`
+- **purpose:** Contract verification (Sprint 1.4 live curl test)
+- **action:** Do not delete — may be useful for future tests and fixtures.
+
 ---
 
 ## Contact & Handoff
