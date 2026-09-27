@@ -9,15 +9,20 @@ import kotlinx.coroutines.flow.map
 import javax.inject.Inject
 import javax.inject.Singleton
 
+interface OnboardingPrefs {
+    val isOnboardingSeen: Flow<Boolean>
+    suspend fun setSeen(seen: Boolean = true)
+}
+
 @Singleton
-class OnboardingPrefs @Inject constructor(
+class DefaultOnboardingPrefs @Inject constructor(
     private val dataStore: DataStore<Preferences>
-) {
-    val isOnboardingSeen: Flow<Boolean> = dataStore.data.map { preferences ->
+) : OnboardingPrefs {
+    override val isOnboardingSeen: Flow<Boolean> = dataStore.data.map { preferences ->
         preferences[KEY_ONBOARDING_SEEN] ?: false
     }
 
-    suspend fun setSeen(seen: Boolean = true) {
+    override suspend fun setSeen(seen: Boolean) {
         dataStore.edit { preferences ->
             preferences[KEY_ONBOARDING_SEEN] = seen
         }

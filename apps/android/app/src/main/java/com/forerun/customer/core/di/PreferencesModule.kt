@@ -5,6 +5,8 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
+import com.forerun.customer.core.storage.DefaultOnboardingPrefs
+import com.forerun.customer.core.storage.OnboardingPrefs
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -27,4 +29,10 @@ object PreferencesModule {
             produceFile = { context.preferencesDataStoreFile(PREFERENCES_NAME) }
         )
     }
+
+    @Provides
+    @Singleton
+    fun provideOnboardingPrefs(
+        defaultOnboardingPrefs: DefaultOnboardingPrefs
+    ): OnboardingPrefs = defaultOnboardingPrefs
 }
