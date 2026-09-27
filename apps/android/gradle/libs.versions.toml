@@ -9,6 +9,7 @@ composeBom = "2024.12.01"
 ksp = "2.0.21-1.0.28"
 hilt = "2.53.1"
 hiltNavigationCompose = "1.2.0"
+navigationCompose = "2.8.5"
 retrofit = "2.11.0"
 okhttp = "4.12.0"
 moshi = "1.15.1"
@@ -26,9 +27,11 @@ androidx-compose-ui = { module = "androidx.compose.ui:ui" }
 androidx-compose-material3 = { module = "androidx.compose.material3:material3" }
 androidx-compose-preview = { module = "androidx.compose.ui:ui-tooling-preview" }
 androidx-compose-tooling = { module = "androidx.compose.ui:ui-tooling" }
+androidx-navigation-compose = { module = "androidx.navigation:navigation-compose", version.ref = "navigationCompose" }
 hilt-android = { module = "com.google.dagger:hilt-android", version.ref = "hilt" }
 hilt-compiler = { module = "com.google.dagger:hilt-compiler", version.ref = "hilt" }
 androidx-hilt-navigation-compose = { module = "androidx.hilt:hilt-navigation-compose", version.ref = "hiltNavigationCompose" }
+
 
 # Networking
 retrofit-core = { module = "com.squareup.retrofit2:retrofit", version.ref = "retrofit" }

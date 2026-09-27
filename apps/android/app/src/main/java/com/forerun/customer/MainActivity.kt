@@ -27,8 +27,9 @@ import com.forerun.customer.data.remote.dto.auth.LoginRequest
 import com.forerun.customer.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import androidx.navigation.compose.rememberNavController
+import com.forerun.customer.ui.navigation.ForerunNavGraph
 import javax.inject.Inject
-
 
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
@@ -48,17 +49,17 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         setContent {
             ForerunTheme {
+                val navController = rememberNavController()
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
                 ) {
-                    DesignSystemPreview(
-                        onTestLoginClick = { testLogin() }
-                    )
+                    ForerunNavGraph(navController = navController)
                 }
             }
         }
     }
+
 
     private fun testLogin() {
         lifecycleScope.launch {
