@@ -281,29 +281,45 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
-## Sprint 1.4: Auth Flow ⏳ (Active)
+## Sprint 1.4: Auth Flow ✅
 
-**Goal:** Auth flow end-to-end.
-
-**Screens:**
-- Splash (`splash`)
-- Onboarding (`onboarding`, 3 screens, persisted via DataStore Preferences)
-- Login (`login`)
-- Register (`register`, stub address for Al-Qanjara)
-- Pending Verification (`pending_verification`)
-- Suspended (`suspended`, P1)
-- Home (`home`, stub)
+**Completed:** Session 6
+**Branch:** `feature/android-sprint-1-4-auth-flow`
 
 **Deliverables:**
-- Navigation set up (`ForerunNavGraph.kt`)
-- ViewModels + UiStates (`UiState` data class + `Intent` sealed interface)
-- Domain Use Cases: `LoginUseCase`, `RegisterUseCase`, `LogoutUseCase`, `CheckSessionUseCase`
-- Repository: `AuthRepository` (interface in domain, impl in data)
-- DataStore preference for `onboarding_seen` flag (`OnboardingPrefs`)
-- Session expired event collection in UI
-- First real APK that logs in end-to-end
-
-**Estimated:** 4-5 days.
+- **Navigation Infrastructure:** `ForerunNavGraph.kt` with NavHost and 7 routes (`splash`, `onboarding`, `login`, `register`, `pending_verification`, `suspended`, `home`).
+- **DataStore Storage:** `OnboardingPrefs` interface + `DefaultOnboardingPrefs` using AndroidX DataStore Preferences for the `onboarding_seen` flag (clean separation from `EncryptedSharedPreferences`).
+- **Auth Domain Layer:**
+  - Models: `User`, `UserStatus` (`PENDING_VERIFICATION`, `VERIFIED`, `REJECTED`, `SUSPENDED`), `SessionState` (`NeedsOnboarding`, `Unauthenticated`, `Authenticated`).
+  - Repository: `AuthRepository` interface.
+  - Use Cases: `LoginUseCase`, `RegisterUseCase`, `LogoutUseCase`, `CheckSessionUseCase`.
+- **Auth Data Layer:**
+  - `AuthRepositoryImpl` implementing `AuthRepository`.
+  - DTOs: `AddressDto`, `RegisterRequest`, `RegisterResponse`, `LoginResponse` (with optional `expiresIn`).
+  - Endpoints: added `POST auth/register` to `AuthApi`.
+  - Hilt DI: `RepositoryModule` with `@Binds` for `AuthRepository`.
+- **Screens & ViewModels (100% Compose + Cairo font + Mint Green `#00C1A7`):**
+  1. **Splash:** `SplashScreen` + `SplashViewModel` with scale/fade animations, branding, and automatic session-based routing.
+  2. **Onboarding:** `OnboardingScreen` + `OnboardingViewModel` with 3-screen `HorizontalPager`, animated dot indicators, "تخطي" / "التالي" / "ابدأ الآن" buttons, saving state to DataStore.
+  3. **Login:** `LoginScreen` + `LoginViewModel` with Syrian phone validation (`^09\d{8}$`), password input with visibility toggle, localized Arabic errors from `strings.xml`.
+  4. **Register:** `RegisterScreen` + `RegisterViewModel` with full client-side validation, Al-Qanjara address stub (`lat = 35.5234`, `lng = 35.9876`), and routing to pending verification.
+  5. **Pending Verification:** `PendingVerificationScreen` + `PendingVerificationViewModel` with status warning badge, WhatsApp direct button (`wa.me`), and logout.
+  6. **Suspended:** `SuspendedScreen` + `SuspendedViewModel` with danger badge, support contact button, and logout.
+  7. **Home (Stub):** `HomeScreen` + `HomeViewModel` displaying personalized greeting, verified badge, Sprint 1.5 coming soon notice, and logout.
+- **Session Expiration Event Handling:**
+  - `MainActivity` injects `@Singleton TokenRefreshManager` and provides it to `ForerunNavGraph`.
+  - When silent refresh fails (`handleSessionExpired()`), `sessionExpiredEvent` emits and automatically resets navigation backstack directly to `Routes.LOGIN`.
+- **Unit Testing Suite:**
+  - Tested with `kotlinx-coroutines-test`, `Turbine`, and `FakeAuthRepository` / `FakeTokenStorage`.
+  - `AuthRepositoryImplTest`: repository login token storage and session state determination.
+  - `LoginViewModelTest`: phone formatting, validation errors, successful auth, network/API failure handling.
+  - `SplashViewModelTest`: complete routing coverage for all session and user status variants.
+  - `RegisterViewModelTest`: form validation, conflict/failure handling, and successful registration.
+- **Quality Gates:**
+  - `./gradlew test`: 100% passed (both debug and release).
+  - `./gradlew lint`: 0 errors.
+  - `./gradlew clean assembleDebug`: successful clean build.
+  - APK Size: **14.93 MB** (well below the 16.0 MB maximum budget).
 
 ---
 
@@ -311,7 +327,7 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 **Repository:** `github.com/ghaithmoa84-cyber/forerun`
 **Active branch:** `feature/android-sprint-1-4-auth-flow`
-**Current session:** Sprint 1.4 (Auth Flow)
+**Next Sprint:** Sprint 1.5 (Grocery Catalog & Ordering)
 
 
 
