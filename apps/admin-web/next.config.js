@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
-  transpilePackages: ['@fawrun/shared-types', '@fawrun/shared-constants'],
+  transpilePackages: ['@forerun/shared-types', '@forerun/shared-constants'],
 };
 
 module.exports = nextConfig;

@@ -1,14 +1,14 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import * as bcrypt from 'bcrypt';
-import { CONFIG } from '@fawrun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
 import {
   type AvailableRunner,
   type CustomerAddressResponse,
   type CustomerProfile,
   type UpdateCustomerAddressRequest,
   type UpdateCustomerRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 

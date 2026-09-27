@@ -8,7 +8,7 @@ import {
   type RunnerProfileResponse,
   type PaginatedResponse,
   type RunnerStatus,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 type Runner = RunnerProfileResponse;
 type RunnersApiResponse = PaginatedResponse<Runner>;

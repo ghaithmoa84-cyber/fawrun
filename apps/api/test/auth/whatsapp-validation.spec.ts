@@ -4,7 +4,7 @@ import {
   LoginSchema,
   RegisterSchema,
   SyrianPhoneSchema,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 describe('F-9: WhatsApp Syrian local validation (shared Zod schemas)', () => {
   describe('SyrianPhoneSchema', () => {

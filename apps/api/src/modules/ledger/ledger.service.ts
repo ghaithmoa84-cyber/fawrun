@@ -6,7 +6,7 @@ import {
   LedgerEntry,
   LedgerEntryListResult,
   LedgerQuery,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { PrismaService } from '../../database/prisma.service.js';
 
 function mapPrismaToLedgerEntry(entry: PrismaLedgerEntry): LedgerEntry {

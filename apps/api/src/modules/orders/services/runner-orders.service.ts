@@ -5,8 +5,8 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { OrderStatus, OrderStoreStatus } from '@fawrun/shared-constants';
-import { MarkStoreSkippedRequest, DeliverOrderRequest } from '@fawrun/shared-types';
+import type { OrderStatus, OrderStoreStatus } from '@forerun/shared-constants';
+import { MarkStoreSkippedRequest, DeliverOrderRequest } from '@forerun/shared-types';
 import type {
   CreateRunnerOrderItemRequest,
   CreateRunnerOrderItemResponse,
@@ -16,7 +16,7 @@ import type {
   RunnerOrderActionResponse,
   RunnerOrderStoresResponse,
   PurchaseStoreResponse,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { LedgerService } from '../../ledger/ledger.service.js';

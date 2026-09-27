@@ -1,7 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
 import { SOCKET_SERVERS } from '../../websocket/gateways/socket-registry.js';
-import { SoundType } from '@fawrun/shared-types';
+import { SoundType } from '@forerun/shared-types';
 
 @Injectable()
 export class NotificationsService {

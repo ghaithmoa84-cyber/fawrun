@@ -2,7 +2,7 @@ import { beforeEach, describe, it, expect, vi } from 'vitest';
 import {
   LedgerEntryType,
   type CreateLedgerEntryRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { LedgerService } from '../../src/modules/ledger/ledger.service.js';
 import { PrismaService } from '../../src/database/prisma.service.js';
 import { NotFoundException } from '@nestjs/common';

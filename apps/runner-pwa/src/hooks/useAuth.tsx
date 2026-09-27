@@ -6,7 +6,7 @@ import {
   type ReactNode,
 } from 'react';
 import api, { clearAuth, decodeJwtExpiry, setAuthCookie } from '../api/client';
-import type { LoginResponse } from '@fawrun/shared-types';
+import type { LoginResponse } from '@forerun/shared-types';
 
 type AuthUser = LoginResponse['user'];
 

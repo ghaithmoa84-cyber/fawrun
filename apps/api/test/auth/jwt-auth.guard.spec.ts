@@ -1,6 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { UnauthorizedException, ExecutionContext } from '@nestjs/common';
-import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@forerun/shared-constants';
 
 vi.mock('@prisma/client', () => ({
   PrismaClient: class {},

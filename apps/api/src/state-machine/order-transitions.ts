@@ -1,5 +1,5 @@
-import { ORDER_STATUSES, ORDER_STORE_STATUSES } from '@fawrun/shared-constants';
-import type { OrderStatus, OrderStoreStatus } from '@fawrun/shared-constants';
+import { ORDER_STATUSES, ORDER_STORE_STATUSES } from '@forerun/shared-constants';
+import type { OrderStatus, OrderStoreStatus } from '@forerun/shared-constants';
 
 export type OrderActor = 'CUSTOMER' | 'ADMIN' | 'RUNNER' | 'SYSTEM';
 

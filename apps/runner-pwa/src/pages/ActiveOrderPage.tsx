@@ -4,12 +4,12 @@ import api from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
 import { MapView } from '../components/MapView';
 import { StoreCard } from '../components/StoreCard';
-import type { OrderStatus } from '@fawrun/shared-constants';
+import type { OrderStatus } from '@forerun/shared-constants';
 import type {
   ActiveOrderResponse,
   CreateOrderStoreRequest,
   DeliverOrderRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import axios from 'axios';
 
 const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {

@@ -2,7 +2,7 @@ import { Outlet, NavLink, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import { useEffect, useState, useCallback } from 'react';
 import api from '../api/client';
-import type { ActiveOrderResponse } from '@fawrun/shared-types';
+import type { ActiveOrderResponse } from '@forerun/shared-types';
 
 export function Layout() {
   const { user, logout } = useAuth();

@@ -4,7 +4,7 @@ import axios, {
   type AxiosResponse,
   AxiosError,
 } from 'axios';
-import type { LoginResponse } from '@fawrun/shared-types';
+import type { LoginResponse } from '@forerun/shared-types';
 
 const api: AxiosInstance = axios.create({
   baseURL: process.env.NEXT_PUBLIC_API_URL || 'http://localhost:3000/api/v1',
@@ -199,3 +199,7 @@ api.interceptors.response.use(
 );
 
 export default api;
+
+
+
+

@@ -8,7 +8,7 @@ import {
   USER_STATUS_VALUES,
   type PaginatedResponse,
   type AdminUserListItem,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 type UserStatus = (typeof USER_STATUS_VALUES)[number];
 

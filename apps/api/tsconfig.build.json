@@ -16,8 +16,8 @@
     "strictPropertyInitialization": false,
     "types": ["node"],
     "paths": {
-      "@fawrun/shared-constants": ["../packages/shared-constants/src/index.ts"],
-      "@fawrun/shared-types": ["../packages/shared-types/src/index.ts"]
+      "@forerun/shared-constants": ["../packages/shared-constants/src/index.ts"],
+      "@forerun/shared-types": ["../packages/shared-types/src/index.ts"]
     }
   },
   "include": ["src/**/*"],

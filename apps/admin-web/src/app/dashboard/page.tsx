@@ -13,7 +13,7 @@ import {
   type UserNewRegistrationPayload,
   type OrderStatus,
   type RunnerStatus,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 interface PendingOrderItem {
   id: string;

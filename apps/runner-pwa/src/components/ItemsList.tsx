@@ -1,4 +1,4 @@
-import type { ActiveOrderStoreItem } from '@fawrun/shared-types';
+import type { ActiveOrderStoreItem } from '@forerun/shared-types';
 
 interface ItemsListProps {
   items: ActiveOrderStoreItem[];

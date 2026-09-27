@@ -9,7 +9,7 @@ import {
   type CreateOrderResponse,
   type AvailableRunner,
   type CustomerAddressResponse,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import axios from 'axios';
 
 // Leaflet custom marker with Fawrun brand color #00C1A7

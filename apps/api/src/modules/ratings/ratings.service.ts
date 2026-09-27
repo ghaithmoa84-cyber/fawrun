@@ -6,12 +6,12 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
-import { CONFIG } from '@fawrun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
 import type {
   CreateRatingBodyRequest,
   RatingResponse,
   UpdateRatingBodyRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { mapRating } from './rating.mapper.js';

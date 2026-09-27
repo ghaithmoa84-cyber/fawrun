@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import axios from 'axios';
-import { SyrianPhoneSchema, type LoginResponse } from '@fawrun/shared-types';
+import { SyrianPhoneSchema, type LoginResponse } from '@forerun/shared-types';
 
 export default function LoginPage() {
   const router = useRouter();

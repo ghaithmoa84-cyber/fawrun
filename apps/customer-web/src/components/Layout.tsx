@@ -8,7 +8,7 @@ import type {
   OrderDeliveredPayload,
   OrderCancelledPayload,
   OrderOutForDeliveryPayload,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 interface ToastState {
   message: string;

@@ -2,13 +2,13 @@ import { useEffect, useState, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import api from '../api/client';
 import { useWebSocket } from '../hooks/useWebSocket';
-import type { RunnerStatus } from '@fawrun/shared-constants';
+import type { RunnerStatus } from '@forerun/shared-constants';
 import type {
   ActiveOrderResponse,
   OrderAssignedPayload,
   RunnerProfileResponse,
   RunnerStatusUpdate,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import axios from 'axios';
 
 const RUNNER_STATUS_LABEL: Record<RunnerStatus, string> = {

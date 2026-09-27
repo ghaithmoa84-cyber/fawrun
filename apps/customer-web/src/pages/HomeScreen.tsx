@@ -2,13 +2,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/client';
 import { useCustomerWebSocket, CLIENT_EVENTS } from '../hooks/useCustomerWebSocket';
-import { ORDER_STATUS } from '@fawrun/shared-constants';
-import type { OrderStatus } from '@fawrun/shared-constants';
+import { ORDER_STATUS } from '@forerun/shared-constants';
+import type { OrderStatus } from '@forerun/shared-constants';
 import type {
   CustomerOrderListItem,
   CustomerProfile,
   PaginatedResponse,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { formatWhatsappUrl, formatTelUrl } from '../lib/phone';
 
 export const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {

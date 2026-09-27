@@ -11,7 +11,7 @@ import {
   type AdminOrderListItem,
   type PaginatedResponse,
   type OrderStatus,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 const ORDER_STATUS_LABEL: Record<OrderStatus, string> = {
   DRAFT: 'مسودة',

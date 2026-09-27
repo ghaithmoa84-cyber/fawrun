@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import { CLIENT_EVENTS } from '@fawrun/shared-types';
+import { CLIENT_EVENTS } from '@forerun/shared-types';
 import { useAuth } from './useAuth';
 
 import { playNotificationBeep } from '../lib/sound';

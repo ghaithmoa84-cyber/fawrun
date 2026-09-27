@@ -1,5 +1,5 @@
 import { beforeEach, describe, it, expect, vi } from 'vitest';
-import { LedgerQuerySchema, type LedgerQuery } from '@fawrun/shared-types';
+import { LedgerQuerySchema, type LedgerQuery } from '@forerun/shared-types';
 import { LedgerController } from '../../src/modules/ledger/ledger.controller.js';
 import { LedgerService } from '../../src/modules/ledger/ledger.service.js';
 import { ZodValidationPipe } from '../../src/common/pipes/zod-validation.pipe.js';

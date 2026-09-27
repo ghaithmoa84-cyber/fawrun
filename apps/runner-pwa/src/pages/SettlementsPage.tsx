@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import api from '../api/client';
-import type { SettlementStatus } from '@fawrun/shared-constants';
+import type { SettlementStatus } from '@forerun/shared-constants';
 import type {
   PaginatedMeta,
   RunnerCurrentSettlement,
   RunnerSettlement,
   RunnerSettlementListResponse,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import axios from 'axios';
 
 const SETTLEMENT_STATUS_LABEL: Record<SettlementStatus, string> = {

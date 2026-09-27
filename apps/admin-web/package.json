@@ -10,8 +10,8 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@fawrun/shared-constants": "workspace:*",
-    "@fawrun/shared-types": "workspace:*",
+    "@forerun/shared-constants": "workspace:*",
+    "@forerun/shared-types": "workspace:*",
     "axios": "^1.20.0",
     "leaflet": "^1.9.4",
     "next": "^14.2.0",

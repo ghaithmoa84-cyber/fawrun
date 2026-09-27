@@ -22,7 +22,7 @@ import {
   type RunnerSettlementsQuery,
   type PendingSettlementsQuery,
   type CuidParamRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';

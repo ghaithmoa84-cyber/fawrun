@@ -1,4 +1,4 @@
-import type { Rating, RatingResponse } from '@fawrun/shared-types';
+import type { Rating, RatingResponse } from '@forerun/shared-types';
 
 export function mapRating(rating: Rating, role: string): RatingResponse {
   const isAllowed = role === 'ADMIN';

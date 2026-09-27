@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { LoginSchema, RegisterSchema, SyrianPhoneSchema } from '@fawrun/shared-types';
+import { LoginSchema, RegisterSchema, SyrianPhoneSchema } from '@forerun/shared-types';
 
 describe('SyrianPhoneSchema (Syria local format: 09XXXXXXXX)', () => {
   const valid = ['0912345678', '0991234567', '0987654321'];

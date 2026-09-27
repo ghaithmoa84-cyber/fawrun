@@ -13,7 +13,7 @@ import {
   type SettlementStatus,
   type LedgerEntryType,
   SETTLEMENT_STATUS_VALUES,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { useAdminWebSocket } from '@/hooks/useAdminWebSocket';
 
 const SETTLEMENT_STATUS_LABEL: Record<SettlementStatus, string> = {
@@ -686,3 +686,7 @@ export default function SettlementsPage() {
     </div>
   );
 }
+
+
+
+

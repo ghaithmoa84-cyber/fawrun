@@ -10,7 +10,7 @@ import { Request } from 'express';
 import { IS_PUBLIC_KEY } from '../decorators/public.decorator.js';
 import { UsersService } from '../../modules/users/users.service.js';
 import { PrismaService } from '../../database/prisma.service.js';
-import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@forerun/shared-constants';
 
 export interface JwtPayload {
   sub: string;

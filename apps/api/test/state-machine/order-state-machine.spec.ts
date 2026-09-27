@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { type OrderStatus } from '@fawrun/shared-constants';
+import { type OrderStatus } from '@forerun/shared-constants';
 import { OrderStateMachine } from '../../src/state-machine/order-state-machine.js';
 import { ORDER_TRANSITIONS } from '../../src/state-machine/order-transitions.js';
 
