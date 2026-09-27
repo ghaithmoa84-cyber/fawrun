@@ -88,6 +88,7 @@ class RegisterViewModel @Inject constructor(
     }
 
     fun register() {
+        if (_uiState.value.isLoading) return
         val state = _uiState.value
         val isNameValid = state.name.trim().length >= 2
         val isWhatsappValid = state.whatsapp.matches(Regex("^09\\d{8}$"))

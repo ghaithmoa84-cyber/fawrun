@@ -36,8 +36,11 @@ fun ForerunNavGraph(
     if (tokenRefreshManager != null) {
         LaunchedEffect(tokenRefreshManager) {
             tokenRefreshManager.sessionExpiredEvent.collect {
-                navController.navigate(Routes.LOGIN) {
-                    popUpTo(0) { inclusive = true }
+                if (navController.currentDestination?.route != Routes.LOGIN) {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                        launchSingleTop = true
+                    }
                 }
             }
         }

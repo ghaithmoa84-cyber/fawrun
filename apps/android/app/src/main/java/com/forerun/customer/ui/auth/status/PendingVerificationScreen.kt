@@ -116,7 +116,9 @@ fun PendingVerificationScreen(
                 val intent = Intent(
                     Intent.ACTION_VIEW,
                     Uri.parse("https://wa.me/963951111111?text=${Uri.encode("مرحباً، أود تفعيل حسابي في تطبيق فَوْراً")}")
-                )
+                ).apply {
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
                 try {
                     context.startActivity(intent)
                 } catch (_: Exception) {

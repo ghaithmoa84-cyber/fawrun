@@ -37,17 +37,23 @@ class SplashViewModel @Inject constructor(
         viewModelScope.launch {
             // A subtle delay for visual smoothness and branding display
             delay(500)
-            when (val state = checkSessionUseCase()) {
-                is SessionState.NeedsOnboarding -> _destination.emit(SplashDestination.Onboarding)
-                is SessionState.Unauthenticated -> _destination.emit(SplashDestination.Login)
-                is SessionState.Authenticated -> {
-                    when (state.user.status) {
-                        UserStatus.VERIFIED -> _destination.emit(SplashDestination.Home)
-                        UserStatus.PENDING_VERIFICATION -> _destination.emit(SplashDestination.PendingVerification)
-                        UserStatus.SUSPENDED -> _destination.emit(SplashDestination.Suspended)
-                        else -> _destination.emit(SplashDestination.Login)
+            try {
+                kotlinx.coroutines.withTimeoutOrNull(4000L) {
+                    when (val state = checkSessionUseCase()) {
+                        is SessionState.NeedsOnboarding -> _destination.emit(SplashDestination.Onboarding)
+                        is SessionState.Unauthenticated -> _destination.emit(SplashDestination.Login)
+                        is SessionState.Authenticated -> {
+                            when (state.user.status) {
+                                UserStatus.VERIFIED -> _destination.emit(SplashDestination.Home)
+                                UserStatus.PENDING_VERIFICATION -> _destination.emit(SplashDestination.PendingVerification)
+                                UserStatus.SUSPENDED -> _destination.emit(SplashDestination.Suspended)
+                                else -> _destination.emit(SplashDestination.Login)
+                            }
+                        }
                     }
-                }
+                } ?: _destination.emit(SplashDestination.Login)
+            } catch (_: Exception) {
+                _destination.emit(SplashDestination.Login)
             }
         }
     }

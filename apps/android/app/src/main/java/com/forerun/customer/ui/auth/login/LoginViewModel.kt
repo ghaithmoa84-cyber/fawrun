@@ -71,6 +71,7 @@ class LoginViewModel @Inject constructor(
     }
 
     fun login() {
+        if (_uiState.value.isLoading) return
         val state = _uiState.value
         val isPhoneValid = state.whatsapp.matches(Regex("^09\\d{8}$"))
         val isPasswordValid = state.password.length >= 8
