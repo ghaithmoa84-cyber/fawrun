@@ -213,7 +213,7 @@ apps/android/
 **Base URL:**
 - Debug (emulator): `http://10.0.2.2:3000/api/v1`
 - Debug (device): `http://<local-ip>:3000/api/v1`
-- Release: `https://forerun-api.up.railway.app/api/v1` (to be updated)
+- Release: `https://fawrun-api-production.up.railway.app/api/v1`
 
 **Timeouts:**
 - Connect: 15s
