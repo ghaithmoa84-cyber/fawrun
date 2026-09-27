@@ -263,22 +263,45 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
-## Next: Sprint 1.4
+## Handoff from Sprint 1.3
+
+### 1. `handleSessionExpired()` Mechanism
+- `TokenRefreshManager` exposes `val sessionExpiredEvent: SharedFlow<Unit>`.
+- When a 401 response occurs and silent refresh fails, `handleSessionExpired()` clears tokens via `TokenStorage.clearAll()` and emits to `sessionExpiredEvent`.
+- **Sprint 1.4 action:** Collect `sessionExpiredEvent` in `MainActivity` or root `ForerunNavGraph` and navigate to the `login` route, clearing the back stack.
+
+### 2. Sprint 1.3 Remaining TODOs (for Sprint 1.4+)
+- [ ] Add unit test for `HeaderInterceptor` (`Accept-Language: ar-SY`, `X-Client: android`).
+- [ ] Add unit test for `TokenRefreshManager` covering concurrent `Mutex` access and token expiry calculations.
+- [ ] Consider separating `ApiErrorParser` if `ApiCall.kt` exceeds 150 lines.
+- [ ] Review 13 unstaged docs/config files in root repo before first production APK.
+
+### 3. Production Base URL
+- Verified and fixed in spec and code: `https://fawrun-api-production.up.railway.app/api/v1/`
+
+---
+
+## Sprint 1.4: Auth Flow ⏳ (Active)
 
 **Goal:** Auth flow end-to-end.
 
 **Screens:**
-- Splash
-- Onboarding (3 screens, shown once via DataStore)
-- Login
-- Register
-- Pending Verification
+- Splash (`splash`)
+- Onboarding (`onboarding`, 3 screens, persisted via DataStore Preferences)
+- Login (`login`)
+- Register (`register`, stub address for Al-Qanjara)
+- Pending Verification (`pending_verification`)
+- Suspended (`suspended`, P1)
+- Home (`home`, stub)
 
 **Deliverables:**
-- Navigation set up
-- ViewModels + UiStates
-- Integration with backend auth endpoints
-- First real APK that logs in
+- Navigation set up (`ForerunNavGraph.kt`)
+- ViewModels + UiStates (`UiState` data class + `Intent` sealed interface)
+- Domain Use Cases: `LoginUseCase`, `RegisterUseCase`, `LogoutUseCase`, `CheckSessionUseCase`
+- Repository: `AuthRepository` (interface in domain, impl in data)
+- DataStore preference for `onboarding_seen` flag (`OnboardingPrefs`)
+- Session expired event collection in UI
+- First real APK that logs in end-to-end
 
 **Estimated:** 4-5 days.
 
@@ -287,8 +310,9 @@ must be corrected to match `Color.kt` during Compose implementation.
 ## Contact & Handoff
 
 **Repository:** `github.com/ghaithmoa84-cyber/forerun`
-**Active branch:** `feature/android-sprint-1-3-networking`
-**Next session:** Continue with Sprint 1.4 (Auth Flow)
+**Active branch:** `feature/android-sprint-1-4-auth-flow`
+**Current session:** Sprint 1.4 (Auth Flow)
+
 
 
 **Reference documents:**
