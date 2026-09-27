@@ -1,8 +1,8 @@
-# FAWRUN - Project Brief (English)
+# FORERUN - Project Brief (English)
 
-## 1. What FAWRUN Is
+## 1. What FORERUN Is
 
-FAWRUN is a grocery delivery platform (Syria-based). A customer places an order; a runner buys the items and delivers them; payment is cash on delivery. FAWRUN takes 25% of the service fee; the runner keeps 75%.
+FORERUN is a grocery delivery platform (Syria-based). A customer places an order; a runner buys the items and delivers them; payment is cash on delivery. FORERUN takes 25% of the service fee; the runner keeps 75%.
 
 MVP scope: buying items from one or more stores + delivery. No catalog, no online payments, no store integration. Store names are free-text written by the customer or runner - there is no store database.
 
@@ -11,6 +11,7 @@ MVP scope: buying items from one or more stores + delivery. No catalog, no onlin
 - Style: Modular Monolith inside a Monorepo (not microservices - easier now, can split later).
 - Backend and Frontend are fully separated.
 - Communication: REST API (/api/v1) + real-time WebSocket (Socket.IO).
+  Note: A customer-web app exists alongside the planned android app.
 - Server is always the source of truth - never compute fees or change states on the frontend.
 
 ### Monorepo layout
@@ -21,7 +22,8 @@ apps/api/src/state-machine/ - order / orderStore / runner machines
 apps/api/src/common/ - guards, decorators, filters, interceptors
 apps/admin-web/ - Next.js 14 (App Router)
 apps/runner-pwa/ - React 18 + Vite + PWA
-apps/customer-web/ - React + Vite
+apps/android/ - Kotlin (Native Android)
+apps/customer-web/ - React 18 + Vite (customer web interface - tested in S2)
 packages/shared-types/ - DTOs + Zod schemas shared by all apps
 packages/shared-constants/ - shared enums + pricing constants
 
@@ -104,7 +106,12 @@ Strict rules:
 - After IN_PROGRESS, cancellation is admin-only.
 - DELIVERED is final - no reversal in the app.
 - Every transition is logged to AuditLog with actor + timestamp.
-- DELIVERED is idempotent - if sent twice, executes once (409 CONFLICT on duplicate).
+- DELIVERED duplicate detection: a second PUT /deliver returns 409 ORDER_ALREADY_DELIVERED.
+  ⚠️ Known limitation (BUG-016, confirmed S3.15): the "safe" path (idempotent: true)
+  is unreachable due to a pre-transaction check. The 409 prevents duplicate financial
+  entries but does not return an idempotent success response.
+- Idempotency on other state transitions (purchaseStore, proceedToDelivery, startOrder):
+  no idempotencyKey defined; duplicate calls return clean 422 (Design Gap, Phase 3).
 
 ### 5.2 OrderStore State Machine
 PENDING -> [runner taps purchased] -> PURCHASED (final)
@@ -332,7 +339,12 @@ Cron reminder: runs daily at 23:00 Damascus time. If there are pending orders fo
 8. HTTPS mandatory in production
 9. Environment variables for all secrets - no secrets in code or Git
 10. CORS: restricted to approved origins only
-11. Database connection pooling: connection_limit in DATABASE_URL for Railway load
+11. Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), usb=()
+12. Central exception handling: Prisma P2002 (unique violation) → 409 CONFLICT
+    (implemented via AllExceptionsFilter, post-review F1)
+13. All API error messages and Zod validation messages: Arabic (post-review F4/F5/F6)
+14. Field paths in validation errors: localized to Arabic (e.g., "المواد[0].اسم المادة")
+15. Database connection pooling: connection_limit in DATABASE_URL for Railway load
 
 ## 13. Deployment
 
@@ -425,7 +437,9 @@ Sprint 6 - QA + Launch (1 week)
 2. Every state change goes through the State Machine - never mutate the status field directly in a service without going through the machine.
 3. Every financial operation = LedgerEntry - no financial operation without a Ledger record.
 4. Use transactions for composite operations - assign runner + update status + AuditLog = one transaction.
-5. Idempotency - the delivered operation, if sent twice, executes only once.
+5. Idempotency - the delivered operation returns 409 on duplicate; the safe idempotent
+   path is currently unreachable (BUG-016). Other state transitions rely on clean 422
+   rejection (Design Gap).
 6. No history deletion - soft delete only. AuditLog and LedgerEntry: never delete.
 7. orderNumber is generated from seqNumber - always inside a transaction, right after save.
 8. Automatic refresh token - the frontend refreshes the access token silently 10 minutes before it expires.
@@ -434,23 +448,6 @@ Sprint 6 - QA + Launch (1 week)
 11. API versioning respected - every endpoint under /api/v1/ without exception.
 12. Zod on every input - never trust any incoming data, no matter the source.
 13. Environment variables only for secrets - no keys in code or in Git.
-
-## 16. Current Status (as of 2026-09-18)
-
-- Sprint 1 is COMPLETE - all 13 sub-tasks done.
-- Sprint 2 (Order Core) is COMPLETE - PR #3 merged.
-- 40+ endpoints implemented (auth + admin users/runners + customer/runner/admin orders).
-- Prisma schema, WebSocket gateway, rate limiting, CORS all in place.
-- State Machines (Order, OrderStore, Runner) implemented and enforced.
-- Pricing Engine implemented with recalculateFee().
-- Audit Log integrated across all state transitions.
-- Ledger module implemented (GET /api/v1/admin/ledger).
-- Admin Dashboard (Next.js) basic structure in place.
-- Post-review fixes in progress on branch feature/sprint-2-post-review-fixes.
-- Frontends (admin-web, runner-pwa, android) not yet implemented (Sprints 3-5).
-- Settlement, Ratings, Receipts modules not yet implemented (Sprints 3-4).
-Note: R09 review (2026-09-17) identified 15 P0 and 21 P1 issues.
-See CHANGELOG.md for the full remediation status.
 
 ## 17. Development Workflow
 
@@ -478,6 +475,10 @@ Commands:
 - pnpm db:generate - generate Prisma client
 - pnpm db:push - push schema to DB
 
+⚠️ Note: The local review workflow currently uses direct commits
+to master. CodeRabbit / PR workflow described here is historical and may not reflect
+current practice.
+
 ## 18. Agents, Commands & Skills
 
 Agents:
@@ -499,8 +500,8 @@ Skills:
 
 ## 19. How to Use This Brief
 
-This file is a condensed English summary of the FAWRUN project, intended for another AI tool to understand the project quickly. It covers:
-- What FAWRUN is and its business model
+This file is a condensed English summary of the FORERUN project, intended for another AI tool to understand the project quickly. It covers:
+- What FORERUN is and its business model
 - Architecture and tech stack
 - Data model (Prisma schema) and critical data rules
 - The three State Machines (Order, OrderStore, Runner) - the most critical part
@@ -519,7 +520,28 @@ This file is a condensed English summary of the FAWRUN project, intended for ano
 - Agents, commands, and skills
 
 For the full detail, refer to:
-- FAWRUN - MVP Technical Specification.txt (the authoritative spec, mostly Arabic)
+- FORERUN - MVP Technical Specification.txt (the authoritative spec, mostly Arabic)
 - CURRENT_STATE.md (current sprint status)
 - AGENTS.md (coding standards and workflow)
 - .kilo/agent/*.md, .kilo/command/*.md, .kilo/skills/*/SKILL.md (agent/command/skill definitions)
+
+## 20. Known Limitations
+
+### Deferred (low priority)
+- BUG-001: R2 delete inside transaction (perf).
+- BUG-002: SettlementItem loop instead of createMany (perf).
+- BUG-004: RATE_LIMIT_GENERAL orphan constant.
+- BUG-005: order:needs_attention cron TODO.
+- BUG-008: Duplicate ORDER_SUBMITTED audit entry.
+- BUG-010: Approve button performs two transitions (UX decision).
+- BUG-023: Latent stored XSS on user.name (no exploit path in current React code).
+- RefreshToken cleanup: 28+ records per user; needs a scheduled cleanup job.
+
+### Blocked (environmental)
+- BUG-015: R2 upload failure UX — no R2 mock available locally.
+
+### Known coverage gaps
+- WebSocket notifications: not tested.
+- Order reassignment: not tested.
+- F2-part1: code-verified only (no behavioral test).
+- Performance / load testing: not performed.

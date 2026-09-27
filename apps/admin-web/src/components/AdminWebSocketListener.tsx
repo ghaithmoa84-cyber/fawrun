@@ -3,7 +3,7 @@
 import { useEffect } from 'react';
 import { useAdminWebSocket } from '@/hooks/useAdminWebSocket';
 import { useToast } from '@/components/Toast';
-import { ADMIN_EVENTS, type SettlementReminderPayload } from '@fawrun/shared-types';
+import { ADMIN_EVENTS, type SettlementReminderPayload } from '@forerun/shared-types';
 
 export function AdminWebSocketListener() {
   const { on, isConnected } = useAdminWebSocket();
@@ -21,3 +21,7 @@ export function AdminWebSocketListener() {
 
   return null;
 }
+
+
+
+

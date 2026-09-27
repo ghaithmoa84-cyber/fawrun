@@ -1,6 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import type { Prisma } from '@prisma/client';
-import type { AdminOrderAuditEntry, AdminOrderDetails, AdminOrderListItem, AdminOrderStore, AdminOrdersQuery, PaginatedResponse } from '@fawrun/shared-types';
+import type { AdminOrderAuditEntry, AdminOrderDetails, AdminOrderListItem, AdminOrderStore, AdminOrdersQuery, PaginatedResponse } from '@forerun/shared-types';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { mapOrderItem } from './order-mapper.js';
 

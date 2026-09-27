@@ -1,4 +1,4 @@
-# FAWRUN — Handoff
+# FORERUN — Handoff
 
 > **آخر تحديث:** 2026-09-24
 > **المصدر الوحيد للحقيقة:** [PROJECT_STATUS.md](PROJECT_STATUS.md)

@@ -2,9 +2,9 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/client';
 import { useCustomerWebSocket, CLIENT_EVENTS } from '../hooks/useCustomerWebSocket';
-import { ORDER_STATUS, ORDER_STATUS_VALUES } from '@fawrun/shared-constants';
-import type { OrderStatus } from '@fawrun/shared-constants';
-import type { CustomerOrderListItem, PaginatedResponse } from '@fawrun/shared-types';
+import { ORDER_STATUS, ORDER_STATUS_VALUES } from '@forerun/shared-constants';
+import type { OrderStatus } from '@forerun/shared-constants';
+import type { CustomerOrderListItem, PaginatedResponse } from '@forerun/shared-types';
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from './HomeScreen';
 
 export function OrdersListScreen() {

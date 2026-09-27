@@ -1,10 +1,11 @@
-# FAWRUN Coding Standards & Workflow
+# FORERUN Coding Standards & Workflow
 
-> **ملاحظة:** القواعد الكاملة للعمل مع الوكلاء (قواعد التعامل) موجودة في [HANDOFF.md](HANDOFF.md).
-> هذا الملف هو المرجع السريع للمعايير والأدوات والأوامر.
+> **ملاحظة:** الحالة الحالية للمشروع وآخر جلسة مراجعة موثّقة في
+> [docs/review/HANDOFF-TO-NEXT-SESSION.md](docs/review/HANDOFF-TO-NEXT-SESSION.md).
+> راجعها قبل أي عمل. هذا الملف هو المرجع للمعايير والأدوات والأوامر.
 
 ## Project Overview
-FAWRUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
+FORERUN is a grocery delivery platform built as a Modular Monolith in a Monorepo.
 - Backend: NestJS + PostgreSQL + Prisma + Socket.IO
 - Admin Dashboard: Next.js 14 (App Router)
 - Runner PWA: React + Vite + PWA
@@ -89,6 +90,6 @@ Active in `.agents/skills/`:
 - pnpm typecheck — Type check all code
 - pnpm test — Run all tests
 - pnpm db:generate — Generate Prisma client
-- pnpm db:push — ⚠️ EMERGENCY ONLY — pushes schema to DB directly without a migration; causes schema drift. Use `prisma migrate deploy` instead (see [PROJECT_STATUS.md §1.2](PROJECT_STATUS.md))
+- pnpm db:push — ⚠️ EMERGENCY ONLY — pushes schema to DB directly without a migration; causes schema drift. Use `prisma migrate deploy` instead.
 - node scripts/diff-schema.js — Detect schema drift against the live production DB
 - docs/runbook-schema-drift.md — Runbook for schema drift diagnosis

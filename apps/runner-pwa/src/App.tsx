@@ -8,7 +8,7 @@ import { ActiveOrderPage } from './pages/ActiveOrderPage';
 import { SettlementsPage } from './pages/SettlementsPage';
 import { Layout } from './components/Layout';
 import api from './api/client';
-import type { ActiveOrderResponse } from '@fawrun/shared-types';
+import type { ActiveOrderResponse } from '@forerun/shared-types';
 
 function RequireAuth({ children }: { children: ReactNode }) {
   const { isAuthenticated, user } = useAuth();

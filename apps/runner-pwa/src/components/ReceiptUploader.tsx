@@ -3,7 +3,7 @@ import api from '../api/client';
 import type {
   CreateReceiptResponse,
   PresignedUrlResponse,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import axios from 'axios';
 
 interface ReceiptUploaderProps {

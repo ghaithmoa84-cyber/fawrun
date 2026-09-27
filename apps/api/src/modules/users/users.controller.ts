@@ -10,7 +10,7 @@ import {
   type CuidParamRequest,
   PaginationQuerySchema,
   type PaginationQueryRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 
 @Controller('admin/users')
 @UseGuards(VerifiedUserGuard, RolesGuard)

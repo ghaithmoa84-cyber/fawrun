@@ -9,8 +9,8 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
-import { CONFIG, ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
-import type { RegisterRequest, LoginRequest, RefreshRequest } from '@fawrun/shared-types';
+import { CONFIG, ACCOUNT_SUSPENDED_MESSAGE } from '@forerun/shared-constants';
+import type { RegisterRequest, LoginRequest, RefreshRequest } from '@forerun/shared-types';
 import type { LogoutDto } from './dto/logout.dto.js';
 
 function generateSelector(): string {

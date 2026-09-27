@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/client';
-import type { CustomerOrderDetails } from '@fawrun/shared-types';
+import type { CustomerOrderDetails } from '@forerun/shared-types';
 import axios from 'axios';
 
 export function RatingScreen() {

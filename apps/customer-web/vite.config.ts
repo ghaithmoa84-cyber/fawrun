@@ -19,8 +19,8 @@ export default defineConfig({
   },
   resolve: {
     alias: {
-      '@fawrun/shared-constants': path.resolve(__dirname, '../../packages/shared-constants/src/index.ts'),
-      '@fawrun/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
+      '@forerun/shared-constants': path.resolve(__dirname, '../../packages/shared-constants/src/index.ts'),
+      '@forerun/shared-types': path.resolve(__dirname, '../../packages/shared-types/src/index.ts'),
     },
   },
 });

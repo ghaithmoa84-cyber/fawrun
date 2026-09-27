@@ -8,7 +8,7 @@ import type {
   CustomerAddressResponse,
   UpdateCustomerRequest,
   UpdateCustomerAddressRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import axios from 'axios';
 
 // Leaflet custom marker with Fawrun brand color

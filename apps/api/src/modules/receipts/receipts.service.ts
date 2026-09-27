@@ -5,7 +5,7 @@ import {
   NotFoundException,
   BadRequestException,
 } from '@nestjs/common';
-import { CONFIG } from '@fawrun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
 import type {
   CreateReceiptRequest,
   CreateReceiptResponse,
@@ -13,7 +13,7 @@ import type {
   PresignedUrlRequest,
   PresignedUrlResponse,
   Receipt,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { R2Service } from './r2.service.js';

@@ -8,7 +8,7 @@ import {
 import {
   LedgerQuerySchema,
   type LedgerQuery,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { Roles } from '../../common/decorators/roles.decorator.js';
 import { VerifiedUserGuard } from '../../common/guards/verified-user.guard.js';
 import { RolesGuard } from '../../common/guards/roles.guard.js';

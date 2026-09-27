@@ -26,10 +26,10 @@ importers:
 
   apps/admin-web:
     dependencies:
-      '@fawrun/shared-constants':
+      '@forerun/shared-constants':
         specifier: workspace:*
         version: link:../../packages/shared-constants
-      '@fawrun/shared-types':
+      '@forerun/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       axios:
@@ -102,10 +102,10 @@ importers:
       '@aws-sdk/s3-request-presigner':
         specifier: ^3.1135.0
         version: 3.1135.0
-      '@fawrun/shared-constants':
+      '@forerun/shared-constants':
         specifier: workspace:*
         version: link:../../packages/shared-constants
-      '@fawrun/shared-types':
+      '@forerun/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       '@nestjs/common':
@@ -244,10 +244,10 @@ importers:
 
   apps/customer-web:
     dependencies:
-      '@fawrun/shared-constants':
+      '@forerun/shared-constants':
         specifier: workspace:*
         version: link:../../packages/shared-constants
-      '@fawrun/shared-types':
+      '@forerun/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       axios:
@@ -302,10 +302,10 @@ importers:
 
   apps/runner-pwa:
     dependencies:
-      '@fawrun/shared-constants':
+      '@forerun/shared-constants':
         specifier: workspace:*
         version: link:../../packages/shared-constants
-      '@fawrun/shared-types':
+      '@forerun/shared-types':
         specifier: workspace:*
         version: link:../../packages/shared-types
       axios:

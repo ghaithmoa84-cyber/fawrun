@@ -2,8 +2,8 @@ import { useState, useEffect, type FormEvent } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import axios from 'axios';
-import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
-import { SyrianPhoneSchema } from '@fawrun/shared-types';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@forerun/shared-constants';
+import { SyrianPhoneSchema } from '@forerun/shared-types';
 
 export function LoginPage() {
   const navigate = useNavigate();

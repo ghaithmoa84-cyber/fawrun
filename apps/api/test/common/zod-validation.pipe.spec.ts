@@ -17,7 +17,7 @@ describe('ZodValidationPipe with Arabic ErrorMap', () => {
     const pipe = new ZodValidationPipe(testSchema);
     expect(() => pipe.transform({}, dummyMetadata)).toThrowError(
       expect.objectContaining({
-        message: expect.stringContaining('name: هذا الحقل مطلوب'),
+        message: expect.stringContaining('الاسم: هذا الحقل مطلوب'),
       }),
     );
   });
@@ -31,7 +31,7 @@ describe('ZodValidationPipe with Arabic ErrorMap', () => {
       ),
     ).toThrowError(
       expect.objectContaining({
-        message: 'name: القيمة قصيرة جدًا',
+        message: 'الاسم: القيمة قصيرة جدًا',
       }),
     );
   });
@@ -88,7 +88,7 @@ describe('ZodValidationPipe with Arabic ErrorMap', () => {
       const ex = err as BadRequestException;
       const res = ex.getResponse() as Record<string, unknown>;
       expect(res.message).toBe(
-        'name: القيمة قصيرة جدًا, role: هذا الحقل مطلوب, age: القيمة طويلة جدًا, email: هذا الحقل مطلوب',
+        'الاسم: القيمة قصيرة جدًا، role: هذا الحقل مطلوب، age: القيمة طويلة جدًا، email: هذا الحقل مطلوب',
       );
     }
   });

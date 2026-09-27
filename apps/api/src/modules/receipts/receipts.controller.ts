@@ -13,7 +13,7 @@ import {
   PresignedUrlRequestSchema,
   RunnerOrderStoreParamSchema,
   RunnerReceiptParamSchema,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import type {
   CreateReceiptRequest,
   CreateReceiptResponse,
@@ -22,7 +22,7 @@ import type {
   PresignedUrlResponse,
   RunnerOrderStoreParamRequest,
   RunnerReceiptParamRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { CurrentUser } from '../../common/decorators/current-user.decorator.js';
 import { Roles } from '../../common/decorators/roles.decorator.js';

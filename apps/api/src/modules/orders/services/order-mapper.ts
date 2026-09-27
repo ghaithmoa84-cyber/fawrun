@@ -1,4 +1,4 @@
-import type { CustomerOrderItem } from '@fawrun/shared-types';
+import type { CustomerOrderItem } from '@forerun/shared-types';
 
 export function mapOrderItem(item: {
   id: string;

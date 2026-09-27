@@ -2,8 +2,8 @@ import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/client';
 import { useCustomerWebSocket, CLIENT_EVENTS } from '../hooks/useCustomerWebSocket';
-import { ORDER_STATUS } from '@fawrun/shared-constants';
-import type { OrderStatus } from '@fawrun/shared-constants';
+import { ORDER_STATUS } from '@forerun/shared-constants';
+import type { OrderStatus } from '@forerun/shared-constants';
 import type {
   CustomerOrderDetails,
   OrderFeeUpdatedPayload,
@@ -11,7 +11,7 @@ import type {
   OrderDeliveredPayload,
   OrderCancelledPayload,
   OrderOutForDeliveryPayload,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { formatWhatsappUrl, formatTelUrl } from '../lib/phone';
 import { ORDER_STATUS_LABEL, ORDER_STATUS_BADGE } from './HomeScreen';
 

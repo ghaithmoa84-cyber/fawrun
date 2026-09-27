@@ -4,8 +4,8 @@ import axios, {
   type InternalAxiosRequestConfig,
   type AxiosResponse,
 } from 'axios';
-import type { LoginResponse } from '@fawrun/shared-types';
-import { ACCOUNT_SUSPENDED_MESSAGE } from '@fawrun/shared-constants';
+import type { LoginResponse } from '@forerun/shared-types';
+import { ACCOUNT_SUSPENDED_MESSAGE } from '@forerun/shared-constants';
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api/v1',

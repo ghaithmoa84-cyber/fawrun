@@ -6,15 +6,15 @@ import {
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
-import type { OrderStatus } from '@fawrun/shared-constants';
-import { CONFIG } from '@fawrun/shared-constants';
-import { CreateOrderRequest } from '@fawrun/shared-types';
+import type { OrderStatus } from '@forerun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
+import { CreateOrderRequest } from '@forerun/shared-types';
 import type {
   CreateOrderResponse,
   CustomerOrderDetails,
   CustomerOrderListItem,
   CustomerOrdersQuery,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { PrismaService } from '../../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';

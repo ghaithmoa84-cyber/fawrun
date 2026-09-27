@@ -1,4 +1,4 @@
-# FAWRUN — Project Status & Diagnostic Playbook
+# FORERUN — Project Status & Diagnostic Playbook
 
 > **آخر تحديث:** 2026-09-23
 > **الغرض:** هذا الملف هو المرجع الوحيد لحالة المشروع، القرارات المعمارية، الأخطاء المعروفة، وحلولها.

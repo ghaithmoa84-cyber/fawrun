@@ -16,8 +16,8 @@ import {
   RunnerCurrentSettlementSchema,
   type RunnerCurrentSettlement,
   type RunnerSettlementItem,
-} from '@fawrun/shared-types';
-import { PRICING } from '@fawrun/shared-constants';
+} from '@forerun/shared-types';
+import { PRICING } from '@forerun/shared-constants';
 
 import { fromZonedTime } from 'date-fns-tz';
 

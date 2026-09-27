@@ -10,7 +10,7 @@ import * as bcrypt from 'bcrypt';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { RunnerStateMachine } from '../../state-machine/runner-state-machine.js';
-import { CONFIG } from '@fawrun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
 
 @Injectable()
 export class RunnersService {

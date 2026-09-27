@@ -1,5 +1,5 @@
 import { Injectable, UnprocessableEntityException, ConflictException } from '@nestjs/common';
-import { type OrderStatus } from '@fawrun/shared-constants';
+import { type OrderStatus } from '@forerun/shared-constants';
 import {
   TERMINAL_ORDER_STATUSES,
   type OrderActor,

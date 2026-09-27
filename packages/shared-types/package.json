@@ -1,5 +1,5 @@
 {
-  "name": "@fawrun/shared-types",
+  "name": "@forerun/shared-types",
   "version": "0.0.1",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

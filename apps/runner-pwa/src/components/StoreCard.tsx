@@ -1,11 +1,11 @@
 import { useState, type FormEvent } from 'react';
 import api from '../api/client';
-import type { OrderStoreStatus } from '@fawrun/shared-constants';
+import type { OrderStoreStatus } from '@forerun/shared-constants';
 import type {
   ActiveOrderStore,
   ActiveOrderStoreReceipt,
   CreateRunnerOrderItemRequest,
-} from '@fawrun/shared-types';
+} from '@forerun/shared-types';
 import { ItemsList } from './ItemsList';
 import { ReceiptUploader } from './ReceiptUploader';
 import axios from 'axios';
