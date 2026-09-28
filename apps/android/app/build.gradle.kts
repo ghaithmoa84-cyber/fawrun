@@ -77,6 +77,10 @@ dependencies {
     // Secure Storage
     implementation(libs.androidx.security.crypto)
 
+    // Maps & Location
+    implementation(libs.maplibre.android)
+    implementation(libs.play.services.location)
+
     // DataStore (Preferences)
     implementation(libs.androidx.datastore.preferences)
 

@@ -18,8 +18,13 @@ datastore = "1.1.1"
 coroutines = "1.9.0"
 junit = "4.13.2"
 turbine = "1.1.0"
+maplibre = "11.5.2"
+playServicesLocation = "21.3.0"
 
 [libraries]
+maplibre-android = { module = "org.maplibre.gl:android-sdk", version.ref = "maplibre" }
+play-services-location = { module = "com.google.android.gms:play-services-location", version.ref = "playServicesLocation" }
+
 androidx-core-ktx = { module = "androidx.core:core-ktx", version.ref = "coreKtx" }
 androidx-appcompat = { module = "androidx.appcompat:appcompat", version.ref = "appcompat" }
 material = { module = "com.google.android.material:material", version.ref = "material" }
