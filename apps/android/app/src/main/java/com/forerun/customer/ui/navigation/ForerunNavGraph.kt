@@ -1,18 +1,24 @@
 package com.forerun.customer.ui.navigation
 
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Scaffold
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.compose.currentBackStackEntryAsState
 import com.forerun.customer.data.remote.token.TokenRefreshManager
+import com.forerun.customer.ui.account.AccountScreen
 import com.forerun.customer.ui.auth.login.LoginScreen
 import com.forerun.customer.ui.auth.register.RegisterScreen
 import com.forerun.customer.ui.auth.status.PendingVerificationScreen
 import com.forerun.customer.ui.auth.status.SuspendedScreen
 import com.forerun.customer.ui.home.HomeScreen
 import com.forerun.customer.ui.onboarding.OnboardingScreen
+import com.forerun.customer.ui.orders.OrdersScreen
 import com.forerun.customer.ui.splash.SplashDestination
 import com.forerun.customer.ui.splash.SplashScreen
 
@@ -24,6 +30,8 @@ object Routes {
     const val PENDING_VERIFICATION = "pending_verification"
     const val SUSPENDED = "suspended"
     const val HOME = "home"
+    const val ORDERS = "orders"
+    const val ACCOUNT = "account"
 }
 
 @Composable
@@ -46,11 +54,34 @@ fun ForerunNavGraph(
         }
     }
 
-    NavHost(
-        navController = navController,
-        startDestination = startDestination,
-        modifier = modifier
-    ) {
+    val navBackStackEntry by navController.currentBackStackEntryAsState()
+    val currentRoute = navBackStackEntry?.destination?.route
+    val showBottomBar = currentRoute in setOf(Routes.HOME, Routes.ORDERS, Routes.ACCOUNT)
+
+    Scaffold(
+        modifier = modifier,
+        bottomBar = {
+            if (showBottomBar) {
+                ForerunBottomNavBar(
+                    currentRoute = currentRoute,
+                    onNavigateToRoute = { route ->
+                        navController.navigate(route) {
+                            popUpTo(Routes.HOME) {
+                                saveState = true
+                            }
+                            launchSingleTop = true
+                            restoreState = true
+                        }
+                    }
+                )
+            }
+        }
+    ) { innerPadding ->
+        NavHost(
+            navController = navController,
+            startDestination = startDestination,
+            modifier = Modifier.padding(innerPadding)
+        ) {
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigate = { destination ->
@@ -137,5 +168,18 @@ fun ForerunNavGraph(
                 }
             )
         }
+        composable(Routes.ORDERS) {
+            OrdersScreen()
+        }
+        composable(Routes.ACCOUNT) {
+            AccountScreen(
+                onNavigateToLogin = {
+                    navController.navigate(Routes.LOGIN) {
+                        popUpTo(0) { inclusive = true }
+                    }
+                }
+            )
+        }
     }
+}
 }
