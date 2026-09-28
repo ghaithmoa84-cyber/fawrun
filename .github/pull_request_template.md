@@ -10,7 +10,7 @@
 
 ## أمر التحقق
 ```bash
-pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test
+pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test
 ```
 النتيجة: [ ] نجح
 

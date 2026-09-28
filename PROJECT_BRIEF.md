@@ -15,7 +15,7 @@ MVP scope: buying items from one or more stores + delivery. No catalog, no onlin
 - Server is always the source of truth - never compute fees or change states on the frontend.
 
 ### Monorepo layout
-fawrun/
+forerun/
 apps/api/src/modules/ - auth, users, customers, runners, orders, order-items, order-stores, pricing, settlements, ledger, ratings, receipts, notifications, audit
 apps/api/src/websocket/ - Socket.IO gateways
 apps/api/src/state-machine/ - order / orderStore / runner machines

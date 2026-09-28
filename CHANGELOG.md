@@ -37,7 +37,7 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 
 **الأوامر والنتائج:**
 - `pnpm exec turbo run typecheck --force` → 4/4 packages successful (كان يوجد cache قديم أظهر خطأ `pricing` غير موجود اقتارفه، تم حله بزيارة الكاش)
-- `pnpm exec turbo run lint --force` → 4/4 successful؛ fawrun-api نظيف؛ تحذيرات runner-pwa موجودة مسبقًا غير مرتبطة
+- `pnpm exec turbo run lint --force` → 4/4 successful؛ forerun-api نظيف؛ تحذيرات runner-pwa موجودة مسبقًا غير مرتبطة
 
 ### 2026-09-12 18:18 — CodeRabbit review documentation fixes (Sprint 2/3 Brief)
 
@@ -75,7 +75,7 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 - `pnpm build` → نجح، 3/3 حزم
 - `pnpm typecheck` → نجح، 3/3 حزم
 - `pnpm lint` → نجح، 3/3 حزم
-- `pnpm --filter fawrun-api test` → نجح، 7 ملفات و148 اختبارًا
+- `pnpm --filter forerun-api test` → نجح، 7 ملفات و148 اختبارًا
 
 **الأخطاء والحلول:**
 - لا توجد أخطاء تشغيل
@@ -92,9 +92,9 @@ and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.ht
 Expose runner-owned paginated settlement history and the current settlement while enforcing RUNNER authorization, verified-account checks, pagination validation, and rate limiting.
 
 **Commands and results:**
-- `pnpm --filter fawrun-api typecheck` → passed
-- `pnpm --filter fawrun-api lint` → passed
-- `pnpm --filter fawrun-api test` → passed, 9 files / 163 tests
+- `pnpm --filter forerun-api typecheck` → passed
+- `pnpm --filter forerun-api lint` → passed
+- `pnpm --filter forerun-api test` → passed, 9 files / 163 tests
 - `git diff -- apps/api/src/modules/settlements/settlements.controller.ts && git status --short` → controller diff reviewed; working tree contains unrelated concurrent changes
 
 **Errors and resolutions:**
@@ -114,12 +114,12 @@ Implement Task 4.5 — provide runner-facing settlement views with support for t
 **Commands and results:**
 - `pnpm typecheck` → passed, 4/4 packages
 - `pnpm lint` → passed, 4/4 packages (0 errors)
-- `pnpm --filter fawrun-api test` → passed, 9 files / 163 tests
+- `pnpm --filter forerun-api test` → passed, 9 files / 163 tests
 
 **Errors and resolutions:**
 - `settlementItems does not exist` in Prisma include — the relation in schema is `items`, not `settlementItems` → corrected relation name
 - TS2322 nullable fields (`orderNumber: string | null`, `deliveredAt: Date | null`) don't match `RunnerSettlementItemSchema` (non-nullable) → used non-null assertions (`!`) when mapping
-- `@fawrun/shared-types` types not found during typecheck → ran `pnpm build` in shared-types first to compile new exports
+- `@forerun/shared-types` types not found during typecheck → ran `pnpm build` in shared-types first to compile new exports
 
 ### 2026-09-19 13:08 — Task 4.5: Runner settlement DTOs in shared-types
 
@@ -144,9 +144,9 @@ Define shared Zod schemas and TypeScript types for runner settlement views as pa
 Match the updated `CustomerOrderListItem` contract and expose whether the customer can rate each delivered order.
 
 **Commands and results:**
-- `pnpm --filter @fawrun/shared-types build` → passed
-- `pnpm --filter fawrun-api exec tsc --noEmit --incremental false --pretty false` → passed
-- `pnpm --filter fawrun-api exec eslint src/modules/orders/services/customer-orders.service.ts` → passed
+- `pnpm --filter @forerun/shared-types build` → passed
+- `pnpm --filter forerun-api exec tsc --noEmit --incremental false --pretty false` → passed
+- `pnpm --filter forerun-api exec eslint src/modules/orders/services/customer-orders.service.ts` → passed
 - `git diff --check -- apps/api/src/modules/orders/services/customer-orders.service.ts` → passed
 
 **Errors and resolutions:**
@@ -163,7 +163,7 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 تغطية منطق التقييمات ونافذة التحرير والمتوسط المتحرك، ومنطق Cron لتذكير التسويات، بدون اتصال بقاعدة بيانات.
 
 **الأوامر والنتائج:**
-- `pnpm --filter fawrun-api test` → نجح، 9 ملفات و163 اختبارًا
+- `pnpm --filter forerun-api test` → نجح، 9 ملفات و163 اختبارًا
 
 **الأخطاء والحلول:**
 - تم تصحيح قيمة `lte` في mock الخاص بنطاق تاريخ التسوية بعد مراجعة الملف قبل تشغيل الاختبارات.
@@ -177,9 +177,9 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 تجاوز فشل `vite:oxc` عند تحليل Prisma `const enum`، وتشغيل اختبارات unit فقط من config الرئيسي مع إبقاء integration على `vitest.config.integration.ts`.
 
 **الأوامر والنتائج:**
-- `pnpm --filter fawrun-api test` → نجح، 7 ملفات و148 اختبارًا
-- `pnpm --filter fawrun-api lint` → نجح
-- `pnpm --filter fawrun-api typecheck` → نجح
+- `pnpm --filter forerun-api test` → نجح، 7 ملفات و148 اختبارًا
+- `pnpm --filter forerun-api lint` → نجح
+- `pnpm --filter forerun-api typecheck` → نجح
 
 **الأخطاء والحلول:**
 - Vitest 4.1.11 لا يصدّر `resolve` من `vitest/config`، لذلك استُخدم `node:path` مع تعريف `__dirname` بصيغة ESM
@@ -195,10 +195,10 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 تحديد إعداد يحل فشل `vite:oxc` عند تحليل `node_modules/.prisma/client/index.d.ts` الناتج عن `const enum`.
 
 **الأوامر والنتائج:**
-- `pnpm --filter fawrun-api test` مع الخيار 1 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ استمرار خطأ `Missing initializer in const declaration` من `vite:oxc`
-- `pnpm --filter fawrun-api test` مع الخيار 2 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ استمرار الخطأ نفسه
-- `pnpm --filter fawrun-api test` مع الخيار 3 → تجاوز خطأ OXC: 7 ملفات نجحت، 3 ملفات integration فشلت بسبب عدم الوصول إلى قاعدة البيانات؛ 148 اختبارًا ناجحًا و13 تخطى
-- `pnpm --filter fawrun-api test` مع الخيار 4 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ حذّر Vitest من وجود `esbuild` و`oxc` معًا وأن إعدادات `oxc` هي المستخدمة
+- `pnpm --filter forerun-api test` مع الخيار 1 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ استمرار خطأ `Missing initializer in const declaration` من `vite:oxc`
+- `pnpm --filter forerun-api test` مع الخيار 2 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ استمرار الخطأ نفسه
+- `pnpm --filter forerun-api test` مع الخيار 3 → تجاوز خطأ OXC: 7 ملفات نجحت، 3 ملفات integration فشلت بسبب عدم الوصول إلى قاعدة البيانات؛ 148 اختبارًا ناجحًا و13 تخطى
+- `pnpm --filter forerun-api test` مع الخيار 4 → فشل: 5 ملفات و123 اختبارًا ناجحًا؛ حذّر Vitest من وجود `esbuild` و`oxc` معًا وأن إعدادات `oxc` هي المستخدمة
 - `git status --short -- apps/api/vitest.config.ts apps/api/vite.config.ts` → لا توجد تغييرات متبقية في ملفات الإعداد المؤقتة
 
 **الأخطاء والحلول:**
@@ -224,7 +224,7 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 - `pnpm build` → نجح، 4/4 حزم
 - `pnpm typecheck` → نجح، 4/4 حزم
 - `pnpm lint` → نجح، 4/4 حزم (0 errors)
-- `pnpm --filter fawrun-api test` → ⚠️ 123 اختبار نجح | 5 ملفات فشلت (بنية تحتية مسبقة — Prisma + Vitest/oxc incompatibility)
+- `pnpm --filter forerun-api test` → ⚠️ 123 اختبار نجح | 5 ملفات فشلت (بنية تحتية مسبقة — Prisma + Vitest/oxc incompatibility)
 
 **الأخطاء والحلول:**
 - خطأ `Duplicate identifier 'SettlementAdminQuery'` — تم تصحيح الاستيراد (القيمة `SettlementAdminQuerySchema` والنوع `type SettlementAdminQuery`)
@@ -243,7 +243,7 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 مطابقة تسلسل State Machine الفعلي: `DRAFT → PENDING_REVIEW → UNDER_REVIEW → AWAITING_RUNNER → ASSIGNED`، ومطابقة الحالة التي يُرجعها API بعد إنشاء الطلب.
 
 **الأوامر والنتائج:**
-- `pnpm typecheck --filter fawrun-api` → نجح، مهمة واحدة ناجحة من مهمة واحدة.
+- `pnpm typecheck --filter forerun-api` → نجح، مهمة واحدة ناجحة من مهمة واحدة.
 - `git diff --check -- apps/api/test/integration/orders/deliver-order.integration.spec.ts apps/api/test/integration/orders/create-order.integration.spec.ts` → نجح بدون أخطاء.
 
 **الأخطاء والحلول:**
@@ -259,7 +259,7 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 تغطية سلوك `deliverOrder` ضد API وPostgreSQL فعليين بدون mocks، والتحقق من حالة الطلب، و3 سجلات Ledger، وتوزيع الرسوم، وإحصاءات العميل، وحالة runner، وAuditLog، وIdempotency، وفحص الملكية.
 
 **الأوامر والنتائج:**
-- `pnpm typecheck --filter fawrun-api` → نجح.
+- `pnpm typecheck --filter forerun-api` → نجح.
 - `pnpm exec prettier --write "apps/api/test/integration/orders/deliver-order.integration.spec.ts" "apps/api/test/integration/helpers/seed.helper.ts"` → نجح.
 - `git diff --check` على ملفي الاختبار وhelper → نجح.
 - لم تُشغّل الاختبارات حسب الطلب؛ لا توجد قاعدة بيانات اختبار فعلية بعد.
@@ -291,7 +291,7 @@ Match the updated `CustomerOrderListItem` contract and expose whether the custom
 - `git push origin feature/sprint-3-runner-endpoints` → نجح
 - `gh pr create --title "feat: Sprint 3 — Runner Execution Flow"` → نجح
 - PR URL: https://github.com/ghaithmoa84-cyber/fawrun/pull/5
-- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test` → All passed (4/4 packages build, 0 type errors, 0 lint errors, 148/148 tests)
+- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test` → All passed (4/4 packages build, 0 type errors, 0 lint errors, 148/148 tests)
 
 **الأخطاء والحلول:**
 - `App.css` was re-added by `git add -A` after being untracked; deleted from filesystem and committed removal
@@ -320,7 +320,7 @@ Runner PWA scaffold had blocking errors preventing typecheck, lint, and build fr
 - `pnpm build --filter runner-pwa` → نجح (161 modules transformed, PWA manifest + service worker generated)
 
 **الأخطاء والحلول:**
-- `Cannot find module '@fawrun/shared-types'` → Resolved by `pnpm install` (pnpm workspace symlinks not yet linked)
+- `Cannot find module '@forerun/shared-types'` → Resolved by `pnpm install` (pnpm workspace symlinks not yet linked)
 - `TS1005: '>' expected` in `useAuth.ts:102` → JSX syntax in `.ts` file; renamed to `.tsx`
 - `TS5097: An import path can only end with '.tsx'` → Removed explicit `.tsx` extension from import
 - `TS2353: 'credentials' does not exist` → Changed to `withCredentials: true`
@@ -336,7 +336,7 @@ Runner PWA scaffold had blocking errors preventing typecheck, lint, and build fr
 مطابقة spec: المندوب القديم يتلقى إشعار نقل الطلب، والمندوب الجديد يتلقى الطلب كاملًا، بينما يُ保留 `order:assignment_cancelled` لحالات إلغاء التعيين كليًا.
 
 **الأوامر والنتائج:**
-- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test` → نجح؛ البناء وفحص الأنواع وlint نجحت، و7 ملفات اختبار و148 اختبارًا نجحت.
+- `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test` → نجح؛ البناء وفحص الأنواع وlint نجحت، و7 ملفات اختبار و148 اختبارًا نجحت.
 
 **الأخطاء والحلول:**
 - لا توجد أخطاء تشغيل.
@@ -477,9 +477,9 @@ Runner PWA scaffold had blocking errors preventing typecheck, lint, and build fr
 تثبيت نتائج R04 في حزمة تسليم قابلة لإعادة الاستخدام، بما في ذلك جرد 40 endpoint وفجوات التحقق والصلاحيات وسلوك Refresh Token ومخاطر WebSocket.
 
 **الأوامر والنتائج:**
-- `pnpm --filter fawrun-api test` → نجح، 7 ملفات و148 اختبارًا
-- `pnpm --filter fawrun-api lint` → نجح
-- `pnpm --filter fawrun-api exec tsc --noEmit` → نجح
+- `pnpm --filter forerun-api test` → نجح، 7 ملفات و148 اختبارًا
+- `pnpm --filter forerun-api lint` → نجح
+- `pnpm --filter forerun-api exec tsc --noEmit` → نجح
 - فحص PEM الآمن → لم يُعثر على مادة مفتاح خاص متعقبة؛ الزوج المحلي موجود وصالح دون طباعة محتواه
 
 **الأخطاء والحلول:**
@@ -559,9 +559,9 @@ Runner PWA scaffold had blocking errors preventing typecheck, lint, and build fr
 Triage of CodeRabbit round 5 comments. Only Category A (real blockers) fixed. Category B deferred to Sprint 2/3/4 per triage classification.
 
 **الأوامر والنتائج:**
-- `pnpm --filter @fawrun/shared-types build` → نجح
-- `pnpm --filter fawrun-api db:generate` → نجح
-- `pnpm --filter fawrun-api build` → نجح
+- `pnpm --filter @forerun/shared-types build` → نجح
+- `pnpm --filter forerun-api db:generate` → نجح
+- `pnpm --filter forerun-api build` → نجح
 - `pnpm lint` → نجح (3/3)
 
 ### 2026-09-13 — PR #1 Created — Sprint 1 Foundation
@@ -605,10 +605,10 @@ PR #1 created on GitHub for Sprint 1 Foundation with CodeRabbit review requested
 إكمال خطة التحقق و记录 حالة الأوامر الناجحة والفاشلة دون تعديل ملفات API خارج نطاق الخطة.
 
 **الأوامر والنتائج:**
-- `pnpm --filter fawrun-api test` → لم يُعثَر على ملفات اختبارات، exit code 1
-- `pnpm --filter @fawrun/shared-types build` → نجح
-- `pnpm --filter @fawrun/shared-constants lint` → نجح
-- `pnpm --filter fawrun-api exec prisma validate` → نجح
+- `pnpm --filter forerun-api test` → لم يُعثَر على ملفات اختبارات، exit code 1
+- `pnpm --filter @forerun/shared-types build` → نجح
+- `pnpm --filter @forerun/shared-constants lint` → نجح
+- `pnpm --filter forerun-api exec prisma validate` → نجح
 - `git diff --check` → نجح
 
 **الأخطاء والحلول:**
@@ -626,12 +626,12 @@ PR #1 created on GitHub for Sprint 1 Foundation with CodeRabbit review requested
 معالجة البنود غير المؤجلة في خطة مراجعات CodeRabbit اليدوية والحفاظ على سلامة الهجرة الأولية.
 
 **الأوامر والنتائج:**
-- `pnpm --filter @fawrun/shared-types lint` → نجح
-- `pnpm --filter fawrun-api db:generate` → نجح
-- `pnpm --filter fawrun-api lint` → فشل بسبب أخطاء parsing/type موجودة مسبقًا في `apps/api/src/app.module.ts:90` و`apps/api/src/config/jwt.config.ts:26`
+- `pnpm --filter @forerun/shared-types lint` → نجح
+- `pnpm --filter forerun-api db:generate` → نجح
+- `pnpm --filter forerun-api lint` → فشل بسبب أخطاء parsing/type موجودة مسبقًا في `apps/api/src/app.module.ts:90` و`apps/api/src/config/jwt.config.ts:26`
 - `pnpm lint` → فشل لنفس أخطاء API الموجودة مسبقًا
 - `pnpm typecheck` → لم يُنفّذ أي مهمة بسبب إعدادات Turbo الحالية
-- `pnpm --filter fawrun-api build` → فشل بنفس أخطاء API الموجودة مسبقًا
+- `pnpm --filter forerun-api build` → فشل بنفس أخطاء API الموجودة مسبقًا
 - `git diff --check` → نجح
 
 **الأخطاء والحلول:**
@@ -655,10 +655,10 @@ PR #1 created on GitHub for Sprint 1 Foundation with CodeRabbit review requested
 
 **الأوامر والنتائج:**
 - `pnpm lint` → نجح (3/3)
-- `pnpm --filter fawrun-api build` → نجح
-- `pnpm --filter @fawrun/shared-types build` → نجح
-- `pnpm --filter @fawrun/shared-constants build` → نجح
-- `pnpm --filter fawrun-api db:generate` → نجح
+- `pnpm --filter forerun-api build` → نجح
+- `pnpm --filter @forerun/shared-types build` → نجح
+- `pnpm --filter @forerun/shared-constants build` → نجح
+- `pnpm --filter forerun-api db:generate` → نجح
 - `git diff --check` → نجح
 
 ### Fixed

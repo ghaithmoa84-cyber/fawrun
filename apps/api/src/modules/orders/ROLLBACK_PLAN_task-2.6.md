@@ -17,7 +17,7 @@ If a deployment or runtime issue is detected before production use:
 1. Disable the new Admin review routes or roll back the deployment.
 2. Do not delete or edit `AuditLog` rows; they are append-only.
 3. If a bad approval/rejection was already written in a non-production environment, restore the affected `Order` row from backup or re-run the domain transition through an admin-approved correction script.
-4. Re-run `pnpm build`, `pnpm lint`, `pnpm --filter fawrun-api exec tsc --noEmit`, and `pnpm test`.
+4. Re-run `pnpm build`, `pnpm lint`, `pnpm --filter forerun-api exec tsc --noEmit`, and `pnpm test`.
 
 ## Verification Queries
 - Confirm approved orders moved only from `UNDER_REVIEW` to an allowed target status.

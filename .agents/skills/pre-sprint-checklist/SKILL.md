@@ -40,7 +40,7 @@ Before each Sprint or new module, verify that the foundation is ready for develo
 
 ### 5. Code Quality Gates
 - [ ] Full verification command succeeds:
-  `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test`
+  `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test`
 - [ ] No `findUnique` without null handling (`findUniqueOrThrow` or explicit check)
 - [ ] No `catch { void 0 }` — every catch logs via Logger
 - [ ] Every status change uses `updateMany` with `where: { status: currentStatus }` and verifies `count === 1`

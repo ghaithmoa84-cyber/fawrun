@@ -22,7 +22,7 @@
 - **Admin**: `https://fawrun-admin.vercel.app`
 - **Runner**: `https://fawrun-runner-pwa-steel.vercel.app`
 - **Customer**: `https://fawrun-customer-web-three.vercel.app`
-- **GitHub**: `github.com/ghaithmoa84-cyber/fawrun` (master)
+- **GitHub**: `github.com/ghaithmoa84-cyber/forerun` (master)
 
 ### 1.1 حالة الإنتاج وقاعدة البيانات — 2026-09-23
 
@@ -91,17 +91,17 @@ COPY tsconfig.json .
 COPY packages/ ./packages/
 COPY apps/api/ ./apps/api/
 RUN pnpm install --no-frozen-lockfile
-RUN pnpm --filter fawrun-api exec prisma generate
-RUN pnpm --filter @fawrun/shared-constants build
-RUN pnpm --filter @fawrun/shared-types build
-RUN pnpm --filter fawrun-api build
+RUN pnpm --filter forerun-api exec prisma generate
+RUN pnpm --filter @forerun/shared-constants build
+RUN pnpm --filter @forerun/shared-types build
+RUN pnpm --filter forerun-api build
 EXPOSE 3000
 CMD ["node", "apps/api/dist/main.js"]
 ```
 **ملاحظات:**
 - لا يوجد `prisma generate` في `CMD` — يعمل في البناء فقط.
 - `openssl` ضروري لـ Prisma query engine.
-- الحزم المشتركة (`shared-types`, `shared-constants`) يجب بناؤها قبل `fawrun-api build`.
+- الحزم المشتركة (`shared-types`, `shared-constants`) يجب بناؤها قبل `forerun-api build`.
 
 ### 3.3 `apps/api/prisma/schema.prisma` (بلوك generator)
 ```prisma
@@ -164,7 +164,7 @@ VITE_ADMIN_WHATSAPP  = <رقم دولي بدون +>   # customer-web فقط
 | 7 | `Settlement_closedByAdminId_fkey` violation | تمرير User.id بدل Admin.id | استخدم `user.adminId` من JwtAuthGuard |
 | 8 | `AuditLog_actorId_fkey` violation | تمرير Admin.id بدل User.id | استخدم `user.userId` في AuditLog |
 | 9 | Vercel 404 على مسارات SPA | missing SPA fallback | أضف `vercel.json` مع rewrites |
-| 10 | Vercel build فشل: `Can't resolve '@fawrun/shared-*'` | pnpm لم يبنِ الحزم المشتركة | استخدم `pnpm --filter <pkg>... build` |
+| 10 | Vercel build فشل: `Can't resolve '@forerun/shared-*'` | pnpm لم يبنِ الحزم المشتركة | استخدم `pnpm --filter <pkg>... build` |
 | 11 | `No Output Directory named "dist"` | Output Directory من جذر الـ repo بدل Root Dir | اضبط `dist` فقط |
 | 12 | `Cannot GET /api/v1` (على الجذر) | لا يوجد root route | **طبيعي** — ليس خطأ |
 

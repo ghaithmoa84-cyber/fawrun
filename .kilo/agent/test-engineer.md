@@ -14,7 +14,7 @@ Runs comprehensive testing and security validation after each module. Mandatory 
 ### 1. Local Code Review Checklist (Before Push)
 Mandatory command before every push:
 ```
-pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test
+pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test
 ```
 All four must succeed — no exceptions.
 - Prisma client generates without errors

@@ -373,7 +373,7 @@
    | `settlement:reminder` | `{ date, pendingRunnerCount }` | تذكير التسوية (Sprint 4) |
 
 4. **أصوات الإشعار** (القسم 10.4):
-   - تعريف أنواع الأصوات في `@fawrun/shared-types`:
+   - تعريف أنواع الأصوات في `@forerun/shared-types`:
      ```typescript
      type SoundType = 'new_order' | 'status_update' | 'urgent' | 'success';
      ```
