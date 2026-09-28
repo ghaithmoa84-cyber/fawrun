@@ -17,4 +17,10 @@ abstract class RepositoryModule {
     abstract fun bindAuthRepository(
         authRepositoryImpl: AuthRepositoryImpl
     ): AuthRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindHomeRepository(
+        homeRepositoryImpl: com.forerun.customer.data.remote.repository.HomeRepositoryImpl
+    ): com.forerun.customer.domain.repository.HomeRepository
 }

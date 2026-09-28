@@ -61,11 +61,24 @@
     <string name="suspended_desc">تم تعليق هذا الحساب مؤقتاً. إذا كنت تعتقد أن هناك خطأ، يرجى التواصل مع إدارة فَوْراً لحل المشكلة.</string>
     <string name="contact_support">التواصل مع الدعم</string>
 
-    <!-- Home Stub -->
+    <!-- Home Screen -->
     <string name="home_welcome">أهلاً بك، %1$s!</string>
     <string name="home_subtitle">خدمة التوصيل السريع في القنجرة</string>
-    <string name="home_status_verified">حسابك موثّق وجاهز لتقديم الطلبات</string>
-    <string name="home_new_order_coming_soon">خدمة إنشاء الطلبات قيد التجهيز</string>
+    <string name="home_status_verified">عميل موثّق ✓</string>
+    <string name="home_new_order_title">طلب جديد</string>
+    <string name="home_new_order_desc">اكتب طلبك وسيتولى الكابتن شراءه وتوصيله فوراً</string>
+    <string name="home_active_order_title">الطلب الجاري حالياً</string>
+    <string name="home_no_active_orders">لا توجد طلبات جارية حالياً</string>
+    <string name="home_no_active_orders_desc">ابدأ طلباً جديداً ليصلك كل ما تحتاجه فوراً!</string>
+    <string name="home_stats_title">إحصائيات حسابك</string>
+    <string name="home_completed_orders">طلبات منجزة</string>
+    <string name="home_total_fees">إجمالي الرسوم</string>
+    <string name="home_retry">إعادة المحاولة</string>
+    <string name="home_order_num">طلب رقم: %1$s</string>
+    <string name="home_items_count">%1$d مواد</string>
+    <string name="home_currency">ل.س</string>
+    <string name="home_runner_label">الكابتن:</string>
+    <string name="home_track_order">متابعة تفاصيل الطلب</string>
 
     <!-- Navigation & Bottom Tabs -->
     <string name="nav_home">الرئيسية</string>

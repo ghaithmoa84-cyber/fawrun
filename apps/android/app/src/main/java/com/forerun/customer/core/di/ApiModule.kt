@@ -24,4 +24,10 @@ object ApiModule {
     fun provideCustomerApi(retrofit: Retrofit): CustomerApi {
         return retrofit.create(CustomerApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideOrderApi(retrofit: Retrofit): com.forerun.customer.data.remote.api.OrderApi {
+        return retrofit.create(com.forerun.customer.data.remote.api.OrderApi::class.java)
+    }
 }
