@@ -6,7 +6,10 @@ import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.repository.AddressResult
 import com.forerun.customer.domain.usecase.GetCustomerAddressUseCase
 import com.forerun.customer.domain.usecase.UpdateCustomerAddressUseCase
+import com.forerun.customer.domain.service.GeocodingService
 import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -45,7 +48,8 @@ sealed interface AddressSetupEvent {
 @HiltViewModel
 class AddressSetupViewModel @Inject constructor(
     private val getCustomerAddressUseCase: GetCustomerAddressUseCase,
-    private val updateCustomerAddressUseCase: UpdateCustomerAddressUseCase
+    private val updateCustomerAddressUseCase: UpdateCustomerAddressUseCase,
+    private val geocodingService: GeocodingService
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddressSetupUiState())
@@ -53,6 +57,8 @@ class AddressSetupViewModel @Inject constructor(
 
     private val _events = MutableSharedFlow<AddressSetupEvent>()
     val events: SharedFlow<AddressSetupEvent> = _events.asSharedFlow()
+
+    private var reverseGeocodeJob: Job? = null
 
     init {
         loadAddress()
@@ -63,6 +69,19 @@ class AddressSetupViewModel @Inject constructor(
             is AddressSetupIntent.LoadAddress -> loadAddress()
             is AddressSetupIntent.UpdateCoordinates -> {
                 _uiState.update { it.copy(lat = intent.lat, lng = intent.lng) }
+                reverseGeocodeJob?.cancel()
+                reverseGeocodeJob = viewModelScope.launch {
+                    delay(500)
+                    val placeName = geocodingService.reverseGeocode(intent.lat, intent.lng)
+                    if (!placeName.isNullOrBlank()) {
+                        _uiState.update {
+                            it.copy(
+                                description = placeName,
+                                descriptionError = null
+                            )
+                        }
+                    }
+                }
             }
             is AddressSetupIntent.UpdateDescription -> {
                 _uiState.update {

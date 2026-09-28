@@ -29,4 +29,10 @@ abstract class RepositoryModule {
     abstract fun bindAddressRepository(
         addressRepositoryImpl: com.forerun.customer.data.remote.repository.AddressRepositoryImpl
     ): com.forerun.customer.domain.repository.AddressRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindGeocodingService(
+        nominatimGeocodingService: com.forerun.customer.data.remote.geocoding.NominatimGeocodingService
+    ): com.forerun.customer.domain.service.GeocodingService
 }
