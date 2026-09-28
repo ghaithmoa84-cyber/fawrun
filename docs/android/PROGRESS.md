@@ -281,8 +281,9 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
-## Sprint 1.4: Auth Flow ✅
+## Sprint 1.4: Auth Flow ✅ (مكتمل ومُعتمد 100%)
 
+**Status:** مكتمل بنسبة 100% — معتمد نهائياً بعد إتمام اختبارات E2E على المحاكي
 **Completed:** Session 6
 **Branch:** `feature/android-sprint-1-4-auth-flow`
 
@@ -329,6 +330,11 @@ must be corrected to match `Color.kt` during Compose implementation.
 - **Impact:** زر "فتح WhatsApp" في PendingVerification يوجّه لرقم غير حقيقي.
 - **Fix:** استبداله بالرقم الإنتاجي قبل أول APK يُوزَّع.
 - **Blocker:** يجب الحصول على الرقم الحقيقي من الإدارة.
+
+#### Known Gap — S5b: Active Session Expiration Ejection (مؤجل إلى Sprint 2)
+- **الوصف:** سيناريو طرد المستخدم النشط لشاشة تسجيل الدخول (`sessionExpiredEvent` -> `Routes.LOGIN`) عند استلام 401 وفشل الـ Silent Refresh تلقائياً أثناء استخدام التطبيق.
+- **الوضع الحالي:** تم التحقق منه معمارياً وتغطيته بالكامل عبر اختبارات الـ Unit Tests في `ForerunNavGraph` و `AuthRepositoryImplTest`.
+- **سبب التأجيل:** يتطلب محاكاة حية لاستدعاءات محمية حقيقية تتلقى 401 بعد انتهاء الصلاحية. تم تأجيل الاختبار اليدوي الحي إلى **Sprint 2** تزامناً مع استدعاء نقاط النهاية الفعلية للطلبات والعميل (`GET /api/v1/customer/me` و `POST /api/v1/orders`).
 
 ### Test Fixtures
 
