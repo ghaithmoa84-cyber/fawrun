@@ -86,6 +86,7 @@ fun CreateOrderScreen(
     onNavigateBack: () -> Unit,
     onNavigateToAddressSetup: () -> Unit,
     onNavigateToOrders: () -> Unit,
+    onNavigateToConfirmation: (orderNumber: String, estimatedFee: Int) -> Unit = { _, _ -> },
     modifier: Modifier = Modifier,
     viewModel: CreateOrderViewModel = hiltViewModel()
 ) {
@@ -110,7 +111,14 @@ fun CreateOrderScreen(
         }
     }
 
-    // Success Confirmation Dialog
+    LaunchedEffect(uiState.createdOrder) {
+        uiState.createdOrder?.let { order ->
+            onNavigateToConfirmation(order.orderNumber, order.totalFee)
+            viewModel.onIntent(CreateOrderIntent.DismissSuccess)
+        }
+    }
+
+    // Success Confirmation Dialog (as fallback / modal)
     uiState.createdOrder?.let { order ->
         AlertDialog(
             onDismissRequest = { viewModel.onIntent(CreateOrderIntent.DismissSuccess) },

@@ -21,6 +21,9 @@ import com.forerun.customer.ui.address.AddressSetupScreen
 import com.forerun.customer.ui.onboarding.OnboardingScreen
 import com.forerun.customer.ui.order.create.CreateOrderScreen
 import com.forerun.customer.ui.orders.OrdersScreen
+import androidx.navigation.NavType
+import androidx.navigation.navArgument
+import com.forerun.customer.ui.order.confirmation.OrderConfirmationScreen
 import com.forerun.customer.ui.splash.SplashDestination
 import com.forerun.customer.ui.splash.SplashScreen
 
@@ -36,6 +39,9 @@ object Routes {
     const val ACCOUNT = "account"
     const val ADDRESS_SETUP = "address_setup"
     const val CREATE_ORDER = "create_order"
+    const val ORDER_CONFIRMATION = "order_confirmation/{orderNumber}?estimatedFee={estimatedFee}"
+    fun orderConfirmation(orderNumber: String, estimatedFee: Int = 0): String =
+        "order_confirmation/$orderNumber?estimatedFee=$estimatedFee"
 }
 
 @Composable
@@ -207,6 +213,35 @@ fun ForerunNavGraph(
                 },
                 onNavigateToOrders = {
                     navController.navigate(Routes.ORDERS) {
+                        popUpTo(Routes.HOME)
+                    }
+                },
+                onNavigateToConfirmation = { orderNumber, estimatedFee ->
+                    navController.navigate(Routes.orderConfirmation(orderNumber, estimatedFee)) {
+                        popUpTo(Routes.HOME)
+                    }
+                }
+            )
+        }
+        composable(
+            route = Routes.ORDER_CONFIRMATION,
+            arguments = listOf(
+                navArgument("orderNumber") { type = NavType.StringType },
+                navArgument("estimatedFee") { type = NavType.IntType; defaultValue = 0 }
+            )
+        ) { backStackEntry ->
+            val orderNumber = backStackEntry.arguments?.getString("orderNumber") ?: ""
+            val estimatedFee = backStackEntry.arguments?.getInt("estimatedFee") ?: 0
+            OrderConfirmationScreen(
+                orderNumber = orderNumber,
+                estimatedFee = estimatedFee,
+                onTrackOrder = {
+                    navController.navigate(Routes.ORDERS) {
+                        popUpTo(Routes.HOME)
+                    }
+                },
+                onNewOrder = {
+                    navController.navigate(Routes.CREATE_ORDER) {
                         popUpTo(Routes.HOME)
                     }
                 }
