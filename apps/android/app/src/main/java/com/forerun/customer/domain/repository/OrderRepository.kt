@@ -15,4 +15,10 @@ interface OrderRepository {
     ): Result<CreatedOrder>
 
     suspend fun getAvailableRunners(): Result<List<RunnerInfo>>
+
+    suspend fun getCustomerOrders(
+        page: Int = 1,
+        limit: Int = 20,
+        status: String? = null
+    ): Result<com.forerun.customer.domain.model.OrdersPage>
 }

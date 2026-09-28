@@ -1,0 +1,218 @@
+package com.forerun.customer.ui.orders
+
+import com.forerun.customer.data.FakeOrderRepository
+import com.forerun.customer.domain.model.CustomerOrder
+import com.forerun.customer.domain.model.OrdersPage
+import com.forerun.customer.domain.usecase.GetCustomerOrdersUseCase
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.test.StandardTestDispatcher
+import kotlinx.coroutines.test.advanceUntilIdle
+import kotlinx.coroutines.test.resetMain
+import kotlinx.coroutines.test.runTest
+import kotlinx.coroutines.test.setMain
+import org.junit.After
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
+import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertTrue
+import org.junit.Before
+import org.junit.Test
+
+@OptIn(ExperimentalCoroutinesApi::class)
+class OrdersListViewModelTest {
+
+    private val testDispatcher = StandardTestDispatcher()
+    private lateinit var fakeRepository: FakeOrderRepository
+    private lateinit var getOrdersUseCase: GetCustomerOrdersUseCase
+
+    @Before
+    fun setUp() {
+        Dispatchers.setMain(testDispatcher)
+        fakeRepository = FakeOrderRepository()
+        getOrdersUseCase = GetCustomerOrdersUseCase(fakeRepository)
+    }
+
+    @After
+    fun tearDown() {
+        Dispatchers.resetMain()
+    }
+
+    @Test
+    fun initialLoad_loadsOrdersSuccessfully() = runTest(testDispatcher) {
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertFalse(state.isLoading)
+        assertFalse(state.isRefreshing)
+        assertEquals(1, state.allOrders.size)
+        assertEquals(1, state.displayedOrders.size)
+        assertEquals("FW-000015", state.displayedOrders[0].orderNumber)
+        assertEquals(80, state.displayedOrders[0].totalFee)
+        assertEquals(1, state.activeCount)
+    }
+
+    @Test
+    fun filterSwitching_filtersOrdersCorrectly() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_1",
+                        orderNumber = "FW-000015",
+                        status = "PENDING_REVIEW",
+                        totalFee = 80,
+                        itemCount = 3,
+                        createdAt = "2026-09-28T12:00:00.000Z"
+                    ),
+                    CustomerOrder(
+                        id = "order_2",
+                        orderNumber = "FW-000014",
+                        status = "DELIVERED",
+                        totalFee = 100,
+                        itemCount = 2,
+                        createdAt = "2026-09-27T10:00:00.000Z"
+                    ),
+                    CustomerOrder(
+                        id = "order_3",
+                        orderNumber = "FW-000013",
+                        status = "CANCELLED",
+                        totalFee = 50,
+                        itemCount = 1,
+                        createdAt = "2026-09-26T08:00:00.000Z"
+                    )
+                ),
+                total = 3,
+                page = 1,
+                limit = 20,
+                totalPages = 1
+            )
+        )
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        // 1. ALL Filter
+        assertEquals(3, vm.uiState.value.displayedOrders.size)
+        assertEquals(1, vm.uiState.value.activeCount)
+
+        // 2. ACTIVE Filter
+        vm.onIntent(OrdersListIntent.SetFilter(OrderFilter.ACTIVE))
+        assertEquals(1, vm.uiState.value.displayedOrders.size)
+        assertEquals("FW-000015", vm.uiState.value.displayedOrders[0].orderNumber)
+
+        // 3. DELIVERED Filter
+        vm.onIntent(OrdersListIntent.SetFilter(OrderFilter.DELIVERED))
+        assertEquals(1, vm.uiState.value.displayedOrders.size)
+        assertEquals("FW-000014", vm.uiState.value.displayedOrders[0].orderNumber)
+
+        // 4. CANCELLED Filter
+        vm.onIntent(OrdersListIntent.SetFilter(OrderFilter.CANCELLED))
+        assertEquals(1, vm.uiState.value.displayedOrders.size)
+        assertEquals("FW-000013", vm.uiState.value.displayedOrders[0].orderNumber)
+    }
+
+    @Test
+    fun refresh_reloadsOrdersList() = runTest(testDispatcher) {
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_updated",
+                        orderNumber = "FW-000016",
+                        status = "IN_PROGRESS",
+                        totalFee = 120,
+                        itemCount = 5,
+                        createdAt = "2026-09-28T14:00:00.000Z"
+                    )
+                ),
+                total = 1,
+                page = 1,
+                limit = 20,
+                totalPages = 1
+            )
+        )
+
+        vm.onIntent(OrdersListIntent.Refresh)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertFalse(state.isRefreshing)
+        assertEquals(1, state.allOrders.size)
+        assertEquals("FW-000016", state.allOrders[0].orderNumber)
+    }
+
+    @Test
+    fun loadMore_appendsOrdersWhenMorePagesAvailable() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_p1",
+                        orderNumber = "FW-000015",
+                        status = "PENDING_REVIEW",
+                        totalFee = 80,
+                        itemCount = 3,
+                        createdAt = "2026-09-28T12:00:00.000Z"
+                    )
+                ),
+                total = 2,
+                page = 1,
+                limit = 1,
+                totalPages = 2
+            )
+        )
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        assertTrue(vm.uiState.value.hasMore)
+
+        // Page 2
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_p2",
+                        orderNumber = "FW-000014",
+                        status = "DELIVERED",
+                        totalFee = 100,
+                        itemCount = 2,
+                        createdAt = "2026-09-27T10:00:00.000Z"
+                    )
+                ),
+                total = 2,
+                page = 2,
+                limit = 1,
+                totalPages = 2
+            )
+        )
+
+        vm.onIntent(OrdersListIntent.LoadMore)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals(2, state.allOrders.size)
+        assertEquals("FW-000015", state.allOrders[0].orderNumber)
+        assertEquals("FW-000014", state.allOrders[1].orderNumber)
+        assertFalse(state.hasMore)
+    }
+
+    @Test
+    fun initialLoad_failure_setsErrorMessage() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertFalse(state.isLoading)
+        assertNotNull(state.errorMessage)
+        assertEquals("Network Timeout", state.errorMessage)
+        assertEquals(0, state.allOrders.size)
+    }
+}

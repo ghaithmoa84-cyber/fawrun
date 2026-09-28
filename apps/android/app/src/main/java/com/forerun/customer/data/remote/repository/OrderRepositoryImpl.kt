@@ -84,4 +84,40 @@ class OrderRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getCustomerOrders(
+        page: Int,
+        limit: Int,
+        status: String?
+    ): Result<com.forerun.customer.domain.model.OrdersPage> {
+        return when (val response = orderApi.getCustomerOrders(page = page, limit = limit, status = status)) {
+            is ApiResponse.Success -> {
+                val data = response.data
+                val orders = data.data.map { dto ->
+                    com.forerun.customer.domain.model.CustomerOrder(
+                        id = dto.id,
+                        orderNumber = dto.orderNumber,
+                        status = dto.status,
+                        totalFee = dto.totalFee,
+                        itemCount = dto.itemCount,
+                        createdAt = dto.createdAt,
+                        deliveredAt = dto.deliveredAt,
+                        runnerName = dto.runner?.name
+                    )
+                }
+                val meta = data.meta
+                val ordersPage = com.forerun.customer.domain.model.OrdersPage(
+                    orders = orders,
+                    total = meta?.total ?: orders.size,
+                    page = meta?.page ?: page,
+                    limit = meta?.limit ?: limit,
+                    totalPages = meta?.totalPages ?: 1
+                )
+                Result.success(ordersPage)
+            }
+            is ApiResponse.Error -> {
+                Result.failure(Exception(response.message))
+            }
+        }
+    }
 }

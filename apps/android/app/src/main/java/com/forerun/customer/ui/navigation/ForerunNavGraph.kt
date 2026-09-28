@@ -182,7 +182,11 @@ fun ForerunNavGraph(
             )
         }
         composable(Routes.ORDERS) {
-            OrdersScreen()
+            OrdersScreen(
+                onNavigateToCreateOrder = {
+                    navController.navigate(Routes.CREATE_ORDER)
+                }
+            )
         }
         composable(Routes.ACCOUNT) {
             AccountScreen(

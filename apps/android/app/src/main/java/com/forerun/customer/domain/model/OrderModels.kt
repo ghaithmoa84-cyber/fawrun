@@ -25,3 +25,22 @@ data class RunnerInfo(
     val totalRatings: Int? = null,
     val status: String
 )
+
+data class CustomerOrder(
+    val id: String,
+    val orderNumber: String,
+    val status: String,
+    val totalFee: Int,
+    val itemCount: Int,
+    val createdAt: String,
+    val deliveredAt: String? = null,
+    val runnerName: String? = null
+)
+
+data class OrdersPage(
+    val orders: List<CustomerOrder>,
+    val total: Int,
+    val page: Int,
+    val limit: Int,
+    val totalPages: Int
+)
