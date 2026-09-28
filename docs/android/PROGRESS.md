@@ -339,6 +339,29 @@ must be corrected to match `Color.kt` during Compose implementation.
 - **purpose:** Contract verification (Sprint 1.4 live curl test)
 - **action:** Do not delete — may be useful for future tests and fixtures.
 
+### Session Prep — 2026-09-28
+
+- **Task 1 — cmdline-tools & AVD:**
+  - Installed Android `cmdline-tools:latest` (12.0) and accepted SDK licenses.
+  - Installed `platforms;android-34` and `system-images;android-34;google_apis;x86_64`.
+  - Created AVD: `ForerunTest` (Pixel 6 profile, API 34).
+  - AVD readiness: **Yes (`ForerunTest` verified in `emulator -list-avds`)**.
+- **Task 2 — Code Review & Robustness Fixes (`4d63c7b`):**
+  - Resolved session expired navigation re-entry loop in `ForerunNavGraph.kt`.
+  - Added 4-second timeout and exception safety in `SplashViewModel.kt`.
+  - Prevented double-tap duplicate submissions in `LoginViewModel.kt` and `RegisterViewModel.kt`.
+  - Added `FLAG_ACTIVITY_NEW_TASK` to WhatsApp Intent in `PendingVerificationScreen.kt`.
+  - Verified 23/23 unit tests pass.
+- **Task 3 — Automated E2E Test Script (`055106c`):**
+  - Created automated PowerShell E2E test script: `apps/android/scripts/e2e-test.ps1`.
+- **Task 4 — Repository Alignment Cleanup (`a14d871`):**
+  - Cleaned up and committed 14 documentation and config references (`fawrun-api` -> `forerun-api`).
+- **New TODOs (Architectural Hardening):**
+  - `TokenStorage`: Combine token and user persistence into an atomic DataStore transaction (`saveUserSession`).
+  - `TokenRefreshManager`: Add `AtomicBoolean` guard against race conditions in concurrent silent refresh requests.
+- **E2E Status:**
+  - Ready for execution on `ForerunTest` emulator using `apps/android/scripts/e2e-test.ps1`.
+
 ---
 
 ## Contact & Handoff
