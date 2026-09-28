@@ -59,4 +59,55 @@ class FakeOrderRepository : OrderRepository {
         limit: Int,
         status: String?
     ): Result<com.forerun.customer.domain.model.OrdersPage> = getCustomerOrdersResult
+
+    var getOrderDetailResult: Result<com.forerun.customer.domain.model.CustomerOrderDetail> = Result.success(
+        com.forerun.customer.domain.model.CustomerOrderDetail(
+            id = "order_123",
+            orderNumber = "FW-000123",
+            status = "PENDING_REVIEW",
+            isPeripheral = false,
+            baseFee = 5000,
+            peripheralFee = 0,
+            extraStoresFee = 0,
+            totalFee = 5000,
+            deliveryDesc = "القنجرة",
+            createdAt = "2026-09-28T12:00:00Z",
+            items = listOf(
+                com.forerun.customer.domain.model.DetailOrderItem(
+                    id = "item_1",
+                    itemName = "خبز",
+                    quantity = "2 ربطات",
+                    anyStore = true
+                )
+            )
+        )
+    )
+
+    override suspend fun getOrderDetail(
+        orderId: String
+    ): Result<com.forerun.customer.domain.model.CustomerOrderDetail> = getOrderDetailResult
+
+    var cancelOrderResult: Result<Unit> = Result.success(Unit)
+
+    override suspend fun cancelOrder(
+        orderId: String
+    ): Result<Unit> = cancelOrderResult
+
+    var submitRatingResult: Result<com.forerun.customer.domain.model.RatingResult> = Result.success(
+        com.forerun.customer.domain.model.RatingResult(
+            id = "rating_123",
+            orderId = "order_123",
+            stars = 5,
+            note = "ممتاز وسريع",
+            isFinal = false,
+            expiresAt = "2026-09-29T12:00:00Z"
+        )
+    )
+
+    override suspend fun submitRating(
+        orderId: String,
+        stars: Int,
+        note: String?,
+        isUpdate: Boolean
+    ): Result<com.forerun.customer.domain.model.RatingResult> = submitRatingResult
 }

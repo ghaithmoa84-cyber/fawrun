@@ -49,6 +49,10 @@ android {
             isUniversalApk = false
         }
     }
+
+    testOptions {
+        unitTests.isReturnDefaultValues = true
+    }
 }
 
 dependencies {
@@ -77,6 +81,11 @@ dependencies {
     implementation(libs.okhttp.core)
     implementation(libs.okhttp.logging)
 
+    // WebSocket (Socket.IO client 2.1.1)
+    implementation(libs.socketio.client) {
+        exclude(group = "org.json", module = "json")
+    }
+
     // Moshi (codegen via KSP - no reflection)
     implementation(libs.moshi.core)
     ksp(libs.moshi.kotlin.codegen)
@@ -101,5 +110,6 @@ dependencies {
     testImplementation(libs.kotlinx.coroutines.test)
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.turbine)
+    testImplementation("org.json:json:20240303")
 }
 

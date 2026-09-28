@@ -42,6 +42,10 @@ object Routes {
     const val ORDER_CONFIRMATION = "order_confirmation/{orderNumber}?estimatedFee={estimatedFee}"
     fun orderConfirmation(orderNumber: String, estimatedFee: Int = 0): String =
         "order_confirmation/$orderNumber?estimatedFee=$estimatedFee"
+    const val ORDER_DETAIL = "orders/{orderId}"
+    fun orderDetail(orderId: String): String = "orders/$orderId"
+    const val ORDER_RATING = "orders/{orderId}/rating"
+    fun orderRating(orderId: String): String = "orders/$orderId/rating"
 }
 
 @Composable
@@ -178,6 +182,9 @@ fun ForerunNavGraph(
                 },
                 onNavigateToCreateOrder = {
                     navController.navigate(Routes.CREATE_ORDER)
+                },
+                onNavigateToOrderDetail = { orderId ->
+                    navController.navigate(Routes.orderDetail(orderId))
                 }
             )
         }
@@ -185,6 +192,9 @@ fun ForerunNavGraph(
             OrdersScreen(
                 onNavigateToCreateOrder = {
                     navController.navigate(Routes.CREATE_ORDER)
+                },
+                onNavigateToOrderDetail = { orderId ->
+                    navController.navigate(Routes.orderDetail(orderId))
                 }
             )
         }
@@ -249,6 +259,29 @@ fun ForerunNavGraph(
                         popUpTo(Routes.HOME)
                     }
                 }
+            )
+        }
+        composable(
+            route = Routes.ORDER_DETAIL,
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType }
+            )
+        ) {
+            com.forerun.customer.ui.order.detail.OrderDetailScreen(
+                onNavigateBack = { navController.popBackStack() },
+                onNavigateToRating = { orderId ->
+                    navController.navigate(Routes.orderRating(orderId))
+                }
+            )
+        }
+        composable(
+            route = Routes.ORDER_RATING,
+            arguments = listOf(
+                navArgument("orderId") { type = NavType.StringType }
+            )
+        ) {
+            com.forerun.customer.ui.rating.RatingScreen(
+                onNavigateBack = { navController.popBackStack() }
             )
         }
     }

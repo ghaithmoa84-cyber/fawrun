@@ -120,4 +120,138 @@ class OrderRepositoryImpl @Inject constructor(
             }
         }
     }
+
+    override suspend fun getOrderDetail(orderId: String): Result<com.forerun.customer.domain.model.CustomerOrderDetail> {
+        return when (val response = orderApi.getOrderDetail(orderId)) {
+            is ApiResponse.Success -> {
+                val dto = response.data
+                val rawStores = if (dto.stores.isNotEmpty()) dto.stores else dto.orderStores ?: emptyList()
+                val mappedStores = rawStores.map { s ->
+                    com.forerun.customer.domain.model.OrderStoreDetail(
+                        id = s.id,
+                        storeName = s.storeName,
+                        status = s.status,
+                        isExtra = s.isExtra,
+                        items = s.items.map { item ->
+                            com.forerun.customer.domain.model.StoreItemDetail(
+                                id = item.id,
+                                itemName = item.itemName,
+                                quantity = item.quantity
+                            )
+                        },
+                        receipts = s.receipts.map { r ->
+                            com.forerun.customer.domain.model.StoreReceiptDetail(
+                                id = r.id,
+                                imageUrl = r.imageUrl
+                            )
+                        }
+                    )
+                }
+
+                val detail = com.forerun.customer.domain.model.CustomerOrderDetail(
+                    id = dto.id,
+                    orderNumber = dto.orderNumber,
+                    status = dto.status,
+                    isPeripheral = dto.isPeripheral,
+                    baseFee = dto.baseFee,
+                    peripheralFee = dto.peripheralFee,
+                    extraStoresFee = dto.extraStoresFee,
+                    totalFee = dto.totalFee,
+                    deliveryLat = dto.deliveryLat,
+                    deliveryLng = dto.deliveryLng,
+                    deliveryDesc = dto.deliveryDesc,
+                    notes = dto.notes,
+                    preferredRunnerId = dto.preferredRunnerId,
+                    waitForPreferred = dto.waitForPreferred,
+                    createdAt = dto.createdAt,
+                    updatedAt = dto.updatedAt,
+                    deliveredAt = dto.deliveredAt,
+                    cancelledAt = dto.cancelledAt,
+                    cancelReason = dto.cancelReason,
+                    items = dto.items.map { item ->
+                        com.forerun.customer.domain.model.DetailOrderItem(
+                            id = item.id,
+                            itemName = item.itemName,
+                            quantity = item.quantity,
+                            customStoreName = item.customStoreName,
+                            anyStore = item.anyStore
+                        )
+                    },
+                    stores = mappedStores,
+                    rating = dto.rating?.let { r ->
+                        com.forerun.customer.domain.model.OrderRatingInfo(
+                            stars = r.stars,
+                            note = r.note
+                        )
+                    },
+                    timeline = com.forerun.customer.domain.model.OrderTimeline(
+                        createdAt = dto.timeline?.createdAt ?: dto.createdAt,
+                        reviewedAt = dto.timeline?.reviewedAt,
+                        assignedAt = dto.timeline?.assignedAt,
+                        startedAt = dto.timeline?.startedAt,
+                        deliveredAt = dto.timeline?.deliveredAt ?: dto.deliveredAt,
+                        cancelledAt = dto.timeline?.cancelledAt ?: dto.cancelledAt
+                    ),
+                    runner = dto.runner?.let { r ->
+                        com.forerun.customer.domain.model.OrderRunnerDetail(
+                            id = r.id,
+                            name = r.name,
+                            avgRating = r.avgRating,
+                            totalRatings = r.totalRatings,
+                            status = r.status,
+                            whatsapp = r.whatsapp,
+                            phone = r.phone
+                        )
+                    }
+                )
+                Result.success(detail)
+            }
+            is ApiResponse.Error -> {
+                Result.failure(Exception(response.message))
+            }
+        }
+    }
+
+    override suspend fun cancelOrder(orderId: String): Result<Unit> {
+        return when (val response = orderApi.cancelOrder(orderId)) {
+            is ApiResponse.Success -> Result.success(Unit)
+            is ApiResponse.Error -> Result.failure(Exception(response.message))
+        }
+    }
+
+    override suspend fun submitRating(
+        orderId: String,
+        stars: Int,
+        note: String?,
+        isUpdate: Boolean
+    ): Result<com.forerun.customer.domain.model.RatingResult> {
+        val request = com.forerun.customer.data.remote.dto.order.CreateRatingRequestDto(
+            stars = stars,
+            note = note?.trim()?.ifEmpty { null }
+        )
+        val response = if (isUpdate) {
+            orderApi.updateRating(orderId, request)
+        } else {
+            orderApi.createRating(orderId, request)
+        }
+
+        return when (response) {
+            is ApiResponse.Success -> {
+                val data = response.data
+                Result.success(
+                    com.forerun.customer.domain.model.RatingResult(
+                        id = data.id,
+                        orderId = data.orderId,
+                        stars = data.stars,
+                        note = data.note,
+                        isFinal = data.isFinal,
+                        expiresAt = data.expiresAt
+                    )
+                )
+            }
+            is ApiResponse.Error -> {
+                Result.failure(Exception(response.message))
+            }
+        }
+    }
 }

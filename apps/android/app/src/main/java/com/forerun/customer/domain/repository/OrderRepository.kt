@@ -21,4 +21,19 @@ interface OrderRepository {
         limit: Int = 20,
         status: String? = null
     ): Result<com.forerun.customer.domain.model.OrdersPage>
+
+    suspend fun getOrderDetail(
+        orderId: String
+    ): Result<com.forerun.customer.domain.model.CustomerOrderDetail>
+
+    suspend fun cancelOrder(
+        orderId: String
+    ): Result<Unit>
+
+    suspend fun submitRating(
+        orderId: String,
+        stars: Int,
+        note: String?,
+        isUpdate: Boolean = false
+    ): Result<com.forerun.customer.domain.model.RatingResult>
 }

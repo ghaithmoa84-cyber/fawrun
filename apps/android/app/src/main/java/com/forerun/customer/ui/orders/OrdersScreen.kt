@@ -78,6 +78,7 @@ import java.util.Locale
 @Composable
 fun OrdersScreen(
     onNavigateToCreateOrder: () -> Unit = {},
+    onNavigateToOrderDetail: (String) -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: OrdersListViewModel = hiltViewModel()
 ) {
@@ -164,7 +165,10 @@ fun OrdersScreen(
                                 items = uiState.displayedOrders,
                                 key = { it.id }
                             ) { order ->
-                                OrderCard(order = order)
+                                OrderCard(
+                                    order = order,
+                                    onClick = { onNavigateToOrderDetail(order.id) }
+                                )
                             }
 
                             if (uiState.isLoadingMore) {
@@ -306,13 +310,18 @@ private fun OrderFilterChip(
 }
 
 @Composable
-private fun OrderCard(order: CustomerOrder) {
+private fun OrderCard(
+    order: CustomerOrder,
+    onClick: () -> Unit = {}
+) {
     val (statusBg, statusTextColor) = getStatusColors(order.status)
     val statusText = getStatusText(order.status)
     val formattedDate = formatOrderDate(order.createdAt)
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable { onClick() },
         shape = RoundedCornerShape(Dimens.RadiusLarge),
         colors = CardDefaults.cardColors(containerColor = ForerunSurface),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
