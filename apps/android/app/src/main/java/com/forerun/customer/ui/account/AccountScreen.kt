@@ -32,7 +32,10 @@ import com.forerun.customer.ui.theme.ForerunBackground
 import com.forerun.customer.ui.theme.ForerunDanger
 import com.forerun.customer.ui.theme.ForerunGreen
 import com.forerun.customer.ui.theme.ForerunGreenLight
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.filled.LocationOn
 import com.forerun.customer.ui.theme.ForerunTextMuted
+import com.forerun.customer.ui.theme.ForerunTextOnPrimary
 import com.forerun.customer.ui.theme.ForerunTextPrimary
 
 import androidx.compose.material3.Button
@@ -45,6 +48,7 @@ import androidx.compose.runtime.getValue
 @Composable
 fun AccountScreen(
     onNavigateToLogin: () -> Unit,
+    onNavigateToAddressSetup: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: AccountViewModel = hiltViewModel()
 ) {
@@ -93,6 +97,31 @@ fun AccountScreen(
         )
 
         Spacer(modifier = Modifier.height(Dimens.Space24))
+
+        Button(
+            onClick = onNavigateToAddressSetup,
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ForerunGreen,
+                contentColor = ForerunTextOnPrimary
+            ),
+            shape = androidx.compose.foundation.shape.RoundedCornerShape(Dimens.RadiusMedium),
+            modifier = Modifier
+                .fillMaxWidth(0.85f)
+                .height(Dimens.ButtonHeight)
+        ) {
+            Icon(
+                imageVector = Icons.Default.LocationOn,
+                contentDescription = null,
+                modifier = Modifier.size(Dimens.IconMedium)
+            )
+            Spacer(modifier = Modifier.width(Dimens.Space8))
+            Text(
+                text = stringResource(R.string.account_address_button),
+                fontWeight = FontWeight.Bold
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.Space16))
 
         OutlinedButton(
             onClick = onNavigateToLogin,

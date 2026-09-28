@@ -92,4 +92,21 @@
     <!-- Account Tab Stub -->
     <string name="account_title">حسابي</string>
     <string name="account_stub_desc">تفاصيل الحساب وعنوان التوصيل ستتوفر هنا قريباً.</string>
+    <string name="account_address_button">عنوان التوصيل</string>
+
+    <!-- Address Setup -->
+    <string name="address_setup_title">تحديد عنوان التوصيل</string>
+    <string name="address_setup_title_edit">تعديل عنوان التوصيل</string>
+    <string name="address_setup_subtitle_new">حدد موقعك على الخريطة لتسهيل التوصيل السريع</string>
+    <string name="address_setup_subtitle_edit">عدّل موقع وعنوان التوصيل الخاص بك</string>
+    <string name="address_description_label">تفاصيل العنوان أو علامة مميزة</string>
+    <string name="address_description_hint">مثال: القنجرة - جانب البلدية - طابق 1</string>
+    <string name="address_save_button">تأكيد وحفظ العنوان</string>
+    <string name="address_saving_button">جاري الحفظ…</string>
+    <string name="address_current_location">موقعي الحالي</string>
+    <string name="address_permission_rationale">يلزم الإذن للوصول إلى موقعك الحالي بدقة على الخريطة</string>
+    <string name="address_coords_format">الإحداثيات: %1$.4f, %2$.4f</string>
+    <string name="address_error_save_failed">فشل حفظ العنوان، يرجى المحاولة مرة أخرى</string>
+    <string name="address_success_message">تم حفظ العنوان بنجاح</string>
+    <string name="address_map_fallback_note">محاكي الأندرويد: تعذر تشغيل معالج الرسوميات الثلاثي الأبعاد للخريطة، يمكنك الاعتماد على الإحداثيات وتحديد الوصف يدوياً</string>
 </resources>

@@ -17,6 +17,7 @@ import com.forerun.customer.ui.auth.register.RegisterScreen
 import com.forerun.customer.ui.auth.status.PendingVerificationScreen
 import com.forerun.customer.ui.auth.status.SuspendedScreen
 import com.forerun.customer.ui.home.HomeScreen
+import com.forerun.customer.ui.address.AddressSetupScreen
 import com.forerun.customer.ui.onboarding.OnboardingScreen
 import com.forerun.customer.ui.orders.OrdersScreen
 import com.forerun.customer.ui.splash.SplashDestination
@@ -32,6 +33,7 @@ object Routes {
     const val HOME = "home"
     const val ORDERS = "orders"
     const val ACCOUNT = "account"
+    const val ADDRESS_SETUP = "address_setup"
 }
 
 @Composable
@@ -177,6 +179,16 @@ fun ForerunNavGraph(
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToAddressSetup = {
+                    navController.navigate(Routes.ADDRESS_SETUP)
+                }
+            )
+        }
+        composable(Routes.ADDRESS_SETUP) {
+            AddressSetupScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }
