@@ -20,7 +20,8 @@ sealed interface HomeUiState {
     data object Loading : HomeUiState
     data class Success(
         val profile: CustomerProfile,
-        val activeOrder: ActiveOrder? = null
+        val activeOrder: ActiveOrder? = null,
+        val isRefreshing: Boolean = false
     ) : HomeUiState
     data class Error(val message: String) : HomeUiState
 }
@@ -46,9 +47,13 @@ class HomeViewModel @Inject constructor(
         loadHomeData()
     }
 
+    fun onIntent(intent: HomeIntent) {
+        handleIntent(intent)
+    }
+
     fun handleIntent(intent: HomeIntent) {
         when (intent) {
-            is HomeIntent.Refresh -> loadHomeData()
+            is HomeIntent.Refresh -> refreshHomeData()
             is HomeIntent.Logout -> logout()
         }
     }
@@ -60,13 +65,40 @@ class HomeViewModel @Inject constructor(
                 .onSuccess { data ->
                     _uiState.value = HomeUiState.Success(
                         profile = data.profile,
-                        activeOrder = data.activeOrder
+                        activeOrder = data.activeOrder,
+                        isRefreshing = false
                     )
                 }
                 .onFailure { throwable ->
                     _uiState.value = HomeUiState.Error(
                         message = throwable.message ?: "تعذر تحميل البيانات"
                     )
+                }
+        }
+    }
+
+    private fun refreshHomeData() {
+        val currentState = _uiState.value
+        if (currentState is HomeUiState.Success) {
+            _uiState.value = currentState.copy(isRefreshing = true)
+        }
+        viewModelScope.launch {
+            getHomeDataUseCase()
+                .onSuccess { data ->
+                    _uiState.value = HomeUiState.Success(
+                        profile = data.profile,
+                        activeOrder = data.activeOrder,
+                        isRefreshing = false
+                    )
+                }
+                .onFailure { throwable ->
+                    if (currentState is HomeUiState.Success) {
+                        _uiState.value = currentState.copy(isRefreshing = false)
+                    } else {
+                        _uiState.value = HomeUiState.Error(
+                            message = throwable.message ?: "تعذر تحميل البيانات"
+                        )
+                    }
                 }
         }
     }

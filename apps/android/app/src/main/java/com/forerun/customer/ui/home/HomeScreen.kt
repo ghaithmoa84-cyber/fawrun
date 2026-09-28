@@ -61,6 +61,10 @@ import com.forerun.customer.ui.theme.ForerunSuccessLight
 import com.forerun.customer.ui.theme.ForerunTextMuted
 import com.forerun.customer.ui.theme.ForerunTextPrimary
 
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HomeScreen(
     onNavigateToLogin: () -> Unit,
@@ -119,12 +123,18 @@ fun HomeScreen(
             }
 
             is HomeUiState.Success -> {
-                HomeContent(
-                    profile = state.profile,
-                    activeOrder = state.activeOrder,
-                    onNewOrderClick = onNavigateToCreateOrder,
-                    onOrderDetailClick = onNavigateToOrderDetail
-                )
+                PullToRefreshBox(
+                    isRefreshing = state.isRefreshing,
+                    onRefresh = { viewModel.onIntent(HomeIntent.Refresh) },
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    HomeContent(
+                        profile = state.profile,
+                        activeOrder = state.activeOrder,
+                        onNewOrderClick = onNavigateToCreateOrder,
+                        onOrderDetailClick = onNavigateToOrderDetail
+                    )
+                }
             }
         }
     }

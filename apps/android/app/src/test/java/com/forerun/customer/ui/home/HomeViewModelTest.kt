@@ -116,4 +116,36 @@ class HomeViewModelTest {
         val error = state as HomeUiState.Error
         assertEquals("تعذر الاتصال بالخادم", error.message)
     }
+
+    @Test
+    fun onIntent_refresh_updates_home_data() = runTest {
+        val initialProfile = CustomerProfile(
+            id = "c1",
+            name = "عمر",
+            whatsapp = "0988888888",
+            altPhone = null,
+            status = "VERIFIED",
+            completedOrders = 0,
+            totalFeesPaid = 0
+        )
+        fakeHomeRepository.homeDataResult = Result.success(
+            HomeData(profile = initialProfile, activeOrder = null)
+        )
+
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        assertEquals(0, (viewModel.uiState.value as HomeUiState.Success).profile.completedOrders)
+
+        val updatedProfile = initialProfile.copy(completedOrders = 1)
+        fakeHomeRepository.homeDataResult = Result.success(
+            HomeData(profile = updatedProfile, activeOrder = null)
+        )
+
+        viewModel.onIntent(HomeIntent.Refresh)
+
+        val refreshedState = viewModel.uiState.value
+        assertTrue(refreshedState is HomeUiState.Success)
+        val success = refreshedState as HomeUiState.Success
+        assertEquals(1, success.profile.completedOrders)
+        assertEquals(false, success.isRefreshing)
+    }
 }
