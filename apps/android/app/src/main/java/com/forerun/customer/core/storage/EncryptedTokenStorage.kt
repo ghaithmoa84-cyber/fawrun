@@ -99,6 +99,13 @@ class EncryptedTokenStorage @Inject constructor(
         sharedPreferences.edit().clear().apply()
     }
 
+    override fun clearAccessTokenOnly() {
+        sharedPreferences.edit()
+            .remove(KEY_ACCESS_TOKEN)
+            .remove(KEY_TOKEN_EXPIRY)
+            .apply()
+    }
+
     override fun hasValidAccessToken(): Boolean {
         val token = getAccessToken()
         val expiry = getTokenExpiry()

@@ -35,11 +35,21 @@ import com.forerun.customer.ui.theme.ForerunGreenLight
 import com.forerun.customer.ui.theme.ForerunTextMuted
 import com.forerun.customer.ui.theme.ForerunTextPrimary
 
+import androidx.compose.material3.Button
+import androidx.compose.ui.graphics.Color
+import androidx.hilt.navigation.compose.hiltViewModel
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.forerun.customer.BuildConfig
+import androidx.compose.runtime.getValue
+
 @Composable
 fun AccountScreen(
     onNavigateToLogin: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    viewModel: AccountViewModel = hiltViewModel()
 ) {
+    val debugStatus by viewModel.debugStatus.collectAsStateWithLifecycle()
+
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -94,6 +104,26 @@ fun AccountScreen(
                 text = stringResource(R.string.logout),
                 fontWeight = FontWeight.SemiBold
             )
+        }
+
+        if (BuildConfig.DEBUG) {
+            Spacer(modifier = Modifier.height(Dimens.Space24))
+            Button(
+                onClick = { viewModel.triggerSessionExpiry() },
+                colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
+            ) {
+                Text("🔧 محاكاة انتهاء الجلسة (Debug S5b)", color = Color.White)
+            }
+
+            if (debugStatus != null) {
+                Spacer(modifier = Modifier.height(Dimens.Space8))
+                Text(
+                    text = debugStatus ?: "",
+                    fontSize = 13.sp,
+                    color = ForerunTextPrimary,
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 }

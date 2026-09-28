@@ -29,5 +29,6 @@ interface TokenStorage {
     )
 
     fun clearAll()
+    fun clearAccessTokenOnly()
     fun hasValidAccessToken(): Boolean
 }

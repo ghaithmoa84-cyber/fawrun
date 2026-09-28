@@ -87,6 +87,10 @@ class AuthRepositoryImplTest {
             backingUserRole = null
             backingUserStatus = null
         }
+        override fun clearAccessTokenOnly() {
+            backingAccessToken = null
+            backingExpiry = 0L
+        }
         override fun hasValidAccessToken(): Boolean = !backingAccessToken.isNullOrBlank() && (backingExpiry == 0L || backingExpiry > System.currentTimeMillis())
     }
 
