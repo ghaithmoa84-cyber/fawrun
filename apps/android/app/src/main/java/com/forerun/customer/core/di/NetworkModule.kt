@@ -80,7 +80,7 @@ object NetworkModule {
         return Retrofit.Builder()
             .baseUrl(BASE_URL)
             .client(okHttpClient)
-            .addConverterFactory(MoshiConverterFactory.create(moshi))
+            .addConverterFactory(MoshiConverterFactory.create(moshi).withNullSerialization())
             .addCallAdapterFactory(ApiCallAdapterFactory.create(moshi))
             .build()
     }

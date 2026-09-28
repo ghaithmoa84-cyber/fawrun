@@ -109,4 +109,44 @@
     <string name="address_error_save_failed">فشل حفظ العنوان، يرجى المحاولة مرة أخرى</string>
     <string name="address_success_message">تم حفظ العنوان بنجاح</string>
     <string name="address_map_fallback_note">محاكي الأندرويد: تعذر تشغيل معالج الرسوميات الثلاثي الأبعاد للخريطة، يمكنك الاعتماد على الإحداثيات وتحديد الوصف يدوياً</string>
+
+    <!-- Create Order -->
+    <string name="create_order_title">إنشاء طلب جديد</string>
+    <string name="create_order_address_header">عنوان التوصيل</string>
+    <string name="create_order_change_address">تغيير العنوان</string>
+    <string name="create_order_no_address_warning">لم تقم بتحديد عنوان توصيل بعد</string>
+    <string name="create_order_set_address_now">تحديد العنوان الآن</string>
+    <string name="create_order_items_section">قائمة المواد المطلوبة</string>
+    <string name="create_order_item_header">المادة رقم %1$d</string>
+    <string name="create_order_add_item">+ إضافة مادة أخرى</string>
+    <string name="create_order_item_name_label">اسم المادة</string>
+    <string name="create_order_item_name_hint">مثال: لبن بقري، سكر، خبز سياحي</string>
+    <string name="create_order_item_quantity_label">الكمية</string>
+    <string name="create_order_item_quantity_hint">مثال: 1 كغ، 2 عبوة، 5 ربطات</string>
+    <string name="create_order_any_store_toggle">الشراء من أي متجر متاح</string>
+    <string name="create_order_custom_store_label">اسم المتجر أو المكان المفضل</string>
+    <string name="create_order_custom_store_hint">مثال: بقالية البركة، صيدلية السلام</string>
+    <string name="create_order_delete_item">حذف المادة</string>
+    <string name="create_order_notes_section">ملاحظات إضافية</string>
+    <string name="create_order_notes_label">ملاحظات للكابتن (اختياري)</string>
+    <string name="create_order_notes_hint">مثال: يرجى التأكد من تاريخ الصلاحية، أو الاتصال عند الوصول</string>
+    <string name="create_order_runner_section">الكابتن المفضل</string>
+    <string name="create_order_preferred_runner_label">اختيار كابتن محدد</string>
+    <string name="create_order_any_runner">أي كابتن متاح (توصيل أسرع)</string>
+    <string name="create_order_wait_for_preferred_toggle">انتظار الكابتن في حال انشغاله</string>
+    <string name="create_order_wait_for_preferred_desc">قد يستغرق الطلب وقتاً أطول حتى يفرغ الكابتن المفضل</string>
+    <string name="create_order_pricing_disclaimer">سيتم تحديد أسعار المواد ورسوم التوصيل بدقة من قبل الكابتن والخادم عند البدء</string>
+    <string name="create_order_submit_button">تأكيد وإرسال الطلب</string>
+    <string name="create_order_submitting_button">جاري إنشاء الطلب…</string>
+    <string name="create_order_items_count_summary">%1$d مواد مضافة</string>
+    <string name="create_order_success_title">تم إنشاء طلبك بنجاح!</string>
+    <string name="create_order_success_desc">تم إرسال الطلب وجاري توجيهه للكابتن فوراً.</string>
+    <string name="create_order_success_order_number">رقم الطلب: %1$s</string>
+    <string name="create_order_track_order_btn">متابعة تفاصيل الطلب</string>
+    <string name="create_order_back_home_btn">العودة للرئيسية</string>
+    <string name="create_order_validation_empty_items">يرجى إضافة مادة واحدة على الأقل</string>
+    <string name="create_order_validation_item_name">يرجى كتابة اسم المادة</string>
+    <string name="create_order_validation_item_quantity">يرجى تحديد الكمية</string>
+    <string name="create_order_validation_custom_store">يرجى تحديد اسم المتجر أو تفعيل خيار أي متجر</string>
+    <string name="create_order_validation_address_missing">يرجى تحديد عنوان التوصيل أولاً قبل إرسال الطلب</string>
 </resources>
