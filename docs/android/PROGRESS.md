@@ -14,13 +14,15 @@
 | **Sprint 1.2** — Design System | ✅ Complete |
 | **Fix** — statusBarColor deprecation | ✅ Complete |
 | **Sprint 1.3** — Hilt + Networking | ✅ Complete |
-| **Sprint 1.4** — Auth Flow | ⏳ Next |
-| **Sprints 2-6** — Features | ⏳ Pending |
+| **Sprint 1.4** — Auth Flow | ✅ Complete |
+| **Sprint 2** — Home, Address & Orders | ✅ Complete |
+| **Sprint 3** — Order Tracking & Socket.IO | ⏳ Next |
+| **Sprints 4-6** — Profile, Reviews & Polish | ⏳ Pending |
 
-**Active branch:** `feature/android-sprint-1-3-networking`
+**Active branch:** `feature/android-sprint-2-home-order`
 
-**Last commit:** `198f997` (edge-to-edge fix)
-**APK size:** 12.36 MB
+**Last commit:** `de1ba2b` (Commit 6: Orders List Screen)
+**APK size (ABI split):** 24.3 MB (armeabi-v7a) / 27.1 MB (arm64-v8a) / 27.4 MB (x86_64)
 
 ---
 
@@ -376,11 +378,96 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
+## Sprint 2: Home, Address & Orders ✅ (مكتمل ومُعتمد 100%)
+
+**Status:** مكتمل بنسبة 100% — معتمد نهائياً بعد إتمام الاختبارات التلقائية والحيّة على المحاكي
+**Completed:** Session 7 (2026-09-28)
+**Branch:** `feature/android-sprint-2-home-order`
+
+### Deliverables Breakdown
+
+1. **Commit 1 — Home Screen & Bottom Navigation (`5cac4a2`, `7cb0285`):**
+   - Bottom navigation bar with 3 tabs: الرئيسية (Home), طلباتي (Orders), حسابي (Account).
+   - Modern Google Stitch dashboard layout with greeting, verified account status badge, and stats summary card.
+   - Active order card banner (showing active order status, runner ETA, quick track button) and quick actions (طلب جديد, إضافة عنوان).
+   - `HomeViewModel` + `FakeHomeRepository` with complete intent processing (`HomeIntent.Load`, `HomeIntent.Refresh`).
+
+2. **Logo Optimization & Brand Refresh (`d14b6ce`):**
+   - Converted 3.4 MB oversized raster logo to modern WebP format (~36 KB), maintaining ultra-crisp resolution with 99% size reduction.
+
+3. **Sprint 1.4 Deferred Verifications (S5a & S5b) (`e172a7e`, `6a1f80c`):**
+   - **S5a (Pull to Refresh):** Added Material 3 `PullToRefreshBox` to `HomeScreen` with non-blocking refresh indicator and `HomeIntent.Refresh`.
+   - **S5b (Active Session Expiration Ejection):** Added debug session expiry trigger on `AccountScreen` (calling `/auth/logout` and clearing access token while retaining refresh token). Verified live on emulator that triggering refresh on expired session rejects with 401, fails silent refresh, emits `sessionExpiredEvent`, and immediately resets navigation backstack to `Routes.LOGIN`.
+
+4. **Commit 2 — Account Screen (`6a1f80c`):**
+   - Customer profile details, verified badge, quick navigation to Address Setup and Orders, and secure logout.
+
+5. **Commit 3 — Address Setup Screen (MapLibre Native Android + OSM) (`dedb86d`, `99dcee9`, `776e9c3`):**
+   - Integrated MapLibre Native Android SDK (`org.maplibre.gl:android-sdk:11.5.1`) with OpenStreetMap raster tile style JSON (`styles/osm_raster.json`).
+   - Center pin with coordinate tracking on camera idle (`onCameraIdle`).
+   - Reverse geocoding via OpenStreetMap Nominatim API (`https://nominatim.openstreetmap.org/reverse?lat=&lon=&format=json`) with custom User-Agent `Forerun/1.0 (android)` and 500ms debounce.
+   - Runtime GPS permissions (`ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`) with animated "موقعي الحالي" FAB.
+   - Full API integration: `GET /customer/me/address` (detects create vs. edit mode) and `PUT /customer/me/address` with validation.
+   - **ABI Splits Configured:** Excluded obsolete `x86`, generating targeted APKs for `arm64-v8a`, `armeabi-v7a`, and `x86_64`.
+
+6. **Commit 4 — Create Order Screen (`b8e01de`):**
+   - Google Stitch dynamic item builder with Arabic UI.
+   - Dynamic items list: item description, quantity counter, "أي متجر" toggle or custom store name input.
+   - Preferred Runner picker fetching available captains (`GET /customer/runners`) with "انتظار الكابتن المفضل" checkbox toggle.
+   - General notes field for runner instructions.
+   - Saved address preview card with "تغيير" navigation button.
+   - Strict client-side validation (at least 1 non-empty item, store specified if not any-store, address selected).
+   - Backend integration: `POST /customer/orders`.
+   - **Server Source of Truth:** Zero local fee calculation; server calculates and returns official fees.
+   - Live verified on production Railway backend: created order **`FW-000015`** with 3 items and 80 SYP fee.
+
+7. **Commit 5 — Order Confirmation Screen (`3786974`):**
+   - Pure argument-driven screen (no ViewModel) receiving `orderNumber` and `estimatedFee` from navigation arguments.
+   - Success badge, order number, estimated fee, and disclaimer note: *"الرسم النهائي يُحدد بعد المراجعة"*.
+   - Action buttons: "تتبع الطلب" (navigates to Orders tab) and "طلب جديد" (re-opens Create Order with cleared stack).
+
+8. **Commit 6 — Orders List Screen (`de1ba2b`):**
+   - Full integration with `GET /customer/orders?page=&limit=&status=`.
+   - Material 3 `PullToRefreshBox` for seamless manual refresh.
+   - Pagination support with infinite scrolling ("جاري تحميل المزيد…").
+   - Filter chips: **الكل** (ALL), **النشطة** (ACTIVE), **المكتملة** (DELIVERED), **الملغاة** (CANCELLED).
+   - Order cards displaying: `orderNumber`, status badge with themed color and Arabic label, `totalFee` formatted with Syrian Pound ("80 ل.س"), item count, and localized Arabic date/time (`dd/MM/yyyy - hh:mm a`).
+   - Arabic empty state illustration and CTA ("ابدأ طلباً جديداً").
+   - MVI/MVVM: `OrdersListViewModel` + `OrdersListUiState` + `OrdersListIntent`.
+   - **Live Verification:** Verified live order **`FW-000015`** displayed correctly on emulator under "النشطة" and "الكل" with status "قيد المراجعة".
+
+---
+
+### Quality & Verification Summary
+
+| Gate | Target | Result | Status |
+|------|--------|--------|--------|
+| **Unit Tests** | 100% passing | 57 / 57 passed | ✅ PASS |
+| **Lint** | 0 errors | 0 errors (`lintReportDebug` clean) | ✅ PASS |
+| **Build** | Debug APKs | Clean build successful (`assembleDebug`) | ✅ PASS |
+| **Server Truth** | Zero client fee logic | 100% server calculated fees | ✅ PASS |
+| **APK Split Sizes** | < 30 MB per ABI | 24.3 MB (armeabi-v7a) / 27.1 MB (arm64-v8a) / 27.4 MB (x86_64) | ✅ PASS |
+
+#### Test Suites (57 Total Tests):
+- `CreateOrderViewModelTest`: 11 tests (validation, item manipulation, preferred runner, submission success/failure)
+- `AddressSetupViewModelTest`: 9 tests (fetch address, save address, reverse geocode, camera debounce, location permissions)
+- `OrdersListViewModelTest`: 5 tests (initial load, filter switching, pull-to-refresh, pagination, error handling)
+- `LoginViewModelTest`: 6 tests
+- `SplashViewModelTest`: 5 tests
+- `AddressRepositoryImplTest`: 5 tests
+- `HomeViewModelTest`: 4 tests
+- `ApiCallAdapterTest`: 3 tests
+- `ErrorMapperTest`: 3 tests
+- `AuthRepositoryImplTest`: 3 tests
+- `RegisterViewModelTest`: 3 tests
+
+---
+
 ## Contact & Handoff
 
 **Repository:** `github.com/ghaithmoa84-cyber/forerun`
-**Active branch:** `feature/android-sprint-1-4-auth-flow`
-**Next Sprint:** Sprint 2 (Home + Address + Create Order)
+**Active branch:** `feature/android-sprint-2-home-order`
+**Next Sprint:** Sprint 3 — Order Tracking & Real-Time Socket.IO Updates
 
 
 
