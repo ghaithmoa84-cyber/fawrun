@@ -359,8 +359,14 @@ must be corrected to match `Color.kt` during Compose implementation.
 - **New TODOs (Architectural Hardening):**
   - `TokenStorage`: Combine token and user persistence into an atomic DataStore transaction (`saveUserSession`).
   - `TokenRefreshManager`: Add `AtomicBoolean` guard against race conditions in concurrent silent refresh requests.
-- **E2E Status:**
-  - Ready for execution on `ForerunTest` emulator using `apps/android/scripts/e2e-test.ps1`.
+- **E2E Testing Results (Executed on ForerunTest / Android 34):**
+  - **S1 (Onboarding):** ✅ نجح (التنقل بين الشرائح الثلاث وتخطيها/إكمالها).
+  - **S2 (Register):** ✅ نجح (إنشاء حساب جديد والتوجيه التلقائي لشاشة المراجعة).
+  - **S3 (WhatsApp Intent):** ✅ نجح (فتح الرابط الخارجي للدعم دون أي تعليق).
+  - **S4 (Logout / Login):** ✅ نجح (تسجيل الخروج والعودة لتسجيل الدخول بنجاح مع استعادة حالة الحساب).
+  - **S5 (Session Persistence):** ✅ نجح (إعادة فتح التطبيق تحتفظ بالتوكنات وتوجّه مباشرة لشاشة قيد المراجعة عبر Splash).
+  - **تحليل Logcat:** 0 انهيارات (0 Fatal, 0 AndroidRuntime exceptions, 0 ANR).
+  - **حالة الاعتماد:** **معتمد 100% — جاهز للانطلاق إلى Sprint 2.**
 
 ---
 
