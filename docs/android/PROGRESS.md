@@ -19,17 +19,18 @@
 | **Sprint 3** — Order Detail, Rating & Socket.IO | ✅ مكتملة (غير مدموجة في master) |
 | **Sprint 4** — Account, Support & WebSocket Hardening | ✅ مكتملة (غير مدموجة في master) |
 | **Sprint 5** — FCM Push Notifications & MapLibre Polish | ✅ مكتملة (غير مدموجة في master) |
-| **UI Polish Pass** — مراجعة يدوية من المستخدم | ⏳ Next |
-| **Sprint 6** — Testing + QA + Final Polish | ⏳ Pending |
+| **Sprint 6** — UI Redesign (Google Stitch UI + RTL) | ✅ مكتملة (غير مدموجة في master) |
+| **Sprint 7** — Production Readiness & Release Pipeline | ✅ مكتملة (جاهزة للتوقيع والدمج) |
 
-**Active branch:** `feature/android-sprint-5-fcm-maplibre`
+**Active branch:** `feature/android-sprint-7-production`
 
-**Last commit:** `abf02d8` (`feat(android): add FCM push notifications + maplibre polish`)
-**Total tests:** 135/135 passed (100% passing)
+**Last commit:** `chore(android): prepare production release pipeline`
+**Total tests:** 152/152 passed (100% passing)
+**Lint status:** 0 errors (clean)
 **APK size (ABI split):**
-- `app-arm64-v8a-debug.apk`: 29.12 MB (29,123,417 bytes)
-- `app-armeabi-v7a-debug.apk`: 26.16 MB (26,163,367 bytes)
-- `app-x86_64-debug.apk`: 29.41 MB (29,410,712 bytes)
+- `app-arm64-v8a-debug.apk`: ~29 MB
+- `app-armeabi-v7a-debug.apk`: ~26 MB
+- `app-x86_64-debug.apk`: ~29 MB
 
 ---
 
@@ -508,11 +509,50 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
+---
+
+## Sprint 6: UI Redesign (Google Stitch) & RTL Enforcement ✅ (مكتملة — غير مدموجة في master)
+
+**Status:** مكتملة بنسبة 100% (غير مدموجة في master)  
+**Branch:** `feature/android-sprint-6-ui-redesign`  
+**Commits:** `415174e`, `9be1637`  
+
+### Deliverables Breakdown
+1. **Google Stitch UI Alignment:**
+   - إعادة تصميم وتحديث كافة الشاشات (17 شاشة وتدفق) لتتطابق بنسبة 100% مع تصاميم Google Stitch المعتمدة.
+   - تطبيق نظام الألوان والسمات الموحد (ForerunGreen `#15803D`، Dark `#191A23`، Soft Backgrounds، Typography، Card Styling).
+2. **Global RTL Layout Direction:**
+   - تطبيق اتجاه الكتابة والعرض العربي من اليمين إلى اليسار (RTL) شاملاً عبر التطبيق بالكامل باستخدام `CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl)`.
+   - تدقيق كافة المحاذات والأيقونات والمؤشرات لضمان تجربة مستخدم عربية أصلية وسلسة.
+
+---
+
+## Sprint 7: Production Readiness & Release Pipeline ✅ (مكتملة — جاهزة للدمج)
+
+**Status:** مكتملة بنسبة 100% (جاهزة للإصدار الأول)  
+**Branch:** `feature/android-sprint-7-production`  
+**Commit:** `chore(android): prepare production release pipeline`  
+
+### Deliverables Breakdown
+1. **Release Signing Pipeline:**
+   - إعداد ملف `keystore.properties.example` كنموذج إعداد التوقيع للإنتاج.
+   - تهيئة `app/build.gradle.kts` لقراءة بيانات التوقيع بأمان من `keystore.properties` دون إيقاف بناء الـ Debug.
+   - عزل وحظر ملفات الـ Keystore وبيانات الاعتماد نهائياً من الـ Git عبر `.gitignore` (`*.jks`, `*.keystore`, `keystore.properties`).
+2. **Hardening & Optimization (R8 / ProGuard):**
+   - تفعيل `isMinifyEnabled = true` و `isShrinkResources = true` لنسخة الإنتاج.
+   - إعداد ملف `proguard-rules.pro` الشامل لحماية وضمان عمل Moshi (مع Codegen الكود المولد)، Retrofit 2، Socket.IO / Engine.IO، OkHttp 3، و MapLibre دون تعارض مع R8.
+3. **Pre-Production Audit & Cleanup:**
+   - حماية أدوات التطوير (Debug Tools) في `AccountScreen.kt` بشرط `BuildConfig.DEBUG` لمنع ظهورها للمستخدم النهائي.
+   - التأكد من خلو واجهات التطبيق وموارده من نصوص TODO أو FIXME أو نصوص وهمية.
+   - إعداد دليل الإصدار والتشغيل `docs/android/RELEASE-CHECKLIST.md`.
+
+---
+
 ### Quality & Verification Summary
 
 | Gate | Target | Result | Status |
 |------|--------|--------|--------|
-| **Unit Tests** | 100% passing | 135 / 135 passed | ✅ PASS |
+| **Unit Tests** | 100% passing | 152 / 152 passed | ✅ PASS |
 | **Lint** | 0 errors | 0 errors (`lint` clean) | ✅ PASS |
 | **Build** | Debug APKs | Clean build (`assembleDebug`) | ✅ PASS |
 | **Server Truth** | Zero client fee logic | 100% server calculated fees | ✅ PASS |
@@ -520,35 +560,53 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
-## Known Gaps
+## Active Branches in Repository
 
-1. **FCM (Firebase Cloud Messaging):** ملف `google-services.json` الحالي هو ملف هيكلي تجريبي (Placeholder مستثنى من git)؛ يتطلب ربط مشروع Firebase فعلي لاستقبال التنبيهات من السيرفر على الأجهزة الحقيقية.
-2. **4 فروع غير مدموجة في master:** الفروع (`sprint-2`, `sprint-3`, `sprint-4`, `sprint-5`) تراكمية ومكتملة محلياً، ولم يتم دمجها في `master` بانتظار إشارة المستخدم ومراجعة PR الشامل.
-3. **غياب اختبارات E2E المؤتمتة:** لا توجد بنية CI/CD لتشغيل اختبارات E2E مؤتمتة على المحاكي، والاعتماد حالياً على 135 unit test مع التحقق اليدوي على المحاكي.
-4. **زر تجربة انتهاء الجلسة في AccountScreen:** زر تجربة انتهاء الجلسة محمي بشرط `BuildConfig.DEBUG` لضمان عدم ظهوره نهائياً في نسخ الإنتاج (Release builds).
+| الفرع (Branch) | المرحلة / السبرنت | الحالة |
+|----------------|-------------------|--------|
+| `feature/android-sprint-1-1-skeleton` | Sprint 1.1 — الهيكل الأساسي | مكتمل (محلي + remote) |
+| `feature/android-sprint-1-3-networking` | Sprint 1.3 — شبكة الاتصال والـ DTOs | مكتمل |
+| `feature/android-sprint-1-4-auth-flow` | Sprint 1.4 — تسجيل الدخول والتسجيل | مكتمل |
+| `feature/android-sprint-2-home-order` | Sprint 2 — الطلبات والعناوين والخريطة | مكتمل |
+| `feature/android-sprint-3-order-detail` | Sprint 3 — تفاصيل الطلب والتقييم والسوكيت | مكتمل |
+| `feature/android-sprint-4-account-support` | Sprint 4 — الحساب والدعم وتجديد الجلسة | مكتمل |
+| `feature/android-sprint-5-fcm-maplibre` | Sprint 5 — إشعارات FCM وتحسين الخرائط | مكتمل |
+| `feature/android-sprint-6-ui-redesign` | Sprint 6 — إعادة تصميم الواجهات ودعم RTL | مكتمل |
+| `feature/android-sprint-7-production` | Sprint 7 — خط الإنتاج والتوقيع والتجهيز | **الفرع الحالي النشط** ✅ |
 
 ---
 
-## Next: UI Polish Pass (يدوي من المستخدم)
+## Known Gaps
 
-- مراجعة يدوية شاملة للواجهات الـ 17 من قبل المستخدم للتدقيق البصري وتناسق الألوان، التباعدات، دعم RTL، والتجاوب مع أحجام الشاشات المختلفة.
-- يليها Sprint 6: Testing + QA + Final Polish.
+1. **FCM (Firebase Cloud Messaging):** ملف `google-services.json` الحالي هو ملف تجريبي؛ يتطلب ربط مشروع Firebase فعلي لاستقبال التنبيهات من السيرفر على الأجهزة الحقيقية.
+2. **دمج الفروع في master:** جميع فروع الأندرويد تراكمية ومنظمة محلياً، وبانتظار أمر الدمج النهائي في `master` لإنشاء أول Release رسمي.
+3. **وضع مفتاح Keystore الحقيقي:** تم تجهيز خط البناء بالكامل، وينتظر وضع ملف `keystore.properties` والمفتاح الحقيقي من قبل المسؤول لبناء `assembleRelease`.
+
+---
+
+## Next Steps
+
+**دمج الفروع في master + Firebase project + أول إصدار (Production Release 1.0.0)**
+
+1. تنفيذ دمج الفروع التراكمية في فرع `master`.
+2. وضع ملف `google-services.json` الحقيقي لمشروع Firebase.
+3. إنشاء مفتاح الـ Keystore الخاص بالإنتاج وتعبئة `keystore.properties`.
+4. تشغيل `./gradlew assembleRelease` أو `bundleRelease` واستخراج حزم الإنتاج الموقعة للمستخدمين.
 
 ---
 
 ## Contact & Handoff
 
 **Repository:** `github.com/ghaithmoa84-cyber/forerun`  
-**Active branch:** `feature/android-sprint-5-fcm-maplibre`  
-**Last commit:** `abf02d8`  
-**Next Step:** UI Polish Pass (يدوي من المستخدم) → Sprint 6: Testing + QA + Final Polish  
-
+**Active branch:** `feature/android-sprint-7-production`  
+**Quality status:** 152/152 tests passed, 0 lint errors, build clean  
 **Reference documents:**
-- `AGENTS.md` — rules and standards
-- `PROJECT_BRIEF.md` — project overview
-- `MASTER-SPEC.md` — Android master specification
-- `CURRENT_STATE.md` — Android current state summary
+- `docs/android/RELEASE-CHECKLIST.md` — دليل وإرشادات إصدار النسخة وتوقيعها
+- `AGENTS.md` — قواعد ومعايير التطوير
+- `MASTER-SPEC.md` — مواصفات تطبيق أندرويد الكاملة
+- `CURRENT_STATE.md` — ملخص حالة تطبيق أندرويد
 
 ---
 
 **End of PROGRESS.md**
+

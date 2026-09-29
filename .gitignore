@@ -17,9 +17,12 @@ dist/
 prisma/*.db
 prisma/*.db-journal
 
-# JWT keys
+# JWT keys and Keystores
 *.pem
 *.key
+*.jks
+*.keystore
+keystore.properties
 
 # Misc
 coverage/
