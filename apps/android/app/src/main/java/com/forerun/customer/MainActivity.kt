@@ -27,8 +27,21 @@ import com.forerun.customer.data.remote.dto.auth.LoginRequest
 import com.forerun.customer.ui.theme.*
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.launch
+import android.Manifest
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.os.Build
+import androidx.activity.compose.rememberLauncherForActivityResult
+import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.content.ContextCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
+import com.forerun.customer.core.notification.NotificationPayloadParser
 import com.forerun.customer.ui.navigation.ForerunNavGraph
+import com.forerun.customer.ui.navigation.Routes
+import kotlinx.coroutines.flow.MutableStateFlow
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -40,6 +53,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var tokenRefreshManager: com.forerun.customer.data.remote.token.TokenRefreshManager
 
+    private val pendingDeepLinkOrderId = MutableStateFlow<String?>(null)
+
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
             statusBarStyle = androidx.activity.SystemBarStyle.dark(
@@ -50,9 +65,43 @@ class MainActivity : ComponentActivity() {
             )
         )
         super.onCreate(savedInstanceState)
+
+        val initialOrderId = NotificationPayloadParser.extractOrderId(intent)
+        if (!initialOrderId.isNullOrBlank()) {
+            pendingDeepLinkOrderId.value = initialOrderId
+        }
+
         setContent {
             ForerunTheme {
                 val navController = rememberNavController()
+                val pendingOrderId by pendingDeepLinkOrderId.collectAsStateWithLifecycle()
+
+                // POST_NOTIFICATIONS permission request for Android 13+ (API 33+)
+                val notificationPermissionLauncher = rememberLauncherForActivityResult(
+                    contract = ActivityResultContracts.RequestPermission()
+                ) { isGranted ->
+                    Log.d("MainActivity", "POST_NOTIFICATIONS granted: $isGranted")
+                }
+
+                LaunchedEffect(Unit) {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                        val permission = Manifest.permission.POST_NOTIFICATIONS
+                        if (ContextCompat.checkSelfPermission(this@MainActivity, permission) != PackageManager.PERMISSION_GRANTED) {
+                            notificationPermissionLauncher.launch(permission)
+                        }
+                    }
+                }
+
+                // Handle deep linking from notification payload
+                LaunchedEffect(pendingOrderId) {
+                    pendingOrderId?.let { orderId ->
+                        navController.navigate(Routes.orderDetail(orderId)) {
+                            launchSingleTop = true
+                        }
+                        pendingDeepLinkOrderId.value = null
+                    }
+                }
+
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
@@ -63,6 +112,15 @@ class MainActivity : ComponentActivity() {
                     )
                 }
             }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        val orderId = NotificationPayloadParser.extractOrderId(intent)
+        if (!orderId.isNullOrBlank()) {
+            pendingDeepLinkOrderId.value = orderId
         }
     }
 

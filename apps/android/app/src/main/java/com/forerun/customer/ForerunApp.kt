@@ -23,6 +23,12 @@ class ForerunApp : Application() {
             Log.e("ForerunApp", "Failed to initialize MapLibre", e)
         }
 
+        try {
+            com.forerun.customer.core.notification.NotificationHelper.createNotificationChannels(this)
+        } catch (e: Throwable) {
+            Log.e("ForerunApp", "Failed to initialize Notification Channels", e)
+        }
+
         registerActivityLifecycleCallbacks(object : ActivityLifecycleCallbacks {
             private var startedActivityCount = 0
 

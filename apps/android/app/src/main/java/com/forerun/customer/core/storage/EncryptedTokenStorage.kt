@@ -83,6 +83,14 @@ class EncryptedTokenStorage @Inject constructor(
         }.apply()
     }
 
+    override fun getDeviceToken(): String? = sharedPreferences.getString(KEY_DEVICE_TOKEN, null)
+
+    override fun setDeviceToken(token: String?) {
+        sharedPreferences.edit().apply {
+            if (token != null) putString(KEY_DEVICE_TOKEN, token) else remove(KEY_DEVICE_TOKEN)
+        }.apply()
+    }
+
     override fun saveAuthTokens(
         accessToken: String,
         refreshToken: String,
@@ -121,5 +129,6 @@ class EncryptedTokenStorage @Inject constructor(
         private const val KEY_USER_NAME = "user_name"
         private const val KEY_USER_ROLE = "user_role"
         private const val KEY_USER_STATUS = "user_status"
+        private const val KEY_DEVICE_TOKEN = "device_token"
     }
 }

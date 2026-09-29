@@ -29,4 +29,5 @@ build-output.txt
 test-output.txt
 .idea/
 .gradle/
+google-services.json
 

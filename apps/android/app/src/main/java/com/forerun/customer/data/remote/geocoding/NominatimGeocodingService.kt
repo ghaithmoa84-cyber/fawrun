@@ -32,7 +32,8 @@ data class NominatimAddress(
 
 @Singleton
 class NominatimGeocodingService @Inject constructor(
-    private val moshi: Moshi
+    private val moshi: Moshi,
+    private val cache: AddressReverseGeocodeCache = AddressReverseGeocodeCache()
 ) : GeocodingService {
 
     private val httpClient = OkHttpClient.Builder()
@@ -45,6 +46,12 @@ class NominatimGeocodingService @Inject constructor(
     }
 
     override suspend fun reverseGeocode(lat: Double, lng: Double): String? = withContext(Dispatchers.IO) {
+        // Check LRU Cache first
+        val cached = cache.get(lat, lng)
+        if (cached != null) {
+            return@withContext cached
+        }
+
         try {
             val url = "https://nominatim.openstreetmap.org/reverse?lat=$lat&lon=$lng&format=json&accept-language=ar"
             val request = Request.Builder()
@@ -54,12 +61,20 @@ class NominatimGeocodingService @Inject constructor(
 
             httpClient.newCall(request).execute().use { response ->
                 if (!response.isSuccessful) {
-                    Log.w("Nominatim", "Response unsuccessful: ${response.code}")
+                    if (response.code == 429) {
+                        Log.w("Nominatim", "Nominatim rate limited (429 Too Many Requests)")
+                    } else {
+                        Log.w("Nominatim", "Response unsuccessful: ${response.code}")
+                    }
                     return@withContext null
                 }
                 val body = response.body?.string() ?: return@withContext null
                 val parsed = adapter.fromJson(body) ?: return@withContext null
-                formatNominatimResult(parsed)
+                val formatted = formatNominatimResult(parsed)
+                if (!formatted.isNullOrBlank()) {
+                    cache.put(lat, lng, formatted)
+                }
+                formatted
             }
         } catch (e: Exception) {
             Log.w("Nominatim", "Reverse geocode error: ${e.message}")

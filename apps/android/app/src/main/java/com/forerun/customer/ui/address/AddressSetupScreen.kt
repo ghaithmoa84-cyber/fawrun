@@ -58,6 +58,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalLifecycleOwner
 import androidx.compose.ui.res.stringResource
+import kotlinx.coroutines.launch
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -150,29 +151,64 @@ fun AddressSetupScreen(
     }
 
     // Permission launcher for GPS location
+    val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+
+    fun fetchLocation() {
+        val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
+        val isGpsEnabled = locationManager?.isProviderEnabled(android.location.LocationManager.GPS_PROVIDER) == true ||
+            locationManager?.isProviderEnabled(android.location.LocationManager.NETWORK_PROVIDER) == true
+
+        if (!isGpsEnabled) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar("يرجى تفعيل خدمة تحديد الموقع (GPS)")
+            }
+        }
+
+        try {
+            fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
+                .addOnSuccessListener { location ->
+                    if (location != null) {
+                        val target = LatLng(location.latitude, location.longitude)
+                        viewModel.onIntent(
+                            AddressSetupIntent.UpdateCoordinates(location.latitude, location.longitude)
+                        )
+                        maplibreInstance?.animateCamera(
+                            CameraUpdateFactory.newLatLngZoom(target, 15.0)
+                        )
+                    } else {
+                        fusedLocationClient.lastLocation.addOnSuccessListener { lastLoc ->
+                            if (lastLoc != null) {
+                                val target = LatLng(lastLoc.latitude, lastLoc.longitude)
+                                viewModel.onIntent(
+                                    AddressSetupIntent.UpdateCoordinates(lastLoc.latitude, lastLoc.longitude)
+                                )
+                                maplibreInstance?.animateCamera(
+                                    CameraUpdateFactory.newLatLngZoom(target, 15.0)
+                                )
+                            } else {
+                                coroutineScope.launch {
+                                    snackbarHostState.showSnackbar("تعذر تحديد موقعك الحالي بدقة، يمكنك سحب الخريطة لتحديده")
+                                }
+                            }
+                        }
+                    }
+                }
+                .addOnFailureListener { e ->
+                    Log.w(TAG, "Failed to get current location", e)
+                }
+        } catch (e: SecurityException) {
+            Log.e(TAG, "Location permission denied", e)
+        }
+    }
+
     val locationPermissionLauncher = rememberLauncherForActivityResult(
         contract = ActivityResultContracts.RequestMultiplePermissions()
     ) { permissions ->
         val fineGranted = permissions[Manifest.permission.ACCESS_FINE_LOCATION] == true
         val coarseGranted = permissions[Manifest.permission.ACCESS_COARSE_LOCATION] == true
         if (fineGranted || coarseGranted) {
-            try {
-                fusedLocationClient.getCurrentLocation(Priority.PRIORITY_HIGH_ACCURACY, null)
-                    .addOnSuccessListener { location ->
-                        if (location != null) {
-                            val target = LatLng(location.latitude, location.longitude)
-                            viewModel.onIntent(
-                                AddressSetupIntent.UpdateCoordinates(location.latitude, location.longitude)
-                            )
-                            maplibreInstance?.animateCamera(
-                                CameraUpdateFactory.newLatLngZoom(target, 15.0)
-                            )
-                        }
-                    }
-            } catch (e: SecurityException) {
-                Log.e(TAG, "Location permission denied", e)
-            }
+            fetchLocation()
         }
     }
 
@@ -317,29 +353,7 @@ fun AddressSetupScreen(
                             if (fineCheck == PackageManager.PERMISSION_GRANTED ||
                                 coarseCheck == PackageManager.PERMISSION_GRANTED
                             ) {
-                                try {
-                                    fusedLocationClient.getCurrentLocation(
-                                        Priority.PRIORITY_HIGH_ACCURACY,
-                                        null
-                                    ).addOnSuccessListener { loc ->
-                                        if (loc != null) {
-                                            viewModel.onIntent(
-                                                AddressSetupIntent.UpdateCoordinates(
-                                                    loc.latitude,
-                                                    loc.longitude
-                                                )
-                                            )
-                                            maplibreInstance?.animateCamera(
-                                                CameraUpdateFactory.newLatLngZoom(
-                                                    LatLng(loc.latitude, loc.longitude),
-                                                    15.0
-                                                )
-                                            )
-                                        }
-                                    }
-                                } catch (e: SecurityException) {
-                                    Log.e(TAG, "SecurityException on location", e)
-                                }
+                                fetchLocation()
                             } else {
                                 locationPermissionLauncher.launch(
                                     arrayOf(
@@ -421,13 +435,38 @@ fun AddressSetupScreen(
                             label = { Text(stringResource(R.string.address_description_label)) },
                             placeholder = { Text(stringResource(R.string.address_description_hint), fontSize = 13.sp) },
                             isError = uiState.descriptionError != null,
-                            supportingText = {
-                                if (uiState.descriptionError != null) {
-                                    Text(
-                                        text = uiState.descriptionError ?: "",
-                                        color = ForerunDanger,
-                                        fontSize = 12.sp
+                            trailingIcon = {
+                                if (uiState.isGeocodingLoading) {
+                                    CircularProgressIndicator(
+                                        modifier = Modifier.size(18.dp),
+                                        strokeWidth = 2.dp,
+                                        color = ForerunGreen
                                     )
+                                }
+                            },
+                            supportingText = {
+                                when {
+                                    uiState.descriptionError != null -> {
+                                        Text(
+                                            text = uiState.descriptionError ?: "",
+                                            color = ForerunDanger,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                    uiState.isGeocodingLoading -> {
+                                        Text(
+                                            text = "جاري تحديد العنوان تلقائياً…",
+                                            color = ForerunGreen,
+                                            fontSize = 12.sp
+                                        )
+                                    }
+                                    uiState.geocodingError != null -> {
+                                        Text(
+                                            text = "تعذر تحديد العنوان تلقائياً، يمكنك إدخاله يدوياً",
+                                            color = ForerunTextMuted,
+                                            fontSize = 12.sp
+                                        )
+                                    }
                                 }
                             },
                             maxLines = 3,

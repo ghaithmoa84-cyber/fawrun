@@ -22,7 +22,8 @@ class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
     private val tokenStorage: TokenStorage,
     private val onboardingPrefs: OnboardingPrefs,
-    private val tokenRefreshManager: TokenRefreshManager
+    private val tokenRefreshManager: TokenRefreshManager,
+    private val fcmTokenManager: com.forerun.customer.core.notification.FcmTokenManager? = null
 ) : AuthRepository {
 
     override suspend fun login(whatsapp: String, password: String): ApiResponse<User> {
@@ -53,6 +54,11 @@ class AuthRepositoryImpl @Inject constructor(
                     role = data.user.role,
                     status = UserStatus.fromString(data.user.status)
                 )
+
+                try {
+                    fcmTokenManager?.registerDeviceToken()
+                } catch (_: Exception) {}
+
                 ApiResponse.Success(user)
             }
             is ApiResponse.Error -> {
@@ -100,6 +106,10 @@ class AuthRepositoryImpl @Inject constructor(
     }
 
     override suspend fun logout(): ApiResponse<Unit> {
+        try {
+            fcmTokenManager?.unregisterDeviceToken()
+        } catch (_: Exception) {}
+
         val refreshToken = tokenStorage.getRefreshToken()
         if (!refreshToken.isNullOrBlank()) {
             try {

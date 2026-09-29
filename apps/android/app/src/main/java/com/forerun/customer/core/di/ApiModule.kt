@@ -30,4 +30,10 @@ object ApiModule {
     fun provideOrderApi(retrofit: Retrofit): com.forerun.customer.data.remote.api.OrderApi {
         return retrofit.create(com.forerun.customer.data.remote.api.OrderApi::class.java)
     }
+
+    @Provides
+    @Singleton
+    fun provideDeviceTokenApi(retrofit: Retrofit): com.forerun.customer.data.remote.api.DeviceTokenApi {
+        return retrofit.create(com.forerun.customer.data.remote.api.DeviceTokenApi::class.java)
+    }
 }

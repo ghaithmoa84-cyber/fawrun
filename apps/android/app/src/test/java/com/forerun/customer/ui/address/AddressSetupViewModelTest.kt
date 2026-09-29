@@ -18,6 +18,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -183,5 +184,64 @@ class AddressSetupViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.isSaving)
         assertEquals("خطأ في الخادم", state.errorMessage)
+    }
+
+    @Test
+    fun updateCoordinates_setsGeocodingLoadingTrue_andResetsToFalseOnSuccess() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.NotFound
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, fakeGeocodingService)
+        advanceUntilIdle()
+
+        viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.5534, 35.8000))
+
+        // Immediately after dispatch, loading is true
+        assertTrue(viewModel.uiState.value.isGeocodingLoading)
+        assertNull(viewModel.uiState.value.geocodingError)
+
+        advanceTimeBy(600)
+
+        // After debounce and completion, loading is false and description populated
+        assertFalse(viewModel.uiState.value.isGeocodingLoading)
+        assertEquals("القنجرة - شارع البلدية", viewModel.uiState.value.description)
+        assertNull(viewModel.uiState.value.geocodingError)
+    }
+
+    @Test
+    fun updateCoordinates_setsGeocodingLoadingFalse_andSetsGeocodingErrorOnFailure() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.NotFound
+        fakeGeocodingService.result = null // Nominatim network failure
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, fakeGeocodingService)
+        advanceUntilIdle()
+
+        viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.60, 35.85))
+        assertTrue(viewModel.uiState.value.isGeocodingLoading)
+
+        advanceTimeBy(600)
+
+        assertFalse(viewModel.uiState.value.isGeocodingLoading)
+        assertNotNull(viewModel.uiState.value.geocodingError)
+    }
+
+    @Test
+    fun updateCoordinates_rapidUpdates_cancelsPreviousRequest_andDebounces() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.NotFound
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, fakeGeocodingService)
+        advanceUntilIdle()
+
+        // 1st coordinate update
+        fakeGeocodingService.result = "الموقع الأول"
+        viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.10, 35.10))
+        advanceTimeBy(300) // Not yet completed (debounce 500ms)
+
+        // 2nd coordinate update cancels 1st
+        fakeGeocodingService.result = "الموقع الثاني"
+        viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.20, 35.20))
+        advanceTimeBy(300) // 1st was cancelled, 2nd has 200ms remaining
+        assertEquals("", viewModel.uiState.value.description)
+
+        // Advance remaining time for 2nd
+        advanceTimeBy(300)
+        assertEquals("الموقع الثاني", viewModel.uiState.value.description)
+        assertFalse(viewModel.uiState.value.isGeocodingLoading)
     }
 }

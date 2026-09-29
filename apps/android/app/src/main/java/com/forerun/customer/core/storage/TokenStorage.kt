@@ -22,6 +22,9 @@ interface TokenStorage {
     fun getUserStatus(): String?
     fun setUserStatus(status: String?)
 
+    fun getDeviceToken(): String? = null
+    fun setDeviceToken(token: String?) {}
+
     fun saveAuthTokens(
         accessToken: String,
         refreshToken: String,

@@ -24,6 +24,8 @@ data class AddressSetupUiState(
     val isLoading: Boolean = true,
     val isSaving: Boolean = false,
     val isEditMode: Boolean = false,
+    val isGeocodingLoading: Boolean = false,
+    val geocodingError: String? = null,
     val lat: Double = 35.5500,
     val lng: Double = 35.8000,
     val description: String = "",
@@ -68,16 +70,43 @@ class AddressSetupViewModel @Inject constructor(
         when (intent) {
             is AddressSetupIntent.LoadAddress -> loadAddress()
             is AddressSetupIntent.UpdateCoordinates -> {
-                _uiState.update { it.copy(lat = intent.lat, lng = intent.lng) }
+                _uiState.update {
+                    it.copy(
+                        lat = intent.lat,
+                        lng = intent.lng,
+                        isGeocodingLoading = true,
+                        geocodingError = null
+                    )
+                }
                 reverseGeocodeJob?.cancel()
                 reverseGeocodeJob = viewModelScope.launch {
-                    delay(500)
-                    val placeName = geocodingService.reverseGeocode(intent.lat, intent.lng)
-                    if (!placeName.isNullOrBlank()) {
+                    try {
+                        delay(500)
+                        val placeName = geocodingService.reverseGeocode(intent.lat, intent.lng)
+                        if (!placeName.isNullOrBlank()) {
+                            _uiState.update {
+                                it.copy(
+                                    description = placeName,
+                                    descriptionError = null,
+                                    isGeocodingLoading = false,
+                                    geocodingError = null
+                                )
+                            }
+                        } else {
+                            _uiState.update {
+                                it.copy(
+                                    isGeocodingLoading = false,
+                                    geocodingError = "تعذر تحديد العنوان تلقائياً"
+                                )
+                            }
+                        }
+                    } catch (e: kotlinx.coroutines.CancellationException) {
+                        throw e
+                    } catch (e: Exception) {
                         _uiState.update {
                             it.copy(
-                                description = placeName,
-                                descriptionError = null
+                                isGeocodingLoading = false,
+                                geocodingError = "تعذر تحديد العنوان تلقائياً"
                             )
                         }
                     }

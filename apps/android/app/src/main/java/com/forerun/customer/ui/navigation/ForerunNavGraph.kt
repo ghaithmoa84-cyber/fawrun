@@ -23,6 +23,7 @@ import com.forerun.customer.ui.order.create.CreateOrderScreen
 import com.forerun.customer.ui.orders.OrdersScreen
 import androidx.navigation.NavType
 import androidx.navigation.navArgument
+import androidx.navigation.navDeepLink
 import com.forerun.customer.ui.order.confirmation.OrderConfirmationScreen
 import com.forerun.customer.ui.splash.SplashDestination
 import com.forerun.customer.ui.splash.SplashScreen
@@ -277,6 +278,10 @@ fun ForerunNavGraph(
             route = Routes.ORDER_DETAIL,
             arguments = listOf(
                 navArgument("orderId") { type = NavType.StringType }
+            ),
+            deepLinks = listOf(
+                navDeepLink { uriPattern = "forerun://orders/{orderId}" },
+                navDeepLink { uriPattern = "https://forerun.app/orders/{orderId}" }
             )
         ) {
             com.forerun.customer.ui.order.detail.OrderDetailScreen(
