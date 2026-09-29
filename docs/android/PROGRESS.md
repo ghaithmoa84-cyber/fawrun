@@ -2,7 +2,7 @@
 
 > **Purpose:** Track what has been built, what decisions were made,
 > and what comes next.
-> **Last updated:** After Sprint 1.2 + statusBarColor fix
+> **Last updated:** After Sprint 5 (FCM Push Notifications + MapLibre Polish)
 
 ---
 
@@ -15,14 +15,21 @@
 | **Fix** — statusBarColor deprecation | ✅ Complete |
 | **Sprint 1.3** — Hilt + Networking | ✅ Complete |
 | **Sprint 1.4** — Auth Flow | ✅ Complete |
-| **Sprint 2** — Home, Address & Orders | ✅ Complete |
-| **Sprint 3** — Order Tracking & Socket.IO | ⏳ Next |
-| **Sprints 4-6** — Profile, Reviews & Polish | ⏳ Pending |
+| **Sprint 2** — Home, Address & Orders | ✅ مكتملة (غير مدموجة في master) |
+| **Sprint 3** — Order Detail, Rating & Socket.IO | ✅ مكتملة (غير مدموجة في master) |
+| **Sprint 4** — Account, Support & WebSocket Hardening | ✅ مكتملة (غير مدموجة في master) |
+| **Sprint 5** — FCM Push Notifications & MapLibre Polish | ✅ مكتملة (غير مدموجة في master) |
+| **UI Polish Pass** — مراجعة يدوية من المستخدم | ⏳ Next |
+| **Sprint 6** — Testing + QA + Final Polish | ⏳ Pending |
 
-**Active branch:** `feature/android-sprint-2-home-order`
+**Active branch:** `feature/android-sprint-5-fcm-maplibre`
 
-**Last commit:** `de1ba2b` (Commit 6: Orders List Screen)
-**APK size (ABI split):** 24.3 MB (armeabi-v7a) / 27.1 MB (arm64-v8a) / 27.4 MB (x86_64)
+**Last commit:** `abf02d8` (`feat(android): add FCM push notifications + maplibre polish`)
+**Total tests:** 135/135 passed (100% passing)
+**APK size (ABI split):**
+- `app-arm64-v8a-debug.apk`: 29.12 MB (29,123,417 bytes)
+- `app-armeabi-v7a-debug.apk`: 26.16 MB (26,163,367 bytes)
+- `app-x86_64-debug.apk`: 29.41 MB (29,410,712 bytes)
 
 ---
 
@@ -378,9 +385,9 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
-## Sprint 2: Home, Address & Orders ✅ (مكتمل ومُعتمد 100%)
+## Sprint 2: Home, Address & Orders ✅ (مكتملة — غير مدموجة في master)
 
-**Status:** مكتمل بنسبة 100% — معتمد نهائياً بعد إتمام الاختبارات التلقائية والحيّة على المحاكي
+**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
 **Completed:** Session 7 (2026-09-28)
 **Branch:** `feature/android-sprint-2-home-order`
 
@@ -438,50 +445,109 @@ must be corrected to match `Color.kt` during Compose implementation.
 
 ---
 
+## Sprint 3: Order Detail, Rating & Socket.IO ✅ (مكتملة — غير مدموجة في master)
+
+**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
+**Branch:** `feature/android-sprint-3-order-detail`
+**Commit:** `9d02b4f`
+
+### Deliverables Breakdown
+1. **Order Detail Screen & Tracking (`OrderDetailScreen`):**
+   - Live order tracking with dynamic Arabic status badges and order progression timeline.
+   - Store purchase items list (`isPurchased` badges and store grouping).
+   - Dynamic runner info card with direct WhatsApp and phone call intent launchers.
+   - Price breakdown (base fee, peripheral fee, extra stores, total).
+2. **Real-time Socket.IO Integration:**
+   - Dedicated `/orders` namespace connection with JWT authentication.
+   - Event listeners for `order:status_changed`, `order:runner_assigned`, `order:fee_updated`, `order:store_purchased`, `order:delivered`, `order:cancelled`.
+   - Foreground lifecycle integration and automatic reconnect with exponential backoff.
+3. **Rating BottomSheet & Screen (`RatingScreen`):**
+   - 5-star interactive rating component with optional customer feedback note.
+   - Integrated with backend `POST /customer/orders/{id}/rating`.
+
+---
+
+## Sprint 4: Account, Support & WebSocket Hardening ✅ (مكتملة — غير مدموجة في master)
+
+**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
+**Branch:** `feature/android-sprint-4-account-support`
+**Commits:** `a364571`, `1aeb02c`
+
+### Deliverables Breakdown
+1. **Account Screen Management (`AccountScreen`):**
+   - Full profile display and update via `PATCH /customer/me` (selective update sending only modified fields).
+   - Saved address shortcut, order history shortcut, and secure token revocation on logout.
+   - Debug session expiration trigger guarded by `BuildConfig.DEBUG`.
+2. **Support Screen (`SupportScreen`):**
+   - Support info retrieval via `GET /customer/support/info`.
+   - Contact channels: direct WhatsApp launch with prefilled message, phone dialer intent, and working hours display.
+3. **WebSocket & Session Hardening:**
+   - Improved socket event handling, lifecycle binding, and token rotation auto-reconnect.
+
+---
+
+## Sprint 5: FCM Push Notifications & MapLibre Polish ✅ (مكتملة — غير مدموجة في master)
+
+**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
+**Branch:** `feature/android-sprint-5-fcm-maplibre`
+**Commit:** `abf02d8`
+
+### Deliverables Breakdown
+1. **Firebase Cloud Messaging (FCM) Integration:**
+   - Firebase BOM `33.7.0` + `firebase-messaging` integrated cleanly with `google-services` plugin 4.4.2.
+   - `ForerunFirebaseMessagingService` handling background push notifications and token refreshes.
+   - High-priority Notification Channel: "FORERUN — تحديثات الطلبات" (`IMPORTANCE_HIGH`) with custom sound and vibration.
+   - Runtime `POST_NOTIFICATIONS` permission request flow for Android 13+ (API 33+).
+   - Deep linking navigation: extracts `orderId` from notification payload and opens `OrderDetailScreen` directly.
+2. **Device Token Management (`DeviceTokenRepository`):**
+   - Registration: `POST /customer/me/device-token` on login and token refresh.
+   - Unregistration: `DELETE /customer/me/device-token` on user logout.
+3. **MapLibre & Geocoding Polish:**
+   - Reverse geocoding in-memory LRU cache (`AddressReverseGeocodeCache`) with 4-decimal coordinate rounding to eliminate redundant network hits.
+   - MapLibre lifecycle handling enhancements in `AddressSetupScreen`.
+
+---
+
 ### Quality & Verification Summary
 
 | Gate | Target | Result | Status |
 |------|--------|--------|--------|
-| **Unit Tests** | 100% passing | 57 / 57 passed | ✅ PASS |
-| **Lint** | 0 errors | 0 errors (`lintReportDebug` clean) | ✅ PASS |
-| **Build** | Debug APKs | Clean build successful (`assembleDebug`) | ✅ PASS |
+| **Unit Tests** | 100% passing | 135 / 135 passed | ✅ PASS |
+| **Lint** | 0 errors | 0 errors (`lint` clean) | ✅ PASS |
+| **Build** | Debug APKs | Clean build (`assembleDebug`) | ✅ PASS |
 | **Server Truth** | Zero client fee logic | 100% server calculated fees | ✅ PASS |
-| **APK Split Sizes** | < 30 MB per ABI | 24.3 MB (armeabi-v7a) / 27.1 MB (arm64-v8a) / 27.4 MB (x86_64) | ✅ PASS |
+| **APK Split Sizes** | < 30 MB per ABI | 26.16 MB (armeabi-v7a) / 29.12 MB (arm64-v8a) / 29.41 MB (x86_64) | ✅ PASS |
 
-#### Test Suites (57 Total Tests):
-- `CreateOrderViewModelTest`: 11 tests (validation, item manipulation, preferred runner, submission success/failure)
-- `AddressSetupViewModelTest`: 9 tests (fetch address, save address, reverse geocode, camera debounce, location permissions)
-- `OrdersListViewModelTest`: 5 tests (initial load, filter switching, pull-to-refresh, pagination, error handling)
-- `LoginViewModelTest`: 6 tests
-- `SplashViewModelTest`: 5 tests
-- `AddressRepositoryImplTest`: 5 tests
-- `HomeViewModelTest`: 4 tests
-- `ApiCallAdapterTest`: 3 tests
-- `ErrorMapperTest`: 3 tests
-- `AuthRepositoryImplTest`: 3 tests
-- `RegisterViewModelTest`: 3 tests
+---
+
+## Known Gaps
+
+1. **FCM (Firebase Cloud Messaging):** ملف `google-services.json` الحالي هو ملف هيكلي تجريبي (Placeholder مستثنى من git)؛ يتطلب ربط مشروع Firebase فعلي لاستقبال التنبيهات من السيرفر على الأجهزة الحقيقية.
+2. **4 فروع غير مدموجة في master:** الفروع (`sprint-2`, `sprint-3`, `sprint-4`, `sprint-5`) تراكمية ومكتملة محلياً، ولم يتم دمجها في `master` بانتظار إشارة المستخدم ومراجعة PR الشامل.
+3. **غياب اختبارات E2E المؤتمتة:** لا توجد بنية CI/CD لتشغيل اختبارات E2E مؤتمتة على المحاكي، والاعتماد حالياً على 135 unit test مع التحقق اليدوي على المحاكي.
+4. **زر تجربة انتهاء الجلسة في AccountScreen:** زر تجربة انتهاء الجلسة محمي بشرط `BuildConfig.DEBUG` لضمان عدم ظهوره نهائياً في نسخ الإنتاج (Release builds).
+
+---
+
+## Next: UI Polish Pass (يدوي من المستخدم)
+
+- مراجعة يدوية شاملة للواجهات الـ 17 من قبل المستخدم للتدقيق البصري وتناسق الألوان، التباعدات، دعم RTL، والتجاوب مع أحجام الشاشات المختلفة.
+- يليها Sprint 6: Testing + QA + Final Polish.
 
 ---
 
 ## Contact & Handoff
 
-**Repository:** `github.com/ghaithmoa84-cyber/forerun`
-**Active branch:** `feature/android-sprint-2-home-order`
-**Next Sprint:** Sprint 3 — Order Tracking & Real-Time Socket.IO Updates
-
-
+**Repository:** `github.com/ghaithmoa84-cyber/forerun`  
+**Active branch:** `feature/android-sprint-5-fcm-maplibre`  
+**Last commit:** `abf02d8`  
+**Next Step:** UI Polish Pass (يدوي من المستخدم) → Sprint 6: Testing + QA + Final Polish  
 
 **Reference documents:**
 - `AGENTS.md` — rules and standards
 - `PROJECT_BRIEF.md` — project overview
-- `MASTER-SPEC.md` (this folder) — Android spec
-- `FAWRUN — MVP Technical Specification.txt` — original spec (archive)
-
-**Any session resuming work must:**
-1. Read MASTER-SPEC.md first
-2. Verify `java -version` shows 21.x
-3. Verify branch is up to date: `git pull`
-4. Continue from the "Next" section above
+- `MASTER-SPEC.md` — Android master specification
+- `CURRENT_STATE.md` — Android current state summary
 
 ---
 

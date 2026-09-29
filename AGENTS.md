@@ -55,6 +55,8 @@ FORERUN is a grocery delivery platform built as a Modular Monolith in a Monorepo
 - Semantic commits: feat:, fix:, refactor:, etc.
 - Branch per Sprint: feature/sprint-N-<description>
 - دفع مباشر إلى master
+- Android branch strategy: تراكمي، لا دمج حتى إشارة المستخدم
+- التوثيق في docs/android/ قبل أي sprint جديد
 
 ### Security Rules
 - No hardcoded secrets

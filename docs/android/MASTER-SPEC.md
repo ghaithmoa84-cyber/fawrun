@@ -818,15 +818,16 @@ Terminal: `DELIVERED`, `CANCELLED`
 
 | Sprint | Duration | Deliverable |
 |--------|----------|-------------|
-| 1.1 | done | Project skeleton, Compose, APK builds |
-| 1.2 | done | Design System (Cairo, Colors, Theme) |
-| 1.3 | 3-4 days | Hilt + Networking (Retrofit + Socket.IO + interceptors + encrypted storage) |
-| 1.4 | 4-5 days | Auth Flow (Splash + Onboarding + Login + Register + Pending) |
-| 2 | 2 weeks | Home + Address Setup + Create Order |
-| 3 | 2 weeks | Orders List + Order Detail + Rating |
-| 4 | 1 week | Account + Support + WebSocket integration |
-| 5 | 1 week | FCM + MapLibre + polish |
-| 6 | 1 week | Testing + QA + first production APK |
+| 1.1 | ✅ Complete | Project skeleton, Compose, APK builds |
+| 1.2 | ✅ Complete | Design System (Cairo, Colors, Theme) |
+| 1.3 | ✅ Complete | Hilt + Networking (Retrofit + Socket.IO + interceptors + encrypted storage) |
+| 1.4 | ✅ Complete | Auth Flow (Splash + Onboarding + Login + Register + Pending) |
+| 2 | ✅ Complete | Home + Address Setup + Create Order |
+| 3 | ✅ Complete | Orders List + Order Detail + Rating |
+| 4 | ✅ Complete | Account + Support + WebSocket integration |
+| 5 | ✅ Complete | FCM + MapLibre + polish |
+| UI Polish Pass | — | مخصص لمراجعة يدوية من المستخدم |
+| 6 | 1 week | Testing + QA + Final Polish |
 
 **Total estimate for one focused agent:** ~10-12 weeks.
 
