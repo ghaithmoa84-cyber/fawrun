@@ -26,6 +26,7 @@ import androidx.navigation.navArgument
 import com.forerun.customer.ui.order.confirmation.OrderConfirmationScreen
 import com.forerun.customer.ui.splash.SplashDestination
 import com.forerun.customer.ui.splash.SplashScreen
+import com.forerun.customer.ui.support.SupportScreen
 
 object Routes {
     const val SPLASH = "splash"
@@ -37,6 +38,7 @@ object Routes {
     const val HOME = "home"
     const val ORDERS = "orders"
     const val ACCOUNT = "account"
+    const val SUPPORT = "support"
     const val ADDRESS_SETUP = "address_setup"
     const val CREATE_ORDER = "create_order"
     const val ORDER_CONFIRMATION = "order_confirmation/{orderNumber}?estimatedFee={estimatedFee}"
@@ -207,6 +209,16 @@ fun ForerunNavGraph(
                 },
                 onNavigateToAddressSetup = {
                     navController.navigate(Routes.ADDRESS_SETUP)
+                },
+                onNavigateToSupport = {
+                    navController.navigate(Routes.SUPPORT)
+                }
+            )
+        }
+        composable(Routes.SUPPORT) {
+            SupportScreen(
+                onNavigateBack = {
+                    navController.popBackStack()
                 }
             )
         }

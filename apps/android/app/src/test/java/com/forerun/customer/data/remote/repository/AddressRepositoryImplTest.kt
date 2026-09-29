@@ -22,6 +22,7 @@ class AddressRepositoryImplTest {
         )
 
         override suspend fun me(): ApiResponse<CustomerProfileDto> = throw NotImplementedError()
+        override suspend fun updateProfile(body: com.forerun.customer.data.remote.dto.customer.UpdateCustomerProfileRequest): ApiResponse<CustomerProfileDto> = throw NotImplementedError()
 
         override suspend fun getAddress(): ApiResponse<CustomerAddressDto> = getAddressResult
 

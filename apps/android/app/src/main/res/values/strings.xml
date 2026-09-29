@@ -89,10 +89,39 @@
     <string name="orders_title">طلباتي</string>
     <string name="orders_stub_desc">قائمة طلباتك ومتابعتها مباشرة ستتوفر هنا قريباً.</string>
 
-    <!-- Account Tab Stub -->
+    <!-- Account Screen -->
     <string name="account_title">حسابي</string>
     <string name="account_stub_desc">تفاصيل الحساب وعنوان التوصيل ستتوفر هنا قريباً.</string>
     <string name="account_address_button">عنوان التوصيل</string>
+    <string name="account_verified_badge">عميل موثّق ✓</string>
+    <string name="account_section_profile">المعلومات الشخصية</string>
+    <string name="account_section_password">تغيير كلمة المرور</string>
+    <string name="account_section_address">عنوان التوصيل</string>
+    <string name="account_section_support">المساعدة والدعم</string>
+    <string name="account_whatsapp_note">رقم الواتساب هو المعرف الأساسي للحساب ولا يمكن تعديله</string>
+    <string name="account_save_profile">حفظ التعديلات</string>
+    <string name="account_saving">جاري الحفظ…</string>
+    <string name="account_profile_saved">تم حفظ معلومات الحساب بنجاح</string>
+    <string name="account_new_password_label">كلمة المرور الجديدة</string>
+    <string name="account_confirm_password_label">تأكيد كلمة المرور</string>
+    <string name="account_change_password_btn">تحديث كلمة المرور</string>
+    <string name="account_changing_password">جاري التحديث…</string>
+    <string name="account_password_changed">تم تغيير كلمة المرور بنجاح</string>
+    <string name="account_error_passwords_dont_match">كلمتا المرور غير متطابقتين</string>
+    <string name="account_no_address">لم يتم تحديد عنوان توصيل بعد</string>
+    <string name="account_edit_address">تعديل العنوان</string>
+    <string name="account_support_button">الدعم الفني والأسئلة الشائعة</string>
+    <string name="account_support_subtitle">تواصل معنا عبر واتساب واطلع على الأسئلة الشائعة</string>
+
+    <!-- Support Screen -->
+    <string name="support_screen_title">الدعم والمساعدة</string>
+    <string name="support_whatsapp_card_title">تواصل مباشرة مع إدارة فَوْراً</string>
+    <string name="support_whatsapp_card_desc">فريقنا متواجد للإجابة على استفساراتكم ومساعدتكم في أي مشكلة</string>
+    <string name="support_whatsapp_button">محادثة واتساب مباشرة</string>
+    <string name="support_admin_phone_display">%1$s</string>
+    <string name="support_faq_title">الأسئلة الشائعة (FAQ)</string>
+    <string name="support_working_hours">ساعات العمل: يومياً من 8:00 صباحاً حتى 12:00 منتصف الليل</string>
+
 
     <!-- Address Setup -->
     <string name="address_setup_title">تحديد عنوان التوصيل</string>

@@ -41,4 +41,10 @@ abstract class RepositoryModule {
     abstract fun bindOrderRepository(
         orderRepositoryImpl: com.forerun.customer.data.remote.repository.OrderRepositoryImpl
     ): com.forerun.customer.domain.repository.OrderRepository
+
+    @Binds
+    @Singleton
+    abstract fun bindAccountRepository(
+        accountRepositoryImpl: com.forerun.customer.data.remote.repository.AccountRepositoryImpl
+    ): com.forerun.customer.domain.repository.AccountRepository
 }

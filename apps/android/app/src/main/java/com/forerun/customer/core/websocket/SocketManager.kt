@@ -19,6 +19,7 @@ import kotlinx.coroutines.launch
 import org.json.JSONObject
 import java.net.URI
 import java.util.Collections
+import java.util.concurrent.atomic.AtomicBoolean
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -46,6 +47,10 @@ class SocketManager @Inject constructor(
     private var socket: Socket? = null
     var isForeground: Boolean = false
         private set
+
+    private val isConnecting = AtomicBoolean(false)
+    val isConnectingState: Boolean
+        get() = isConnecting.get()
 
     private val _connectionState = MutableStateFlow(SocketConnectionState.DISCONNECTED)
     val connectionState: StateFlow<SocketConnectionState> = _connectionState.asStateFlow()
@@ -75,6 +80,8 @@ class SocketManager @Inject constructor(
         val token = tokenStorage.getAccessToken()
         if (token.isNullOrBlank()) {
             Log.d(TAG, "Not connecting: no access token")
+            disconnectInternal()
+            _connectionState.value = SocketConnectionState.DISCONNECTED
             return
         }
 
@@ -83,7 +90,12 @@ class SocketManager @Inject constructor(
             return
         }
 
-        disconnect()
+        if (!isConnecting.compareAndSet(false, true)) {
+            Log.d(TAG, "Connection attempt already in progress (guarded by AtomicBoolean)")
+            return
+        }
+
+        disconnectInternal()
 
         try {
             _connectionState.value = SocketConnectionState.CONNECTING
@@ -97,11 +109,25 @@ class SocketManager @Inject constructor(
         } catch (e: Exception) {
             Log.e(TAG, "Failed to initialize socket", e)
             _connectionState.value = SocketConnectionState.ERROR
+            isConnecting.set(false)
         }
     }
 
     @Synchronized
+    fun reconnect() {
+        Log.d(TAG, "Reconnecting socket (forcing disconnect then connect)")
+        disconnect()
+        connect()
+    }
+
+    @Synchronized
     fun disconnect() {
+        isConnecting.set(false)
+        disconnectInternal()
+        _connectionState.value = SocketConnectionState.DISCONNECTED
+    }
+
+    private fun disconnectInternal() {
         socket?.let { s ->
             try {
                 s.off()
@@ -111,7 +137,6 @@ class SocketManager @Inject constructor(
             }
         }
         socket = null
-        _connectionState.value = SocketConnectionState.DISCONNECTED
     }
 
     fun onAppForegrounded() {
@@ -135,17 +160,20 @@ class SocketManager @Inject constructor(
     private fun setupListeners(socket: Socket) {
         socket.on(Socket.EVENT_CONNECT) {
             Log.d(TAG, "Socket connected to namespace $NAMESPACE")
+            isConnecting.set(false)
             _connectionState.value = SocketConnectionState.CONNECTED
         }
 
         socket.on(Socket.EVENT_DISCONNECT) {
             Log.d(TAG, "Socket disconnected")
+            isConnecting.set(false)
             _connectionState.value = SocketConnectionState.DISCONNECTED
         }
 
         socket.on(Socket.EVENT_CONNECT_ERROR) { args ->
             val error = args.getOrNull(0)
             Log.e(TAG, "Socket connect error: $error")
+            isConnecting.set(false)
             _connectionState.value = SocketConnectionState.ERROR
         }
 

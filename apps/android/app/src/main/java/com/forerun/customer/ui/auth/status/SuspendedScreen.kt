@@ -112,7 +112,7 @@ fun SuspendedScreen(
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse("https://wa.me/963951111111?text=${Uri.encode("مرحباً إدارة فَوْراً، أود الاستفسار عن سبب تعليق حسابي")}")
+                    Uri.parse(com.forerun.customer.core.config.AppConfig.buildWhatsAppUrl("مرحباً إدارة فَوْراً، أود الاستفسار عن سبب تعليق حسابي"))
                 )
                 try {
                     context.startActivity(intent)

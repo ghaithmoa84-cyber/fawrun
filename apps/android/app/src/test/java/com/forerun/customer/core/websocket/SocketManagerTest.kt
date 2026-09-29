@@ -214,4 +214,40 @@ class SocketManagerTest {
             expectNoEvents()
         }
     }
+
+    @Test
+    fun reconnect_when_token_is_lost_disconnects_and_stays_disconnected() {
+        socketManager.onAppForegrounded()
+        // Simulate losing token (e.g. logout or expiry)
+        tokenStorage.token = null
+
+        socketManager.reconnect()
+
+        assertEquals(SocketConnectionState.DISCONNECTED, socketManager.connectionState.value)
+        assertFalse(socketManager.isConnectingState)
+    }
+
+    @Test
+    fun reconnect_when_backgrounded_remains_disconnected() {
+        socketManager.onAppBackgrounded()
+
+        socketManager.reconnect()
+
+        assertEquals(SocketConnectionState.DISCONNECTED, socketManager.connectionState.value)
+    }
+
+    @Test
+    fun connect_is_guarded_by_atomic_boolean_against_race_conditions() {
+        socketManager.onAppForegrounded()
+        // Connection is in progress, guarded by isConnecting = true
+        assertTrue(socketManager.isConnectingState)
+
+        // Concurrent connect call is guarded and ignored
+        socketManager.connect()
+        assertTrue(socketManager.isConnectingState)
+
+        // Disconnect cleans up and resets the atomic guard
+        socketManager.disconnect()
+        assertFalse(socketManager.isConnectingState)
+    }
 }
