@@ -6,6 +6,10 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.ui.platform.LocalLayoutDirection
+import androidx.compose.ui.unit.LayoutDirection
+
 private val ForerunColorScheme = lightColorScheme(
     primary = ForerunGreen,
     onPrimary = ForerunTextOnPrimary,
@@ -36,9 +40,11 @@ private val ForerunColorScheme = lightColorScheme(
 fun ForerunTheme(
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colorScheme = ForerunColorScheme,
-        typography = ForerunTypography,
-        content = content
-    )
+    CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl) {
+        MaterialTheme(
+            colorScheme = ForerunColorScheme,
+            typography = ForerunTypography,
+            content = content
+        )
+    }
 }
