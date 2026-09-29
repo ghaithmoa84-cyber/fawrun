@@ -58,7 +58,8 @@ sealed class BottomNavItem(
     )
 
     companion object {
-        val items = listOf(Home, Orders, Account)
+        val items: List<BottomNavItem>
+            get() = listOf(Home, Orders, Account)
     }
 }
 

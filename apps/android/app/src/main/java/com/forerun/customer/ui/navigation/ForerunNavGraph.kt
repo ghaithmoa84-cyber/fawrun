@@ -82,12 +82,21 @@ fun ForerunNavGraph(
                 ForerunBottomNavBar(
                     currentRoute = currentRoute,
                     onNavigateToRoute = { route ->
-                        navController.navigate(route) {
-                            popUpTo(Routes.HOME) {
-                                saveState = true
+                        if (route == Routes.HOME) {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.HOME) {
+                                    inclusive = false
+                                }
+                                launchSingleTop = true
                             }
-                            launchSingleTop = true
-                            restoreState = true
+                        } else {
+                            navController.navigate(route) {
+                                popUpTo(Routes.HOME) {
+                                    saveState = true
+                                }
+                                launchSingleTop = true
+                                restoreState = true
+                            }
                         }
                     }
                 )

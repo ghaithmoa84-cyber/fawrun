@@ -108,17 +108,15 @@ fun OrdersScreen(
         }
     }
 
-    Scaffold(
-        modifier = modifier.fillMaxSize(),
-        containerColor = ForerunSoftSurface,
-        snackbarHost = { SnackbarHost(snackbarHostState) }
-    ) { innerPadding ->
+    Box(
+        modifier = modifier
+            .fillMaxSize()
+            .background(ForerunSoftSurface)
+    ) {
         PullToRefreshBox(
             isRefreshing = uiState.isRefreshing,
             onRefresh = { viewModel.onIntent(OrdersListIntent.Refresh) },
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
+            modifier = Modifier.fillMaxSize()
         ) {
             Column(modifier = Modifier.fillMaxSize()) {
                 // 1. Top Header (Stitch Design)
@@ -192,6 +190,13 @@ fun OrdersScreen(
                 }
             }
         }
+
+        SnackbarHost(
+            hostState = snackbarHostState,
+            modifier = Modifier
+                .align(Alignment.BottomCenter)
+                .padding(Dimens.Space16)
+        )
     }
 }
 
