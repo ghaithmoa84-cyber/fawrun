@@ -11,11 +11,14 @@ import com.forerun.customer.data.remote.dto.auth.RefreshRequest
 import com.forerun.customer.data.remote.dto.auth.RefreshResponse
 import com.forerun.customer.data.remote.dto.auth.RegisterRequest
 import com.forerun.customer.data.remote.dto.auth.RegisterResponse
+import com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
+import com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.repository.AccountRepository
 import com.forerun.customer.domain.repository.AddressResult
 import com.forerun.customer.util.MainDispatcherRule
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -90,6 +93,59 @@ class AccountViewModelTest {
         assertEquals("0987654321", fakeAccountRepository.lastUpdatedAltPhone)
         assertEquals("تم حفظ معلومات الحساب بنجاح", state.profileSuccessMessage)
         assertNull(state.errorMessage)
+    }
+
+    @Test
+    fun saveProfile_validData_sendsOnlyNameAndAltPhone_withoutPassword() {
+        viewModel.saveProfile(name = "أحمد خالد", altPhone = "0987654321")
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSavingProfile)
+        val request = fakeAccountRepository.lastProfileRequest
+        assertNotNull(request)
+        assertEquals("أحمد خالد", request?.name)
+        assertEquals("0987654321", request?.altPhone)
+
+        val moshi = Moshi.Builder().build()
+        val json = moshi.adapter(UpdateProfileRequest::class.java).toJson(request)
+        assertFalse(json.contains("password"))
+        assertTrue(json.contains("\"name\":\"أحمد خالد\""))
+        assertTrue(json.contains("\"altPhone\":\"0987654321\""))
+    }
+
+    @Test
+    fun saveProfile_nullAltPhone_sendsNullAltPhone_withoutPassword() {
+        viewModel.saveProfile(name = "أحمد خالد", altPhone = null)
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSavingProfile)
+        val request = fakeAccountRepository.lastProfileRequest
+        assertNotNull(request)
+        assertEquals("أحمد خالد", request?.name)
+        assertNull(request?.altPhone)
+
+        val moshi = Moshi.Builder().build()
+        val json = moshi.adapter(UpdateProfileRequest::class.java).serializeNulls().toJson(request)
+        assertFalse(json.contains("password"))
+        assertTrue(json.contains("\"name\":\"أحمد خالد\""))
+        assertTrue(json.contains("\"altPhone\":null"))
+    }
+
+    @Test
+    fun changePassword_validPassword_sendsOnlyPassword_withoutNameOrAltPhone() {
+        viewModel.changePassword(newPassword = "newPassword123", confirmPassword = "newPassword123")
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isChangingPassword)
+        val request = fakeAccountRepository.lastPasswordRequest
+        assertNotNull(request)
+        assertEquals("newPassword123", request?.password)
+
+        val moshi = Moshi.Builder().build()
+        val json = moshi.adapter(ChangePasswordRequest::class.java).toJson(request)
+        assertFalse(json.contains("name"))
+        assertFalse(json.contains("altPhone"))
+        assertTrue(json.contains("\"password\":\"newPassword123\""))
     }
 
     @Test
@@ -213,6 +269,8 @@ class AccountViewModelTest {
         var shouldFailGetProfile = false
         var shouldFailUpdateProfile = false
         var shouldFailChangePassword = false
+        var lastProfileRequest: UpdateProfileRequest? = null
+        var lastPasswordRequest: ChangePasswordRequest? = null
         var lastUpdatedName: String? = null
         var lastUpdatedAltPhone: String? = null
         var lastChangedPassword: String? = null
@@ -226,22 +284,24 @@ class AccountViewModelTest {
             }
         }
 
-        override suspend fun updateProfile(name: String?, altPhone: String?): Result<CustomerProfileDto> {
+        override suspend fun updateProfile(request: UpdateProfileRequest): Result<CustomerProfileDto> {
             return if (shouldFailUpdateProfile) {
                 Result.failure(Exception("خطأ في تحديث الملف"))
             } else {
-                lastUpdatedName = name
-                lastUpdatedAltPhone = altPhone
-                profile = profile.copy(name = name ?: profile.name, altPhone = altPhone)
+                lastProfileRequest = request
+                lastUpdatedName = request.name
+                lastUpdatedAltPhone = request.altPhone
+                profile = profile.copy(name = request.name, altPhone = request.altPhone)
                 Result.success(profile)
             }
         }
 
-        override suspend fun changePassword(password: String): Result<CustomerProfileDto> {
+        override suspend fun changePassword(request: ChangePasswordRequest): Result<CustomerProfileDto> {
             return if (shouldFailChangePassword) {
                 Result.failure(Exception("خطأ في تغيير كلمة المرور"))
             } else {
-                lastChangedPassword = password
+                lastPasswordRequest = request
+                lastChangedPassword = request.password
                 Result.success(profile)
             }
         }

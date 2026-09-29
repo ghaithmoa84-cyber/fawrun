@@ -83,6 +83,10 @@ class AccountViewModel @Inject constructor(
         }
     }
 
+    fun saveProfile(name: String, altPhone: String?) {
+        updateProfile(name, altPhone)
+    }
+
     fun updateProfile(name: String, altPhone: String?) {
         val trimmedName = name.trim()
         if (trimmedName.length < 2) {
@@ -102,7 +106,11 @@ class AccountViewModel @Inject constructor(
                 errorMessage = null,
                 profileSuccessMessage = null
             )
-            val result = accountRepository.updateProfile(trimmedName, trimmedAltPhone)
+            val request = com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest(
+                name = trimmedName,
+                altPhone = trimmedAltPhone
+            )
+            val result = accountRepository.updateProfile(request)
             result.fold(
                 onSuccess = { updatedProfile ->
                     _uiState.value = _uiState.value.copy(
@@ -141,7 +149,10 @@ class AccountViewModel @Inject constructor(
                 errorMessage = null,
                 passwordSuccessMessage = null
             )
-            val result = accountRepository.changePassword(newPassword)
+            val request = com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest(
+                password = newPassword
+            )
+            val result = accountRepository.changePassword(request)
             result.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
