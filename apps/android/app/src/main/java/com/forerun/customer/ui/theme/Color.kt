@@ -3,9 +3,9 @@ package com.forerun.customer.ui.theme
 import androidx.compose.ui.graphics.Color
 
 // Brand
-val ForerunGreen = Color(0xFF00C1A7)
-val ForerunGreenDark = Color(0xFF008F7D)
-val ForerunGreenLight = Color(0xFFE6F9F6)
+val ForerunGreen = Color(0xFF7DDDD4)
+val ForerunGreenDark = Color(0xFF3ABFB5)
+val ForerunGreenLight = Color(0xFFE8F8F7)
 val WhatsAppGreen = Color(0xFF25D366)
 
 // Surfaces

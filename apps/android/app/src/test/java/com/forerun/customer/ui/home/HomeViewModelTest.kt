@@ -148,4 +148,82 @@ class HomeViewModelTest {
         assertEquals(1, success.profile.completedOrders)
         assertEquals(false, success.isRefreshing)
     }
+
+    @Test
+    fun loadHomeData_withActiveOrder_includesRunnerPhoneAndDetails() = runTest {
+        val testOrder = ActiveOrder(
+            id = "o2",
+            orderNumber = "FAW-2002",
+            status = "IN_PROGRESS",
+            totalFee = 6000,
+            itemCount = 2,
+            createdAt = "2026-09-29T11:00:00Z",
+            runnerName = "الكابتن باسل",
+            runnerWhatsapp = "0981571936",
+            runnerPhone = "0981571936"
+        )
+
+        fakeHomeRepository.homeDataResult = Result.success(
+            HomeData(
+                profile = CustomerProfile(
+                    id = "c1",
+                    name = "علي",
+                    whatsapp = "0988888888",
+                    altPhone = null,
+                    status = "VERIFIED",
+                    completedOrders = 3,
+                    totalFeesPaid = 12000
+                ),
+                activeOrder = testOrder
+            )
+        )
+
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+
+        val state = viewModel.uiState.value
+        assertTrue(state is HomeUiState.Success)
+        val success = state as HomeUiState.Success
+        assertEquals("FAW-2002", success.activeOrder?.orderNumber)
+        assertEquals("الكابتن باسل", success.activeOrder?.runnerName)
+        assertEquals("0981571936", success.activeOrder?.runnerWhatsapp)
+        assertEquals("0981571936", success.activeOrder?.runnerPhone)
+    }
+
+    @Test
+    fun loadHomeData_withActiveOrder_nullRunnerPhone_handledGracefully() = runTest {
+        val testOrder = ActiveOrder(
+            id = "o3",
+            orderNumber = "FAW-3003",
+            status = "OUT_FOR_DELIVERY",
+            totalFee = 3500,
+            itemCount = 1,
+            createdAt = "2026-09-29T12:00:00Z",
+            runnerName = "الكابتن سمير",
+            runnerWhatsapp = "0988112233",
+            runnerPhone = null
+        )
+
+        fakeHomeRepository.homeDataResult = Result.success(
+            HomeData(
+                profile = CustomerProfile(
+                    id = "c1",
+                    name = "مريم",
+                    whatsapp = "0988888888",
+                    altPhone = null,
+                    status = "VERIFIED",
+                    completedOrders = 8,
+                    totalFeesPaid = 35000
+                ),
+                activeOrder = testOrder
+            )
+        )
+
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+
+        val state = viewModel.uiState.value
+        assertTrue(state is HomeUiState.Success)
+        val success = state as HomeUiState.Success
+        assertEquals("FAW-3003", success.activeOrder?.orderNumber)
+        assertNull(success.activeOrder?.runnerPhone)
+    }
 }

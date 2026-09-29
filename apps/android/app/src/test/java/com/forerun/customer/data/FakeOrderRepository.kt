@@ -23,13 +23,18 @@ class FakeOrderRepository : OrderRepository {
         )
     )
 
+    var lastCreatedItems: List<OrderItem>? = null
+
     override suspend fun createOrder(
         items: List<OrderItem>,
         notes: String?,
         preferredRunnerId: String?,
         waitForPreferred: Boolean,
         deliveryAddress: CustomerAddress
-    ): Result<CreatedOrder> = createOrderResult
+    ): Result<CreatedOrder> {
+        lastCreatedItems = items
+        return createOrderResult
+    }
 
     override suspend fun getAvailableRunners(): Result<List<RunnerInfo>> = availableRunnersResult
 

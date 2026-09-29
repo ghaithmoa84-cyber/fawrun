@@ -18,9 +18,9 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.CheckCircle
-import androidx.compose.material.icons.filled.LocationOn
-import androidx.compose.material.icons.filled.ShoppingCart
+import androidx.compose.material.icons.filled.DeliveryDining
+import androidx.compose.material.icons.filled.LocalShipping
+import androidx.compose.material.icons.filled.Storefront
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Icon
@@ -45,6 +45,7 @@ import com.forerun.customer.ui.theme.Dimens
 import com.forerun.customer.ui.theme.ForerunBackground
 import com.forerun.customer.ui.theme.ForerunBorder
 import com.forerun.customer.ui.theme.ForerunGreen
+import com.forerun.customer.ui.theme.ForerunGreenDark
 import com.forerun.customer.ui.theme.ForerunGreenLight
 import com.forerun.customer.ui.theme.ForerunTextMuted
 import com.forerun.customer.ui.theme.ForerunTextOnPrimary
@@ -70,17 +71,17 @@ fun OnboardingScreen(
         OnboardingPageData(
             titleRes = R.string.onboarding_title_1,
             descRes = R.string.onboarding_desc_1,
-            icon = Icons.Default.ShoppingCart
+            icon = Icons.Default.Storefront
         ),
         OnboardingPageData(
             titleRes = R.string.onboarding_title_2,
             descRes = R.string.onboarding_desc_2,
-            icon = Icons.Default.CheckCircle
+            icon = Icons.Default.DeliveryDining
         ),
         OnboardingPageData(
             titleRes = R.string.onboarding_title_3,
             descRes = R.string.onboarding_desc_3,
-            icon = Icons.Default.LocationOn
+            icon = Icons.Default.LocalShipping
         )
     )
 
@@ -132,10 +133,10 @@ fun OnboardingScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.Center
             ) {
-                // Feature Icon Container
+                // Feature Icon Container (96dp with ForerunGreenLight)
                 Box(
                     modifier = Modifier
-                        .size(130.dp)
+                        .size(96.dp)
                         .clip(CircleShape)
                         .background(ForerunGreenLight),
                     contentAlignment = Alignment.Center
@@ -143,8 +144,8 @@ fun OnboardingScreen(
                     Icon(
                         imageVector = page.icon,
                         contentDescription = null,
-                        modifier = Modifier.size(64.dp),
-                        tint = ForerunGreen
+                        modifier = Modifier.size(48.dp),
+                        tint = ForerunGreenDark
                     )
                 }
 

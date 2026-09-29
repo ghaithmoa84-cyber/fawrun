@@ -65,6 +65,138 @@ class CreateOrderViewModelTest {
     }
 
     @Test
+    fun setInputMode_updatesState() = runTest(testDispatcher) {
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        assertEquals(OrderInputMode.QUICK, viewModel.uiState.value.inputMode)
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
+        assertEquals(OrderInputMode.STRUCTURED, viewModel.uiState.value.inputMode)
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        assertEquals(OrderInputMode.QUICK, viewModel.uiState.value.inputMode)
+    }
+
+    @Test
+    fun updateQuickText_updatesState() = runTest(testDispatcher) {
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        assertEquals("", viewModel.uiState.value.quickText)
+        val text = "حليب 2 لتر\nخبز سياحي 3 ربطات"
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText(text))
+        assertEquals(text, viewModel.uiState.value.quickText)
+    }
+
+    @Test
+    fun submitOrder_quickMode_parsesLinesCorrectly_andSubmits() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "القنجرة - الحارة الغربية")
+        )
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText("حليب نيدو 2 كغ\nخبز 3 ربطات\nشاي لبتون"))
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isSubmitting)
+        assertNull(state.validationError)
+        assertNotNull(state.createdOrder)
+        assertEquals("ORD-001", state.createdOrder?.orderNumber)
+
+        // Verify sent items through fake repository
+        val submittedItems = fakeOrderRepository.lastCreatedItems
+        assertNotNull(submittedItems)
+        assertEquals(3, submittedItems?.size)
+        assertEquals("حليب نيدو 2 كغ", submittedItems?.get(0)?.itemName)
+        assertEquals("1", submittedItems?.get(0)?.quantity)
+        assertTrue(submittedItems?.get(0)?.anyStore == true)
+        assertNull(submittedItems?.get(0)?.customStoreName)
+
+        assertEquals("خبز 3 ربطات", submittedItems?.get(1)?.itemName)
+        assertEquals("1", submittedItems?.get(1)?.quantity)
+
+        assertEquals("شاي لبتون", submittedItems?.get(2)?.itemName)
+        assertEquals("1", submittedItems?.get(2)?.quantity)
+    }
+
+    @Test
+    fun submitOrder_quickMode_trimsAndFiltersBlankLines() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "القنجرة")
+        )
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText("\n   موز 1 كغ   \n\n   تفاح 2 كغ \n  \n"))
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        advanceUntilIdle()
+
+        val submittedItems = fakeOrderRepository.lastCreatedItems
+        assertNotNull(submittedItems)
+        assertEquals(2, submittedItems?.size)
+        assertEquals("موز 1 كغ", submittedItems?.get(0)?.itemName)
+        assertEquals("تفاح 2 كغ", submittedItems?.get(1)?.itemName)
+    }
+
+    @Test
+    fun submitOrder_quickMode_failsValidation_whenQuickTextIsEmpty() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "القنجرة")
+        )
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText(""))
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.validationError)
+        assertFalse(state.isSubmitting)
+        assertNull(state.createdOrder)
+    }
+
+    @Test
+    fun submitOrder_quickMode_failsValidation_whenQuickTextHasOnlyWhitespaceOrNewlines() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "القنجرة")
+        )
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText("   \n\n   \n\t  "))
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.validationError)
+        assertFalse(state.isSubmitting)
+    }
+
+    @Test
+    fun submitOrder_quickMode_failsValidation_whenAddressMissing() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.NotFound
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText("حليب 1 لتر"))
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertNotNull(state.validationError)
+        assertFalse(state.isSubmitting)
+        assertNull(state.createdOrder)
+    }
+
+    @Test
     fun addItem_increasesItemsCount() = runTest(testDispatcher) {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
@@ -121,6 +253,7 @@ class CreateOrderViewModelTest {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
 
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
         val itemId = viewModel.uiState.value.items[0].id
         viewModel.onIntent(CreateOrderIntent.UpdateItemName(itemId, "سكر"))
         viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(itemId, "1 كغ"))
@@ -142,6 +275,7 @@ class CreateOrderViewModelTest {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
 
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
         val itemId = viewModel.uiState.value.items[0].id
         viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(itemId, "1 كغ"))
 
@@ -161,8 +295,10 @@ class CreateOrderViewModelTest {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
 
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
         val itemId = viewModel.uiState.value.items[0].id
         viewModel.onIntent(CreateOrderIntent.UpdateItemName(itemId, "حليب"))
+        viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(itemId, ""))
 
         viewModel.onIntent(CreateOrderIntent.SubmitOrder)
         advanceUntilIdle()
@@ -180,6 +316,7 @@ class CreateOrderViewModelTest {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
 
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
         val itemId = viewModel.uiState.value.items[0].id
         viewModel.onIntent(CreateOrderIntent.UpdateItemName(itemId, "حليب"))
         viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(itemId, "1 علبة"))
@@ -202,6 +339,7 @@ class CreateOrderViewModelTest {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
 
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
         val itemId = viewModel.uiState.value.items[0].id
         viewModel.onIntent(CreateOrderIntent.UpdateItemName(itemId, "سكر"))
         viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(itemId, "2 كغ"))
@@ -225,6 +363,7 @@ class CreateOrderViewModelTest {
         val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
         advanceUntilIdle()
 
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.STRUCTURED))
         val itemId = viewModel.uiState.value.items[0].id
         viewModel.onIntent(CreateOrderIntent.UpdateItemName(itemId, "سكر"))
         viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(itemId, "2 كغ"))

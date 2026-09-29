@@ -5,8 +5,9 @@ object AppConfig {
      * Official Admin WhatsApp number in international format without '+' for wa.me links.
      * Replaces temporary placeholders across the app (BUG-ANDROID-001).
      */
-    const val ADMIN_WHATSAPP_NUMBER = "963951111111"
-    const val ADMIN_WHATSAPP_DISPLAY = "+963 951 111 111"
+    const val ADMIN_WHATSAPP = "963981571936"
+    const val ADMIN_WHATSAPP_NUMBER = "963981571936"
+    const val ADMIN_WHATSAPP_DISPLAY = "+963 981 571 936"
 
     fun buildWhatsAppUrl(message: String): String {
         val encodedMessage = java.net.URLEncoder.encode(message, "UTF-8")

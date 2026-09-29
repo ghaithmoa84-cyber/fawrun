@@ -24,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.LocationOn
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.Button
@@ -75,6 +76,7 @@ import com.forerun.customer.ui.theme.ForerunBackground
 import com.forerun.customer.ui.theme.ForerunBorder
 import com.forerun.customer.ui.theme.ForerunDanger
 import com.forerun.customer.ui.theme.ForerunGreen
+import com.forerun.customer.ui.theme.ForerunGreenDark
 import com.forerun.customer.ui.theme.ForerunGreenLight
 import com.forerun.customer.ui.theme.ForerunSoftSurface
 import com.forerun.customer.ui.theme.ForerunSurface
@@ -230,12 +232,21 @@ fun AddressSetupScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "الرجوع",
-                            tint = ForerunTextPrimary
-                        )
+                    Box(modifier = Modifier.padding(start = Dimens.Space8)) {
+                        IconButton(
+                            onClick = onNavigateBack,
+                            modifier = Modifier
+                                .size(40.dp)
+                                .clip(CircleShape)
+                                .background(ForerunSoftSurface)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Close,
+                                contentDescription = "إغلاق",
+                                tint = ForerunTextPrimary,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     }
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
@@ -274,7 +285,7 @@ fun AddressSetupScreen(
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
-                                tint = ForerunDanger,
+                                tint = ForerunGreenDark,
                                 modifier = Modifier.size(56.dp)
                             )
                             Spacer(modifier = Modifier.height(Dimens.Space8))
@@ -313,7 +324,7 @@ fun AddressSetupScreen(
                         }
                     )
 
-                    // Centered Pin Overlay
+                    // Centered Pulsing Mint Pin Overlay
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
@@ -324,15 +335,27 @@ fun AddressSetupScreen(
                             horizontalAlignment = Alignment.CenterHorizontally,
                             verticalArrangement = Arrangement.Center
                         ) {
-                            Icon(
-                                imageVector = Icons.Default.LocationOn,
-                                contentDescription = "موقع التوصيل المحدد",
-                                tint = ForerunDanger,
-                                modifier = Modifier.size(46.dp)
-                            )
+                            Box(
+                                contentAlignment = Alignment.Center,
+                                modifier = Modifier.size(56.dp)
+                            ) {
+                                // Pulse ground halo
+                                Box(
+                                    modifier = Modifier
+                                        .size(52.dp)
+                                        .clip(CircleShape)
+                                        .background(ForerunGreen.copy(alpha = 0.28f))
+                                )
+                                Icon(
+                                    imageVector = Icons.Default.LocationOn,
+                                    contentDescription = "موقع التوصيل المحدد",
+                                    tint = ForerunGreenDark,
+                                    modifier = Modifier.size(46.dp)
+                                )
+                            }
                             Box(
                                 modifier = Modifier
-                                    .size(8.dp, 4.dp)
+                                    .size(10.dp, 4.dp)
                                     .clip(CircleShape)
                                     .background(Color.Black.copy(alpha = 0.25f))
                             )
@@ -400,13 +423,13 @@ fun AddressSetupScreen(
                     }
                 }
 
-                // Bottom Sheet / Card with Address Details & Action
+                // Bottom Sheet / Card with Address Details & Action (20dp corners)
                 Card(
                     modifier = Modifier
                         .align(Alignment.BottomCenter)
                         .fillMaxWidth()
-                        .shadow(12.dp, shape = RoundedCornerShape(topStart = Dimens.RadiusXLarge, topEnd = Dimens.RadiusXLarge)),
-                    shape = RoundedCornerShape(topStart = Dimens.RadiusXLarge, topEnd = Dimens.RadiusXLarge),
+                        .shadow(12.dp, shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp)),
+                    shape = RoundedCornerShape(topStart = 20.dp, topEnd = 20.dp),
                     colors = CardDefaults.cardColors(containerColor = ForerunSurface)
                 ) {
                     Column(
@@ -424,6 +447,14 @@ fun AddressSetupScreen(
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ForerunTextPrimary
+                        )
+
+                        Spacer(modifier = Modifier.height(Dimens.Space4))
+
+                        Text(
+                            text = stringResource(R.string.address_permanent_note),
+                            fontSize = 12.sp,
+                            color = ForerunTextMuted
                         )
 
                         Spacer(modifier = Modifier.height(Dimens.Space10))

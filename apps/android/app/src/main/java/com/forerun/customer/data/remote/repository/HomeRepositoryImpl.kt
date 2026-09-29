@@ -52,7 +52,8 @@ class HomeRepositoryImpl @Inject constructor(
                         itemCount = activeDto.itemCount,
                         createdAt = activeDto.createdAt,
                         runnerName = activeDto.runner?.name,
-                        runnerWhatsapp = activeDto.runner?.whatsapp
+                        runnerWhatsapp = activeDto.runner?.whatsapp,
+                        runnerPhone = activeDto.runner?.phone
                     )
                 }
             }

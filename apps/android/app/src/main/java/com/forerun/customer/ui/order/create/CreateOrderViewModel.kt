@@ -21,12 +21,19 @@ import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import javax.inject.Inject
 
+enum class OrderInputMode {
+    QUICK,
+    STRUCTURED
+}
+
 data class CreateOrderUiState(
+    val inputMode: OrderInputMode = OrderInputMode.QUICK,
+    val quickText: String = "",
     val isLoadingAddress: Boolean = true,
     val isLoadingRunners: Boolean = false,
     val isSubmitting: Boolean = false,
     val deliveryAddress: CustomerAddress? = null,
-    val items: List<OrderItem> = listOf(OrderItem(itemName = "", quantity = "")),
+    val items: List<OrderItem> = listOf(OrderItem(itemName = "", quantity = "1")),
     val notes: String = "",
     val availableRunners: List<RunnerInfo> = emptyList(),
     val selectedRunnerId: String? = null,
@@ -38,6 +45,8 @@ data class CreateOrderUiState(
 
 sealed interface CreateOrderIntent {
     data object LoadInitialData : CreateOrderIntent
+    data class SetInputMode(val mode: OrderInputMode) : CreateOrderIntent
+    data class UpdateQuickText(val text: String) : CreateOrderIntent
     data object AddItem : CreateOrderIntent
     data class RemoveItem(val id: String) : CreateOrderIntent
     data class UpdateItemName(val id: String, val name: String) : CreateOrderIntent
@@ -77,6 +86,8 @@ class CreateOrderViewModel @Inject constructor(
     fun onIntent(intent: CreateOrderIntent) {
         when (intent) {
             is CreateOrderIntent.LoadInitialData -> loadInitialData()
+            is CreateOrderIntent.SetInputMode -> _uiState.update { it.copy(inputMode = intent.mode, validationError = null) }
+            is CreateOrderIntent.UpdateQuickText -> _uiState.update { it.copy(quickText = intent.text, validationError = null) }
             is CreateOrderIntent.AddItem -> addItem()
             is CreateOrderIntent.RemoveItem -> removeItem(intent.id)
             is CreateOrderIntent.UpdateItemName -> updateItemName(intent.id, intent.name)
@@ -124,7 +135,7 @@ class CreateOrderViewModel @Inject constructor(
 
     private fun addItem() {
         _uiState.update { state ->
-            state.copy(items = state.items + OrderItem(itemName = "", quantity = ""))
+            state.copy(items = state.items + OrderItem(itemName = "", quantity = "1"))
         }
     }
 
@@ -190,30 +201,61 @@ class CreateOrderViewModel @Inject constructor(
             return
         }
 
-        if (state.items.isEmpty()) {
-            _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
-            return
-        }
+        val orderItems: List<OrderItem> = when (state.inputMode) {
+            OrderInputMode.QUICK -> {
+                val lines = state.quickText.lines()
+                    .map { it.trim() }
+                    .filter { it.isNotEmpty() }
 
-        for (item in state.items) {
-            if (item.itemName.trim().isEmpty()) {
-                _uiState.update { it.copy(validationError = "يرجى كتابة اسم المادة") }
-                return
+                if (lines.isEmpty()) {
+                    _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
+                    return
+                }
+
+                lines.map { line ->
+                    OrderItem(
+                        itemName = line,
+                        quantity = "1",
+                        anyStore = true,
+                        customStoreName = null
+                    )
+                }
             }
-            if (item.quantity.trim().isEmpty()) {
-                _uiState.update { it.copy(validationError = "يرجى تحديد الكمية للمادة: ${item.itemName}") }
-                return
-            }
-            if (!item.anyStore && (item.customStoreName == null || item.customStoreName.trim().isEmpty())) {
-                _uiState.update { it.copy(validationError = "يرجى تحديد اسم المتجر للمادة: ${item.itemName} أو تفعيل خيار أي متجر") }
-                return
+            OrderInputMode.STRUCTURED -> {
+                if (state.items.isEmpty()) {
+                    _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
+                    return
+                }
+
+                for (item in state.items) {
+                    if (item.itemName.trim().isEmpty()) {
+                        _uiState.update { it.copy(validationError = "يرجى كتابة اسم المادة") }
+                        return
+                    }
+                    if (item.quantity.trim().isEmpty()) {
+                        _uiState.update { it.copy(validationError = "يرجى تحديد الكمية للمادة: ${item.itemName}") }
+                        return
+                    }
+                    if (!item.anyStore && (item.customStoreName == null || item.customStoreName.trim().isEmpty())) {
+                        _uiState.update { it.copy(validationError = "يرجى تحديد اسم المتجر للمادة: ${item.itemName} أو تفعيل خيار أي متجر") }
+                        return
+                    }
+                }
+
+                state.items.map {
+                    it.copy(
+                        itemName = it.itemName.trim(),
+                        quantity = it.quantity.trim(),
+                        customStoreName = if (it.anyStore) null else it.customStoreName?.trim()
+                    )
+                }
             }
         }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errorMessage = null, validationError = null) }
             val result = createOrderUseCase(
-                items = state.items,
+                items = orderItems,
                 notes = state.notes,
                 preferredRunnerId = state.selectedRunnerId,
                 waitForPreferred = state.waitForPreferred,

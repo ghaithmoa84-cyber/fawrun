@@ -18,7 +18,8 @@ data class ActiveOrder(
     val itemCount: Int,
     val createdAt: String,
     val runnerName: String? = null,
-    val runnerWhatsapp: String? = null
+    val runnerWhatsapp: String? = null,
+    val runnerPhone: String? = null
 )
 
 data class HomeData(

@@ -165,7 +165,7 @@
     <string name="create_order_wait_for_preferred_toggle">انتظار الكابتن في حال انشغاله</string>
     <string name="create_order_wait_for_preferred_desc">قد يستغرق الطلب وقتاً أطول حتى يفرغ الكابتن المفضل</string>
     <string name="create_order_pricing_disclaimer">سيتم تحديد أسعار المواد ورسوم التوصيل بدقة من قبل الكابتن والخادم عند البدء</string>
-    <string name="create_order_submit_button">تأكيد وإرسال الطلب</string>
+    <string name="create_order_submit_button">أرسل الطلب الآن 🚀</string>
     <string name="create_order_submitting_button">جاري إنشاء الطلب…</string>
     <string name="create_order_items_count_summary">%1$d مواد مضافة</string>
     <string name="create_order_success_title">تم إنشاء طلبك بنجاح!</string>
@@ -284,4 +284,36 @@
     <string name="rating_success_created">شكراً لك! تم إرسال تقييمك بنجاح</string>
     <string name="rating_success_updated">تم تحديث التقييم بنجاح</string>
     <string name="rating_error_submit">فشل إرسال التقييم، يرجى المحاولة ثانية</string>
+
+    <!-- Services (Home Screen Redesign) -->
+    <string name="services_section_title">خدماتنا</string>
+    <string name="services_section_subtitle">خدمة سريعة وموثوقة في القنجرة</string>
+    <string name="service_grocery_title">حاجيات البقالة</string>
+    <string name="service_grocery_desc">من أي متجر أو سوبرماركت في القنجرة</string>
+    <string name="service_parcels_title">طرود وأمانات</string>
+    <string name="service_parcels_desc">القنجرة ↔ اللاذقية</string>
+    <string name="service_parcels_tag">سريع</string>
+    <string name="service_rides_title">مشاوير ركاب</string>
+    <string name="service_rides_desc">القنجرة ↔ اللاذقية</string>
+    <string name="service_rides_tag">توصيلة</string>
+    <string name="service_in_dev_dialog_title">خدمة الطرود والمشاوير</string>
+    <string name="service_in_dev_dialog_desc">هذه الخدمة قيد التطوير داخل التطبيق حالياً، ويسعدنا خدمتك وتنسيق طلبك فوراً عبر واتساب الإدارة.</string>
+    <string name="service_in_dev_dialog_btn">مراسلة الإدارة عبر واتساب</string>
+    <string name="service_in_dev_dialog_dismiss">إغلاق</string>
+    <string name="service_in_dev_whatsapp_msg">مرحباً، أود الاستفسار والتنسيق لطلب (طرد / مشوار) في القنجرة.</string>
+
+    <!-- Create Order Redesign (Quick vs Structured) -->
+    <string name="create_order_tab_quick">إدخال سريع ✏️</string>
+    <string name="create_order_tab_structured">إدخال منظّم 📋</string>
+    <string name="create_order_quick_title">اكتب مشترياتك بشكل حر وسريع:</string>
+    <string name="create_order_quick_hint">اكتب كل مادة في سطر منفصل، مثال:\nحليب ٢ لتر\nخبز ٣ ربطات\nكيلو سكر من سوبرماركت الخير</string>
+    <string name="create_order_quick_note">سيتم ترقيم المواد تلقائياً ويتولى الكابتن تأمينها بأفضل سرعة وجودة.</string>
+    <string name="create_order_item_combined_label">المادة والكمية (مثال: حليب المراعي ٢ لتر)</string>
+    <string name="create_order_item_combined_hint">اسم المادة والكمية المطلوبة</string>
+    <string name="create_order_store_options_title">خيارات المتجر</string>
+    <string name="create_order_store_any_label">من أي متجر متاح (أسرع وأوفر)</string>
+    <string name="create_order_store_custom_label">أو حدد اسم المتجر المفضل</string>
+
+    <!-- Address Setup Polish -->
+    <string name="address_permanent_note">سيُعتمد هذا الموقع كعنوان رئيسي ودائم لتسليم طلباتك في القنجرة.</string>
 </resources>

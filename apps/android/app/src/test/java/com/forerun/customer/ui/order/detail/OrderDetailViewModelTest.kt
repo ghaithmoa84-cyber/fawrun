@@ -206,21 +206,22 @@ class OrderDetailViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
+        val recentDeliveredAt = java.time.Instant.now().toString()
         fakeRepository.getOrderDetailResult = Result.success(
-            sampleOrder.copy(status = "DELIVERED", deliveredAt = "2026-09-28T14:00:00Z")
+            sampleOrder.copy(status = "DELIVERED", deliveredAt = recentDeliveredAt)
         )
 
         viewModel.handleWebSocketEvent(
             WebSocketEvent.Delivered(
                 orderId = "order_123",
-                deliveredAt = "2026-09-28T14:00:00Z"
+                deliveredAt = recentDeliveredAt
             )
         )
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
         assertEquals("DELIVERED", state.order?.status)
-        assertEquals("2026-09-28T14:00:00Z", state.order?.deliveredAt)
+        assertEquals(recentDeliveredAt, state.order?.deliveredAt)
         assertTrue(state.canRate)
     }
 

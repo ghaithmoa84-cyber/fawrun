@@ -6,9 +6,11 @@ object Dimens {
     // Spacing (4dp grid)
     val Space2 = 2.dp
     val Space4 = 4.dp
+    val Space6 = 6.dp
     val Space8 = 8.dp
     val Space10 = 10.dp
     val Space12 = 12.dp
+    val Space14 = 14.dp
     val Space16 = 16.dp
     val Space20 = 20.dp
     val Space24 = 24.dp

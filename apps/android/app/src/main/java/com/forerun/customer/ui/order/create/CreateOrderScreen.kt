@@ -17,7 +17,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
@@ -33,7 +32,6 @@ import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.OutlinedButton
@@ -66,10 +64,10 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.forerun.customer.R
 import com.forerun.customer.domain.model.OrderItem
 import com.forerun.customer.ui.theme.Dimens
-import com.forerun.customer.ui.theme.ForerunBackground
 import com.forerun.customer.ui.theme.ForerunBorder
 import com.forerun.customer.ui.theme.ForerunDanger
 import com.forerun.customer.ui.theme.ForerunGreen
+import com.forerun.customer.ui.theme.ForerunGreenDark
 import com.forerun.customer.ui.theme.ForerunGreenLight
 import com.forerun.customer.ui.theme.ForerunSoftSurface
 import com.forerun.customer.ui.theme.ForerunSuccess
@@ -118,7 +116,7 @@ fun CreateOrderScreen(
         }
     }
 
-    // Success Confirmation Dialog (as fallback / modal)
+    // Success Confirmation Dialog
     uiState.createdOrder?.let { order ->
         AlertDialog(
             onDismissRequest = { viewModel.onIntent(CreateOrderIntent.DismissSuccess) },
@@ -160,7 +158,7 @@ fun CreateOrderScreen(
                             text = stringResource(R.string.create_order_success_order_number, order.orderNumber),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
-                            color = ForerunGreen
+                            color = ForerunGreenDark
                         )
                     }
                 }
@@ -172,7 +170,7 @@ fun CreateOrderScreen(
                         onNavigateToOrders()
                     },
                     colors = ButtonDefaults.buttonColors(
-                        containerColor = ForerunGreen,
+                        containerColor = ForerunGreenDark,
                         contentColor = ForerunTextOnPrimary
                     )
                 ) {
@@ -217,21 +215,14 @@ fun CreateOrderScreen(
                 colors = TopAppBarDefaults.topAppBarColors(containerColor = ForerunSurface)
             )
         },
-        floatingActionButton = {
-            FloatingActionButton(
-                onClick = { viewModel.onIntent(CreateOrderIntent.AddItem) },
-                containerColor = ForerunGreen,
-                contentColor = ForerunTextOnPrimary,
-                modifier = Modifier.padding(bottom = 70.dp)
-            ) {
-                Icon(
-                    imageVector = Icons.Default.Add,
-                    contentDescription = stringResource(R.string.create_order_add_item)
-                )
-            }
-        },
         bottomBar = {
             // Bottom Action Dock
+            val itemsCount = if (uiState.inputMode == OrderInputMode.QUICK) {
+                uiState.quickText.lines().count { it.trim().isNotEmpty() }
+            } else {
+                uiState.items.size
+            }
+
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(topStart = Dimens.RadiusLarge, topEnd = Dimens.RadiusLarge),
@@ -249,7 +240,7 @@ fun CreateOrderScreen(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = stringResource(R.string.create_order_items_count_summary, uiState.items.size),
+                            text = stringResource(R.string.create_order_items_count_summary, itemsCount),
                             fontSize = 14.sp,
                             fontWeight = FontWeight.SemiBold,
                             color = ForerunTextPrimary
@@ -258,7 +249,7 @@ fun CreateOrderScreen(
                             text = if (uiState.deliveryAddress != null) "العنوان جاهز ✓" else "العنوان غير محدد ⚠️",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
-                            color = if (uiState.deliveryAddress != null) ForerunGreen else ForerunWarning
+                            color = if (uiState.deliveryAddress != null) ForerunGreenDark else ForerunWarning
                         )
                     }
 
@@ -272,7 +263,7 @@ fun CreateOrderScreen(
                             .height(Dimens.ButtonHeight),
                         shape = RoundedCornerShape(Dimens.RadiusMedium),
                         colors = ButtonDefaults.buttonColors(
-                            containerColor = ForerunGreen,
+                            containerColor = ForerunGreenDark,
                             contentColor = ForerunTextOnPrimary
                         )
                     ) {
@@ -291,7 +282,7 @@ fun CreateOrderScreen(
                         } else {
                             Text(
                                 text = stringResource(R.string.create_order_submit_button),
-                                fontSize = 15.sp,
+                                fontSize = 16.sp,
                                 fontWeight = FontWeight.Bold
                             )
                         }
@@ -308,7 +299,77 @@ fun CreateOrderScreen(
             contentPadding = PaddingValues(Dimens.Space16),
             verticalArrangement = Arrangement.spacedBy(Dimens.Space16)
         ) {
-            // 1. Delivery Address Card
+            // 1. Dual Mode Switcher Tabs
+            item {
+                OrderModeTabs(
+                    selectedMode = uiState.inputMode,
+                    onModeSelected = { viewModel.onIntent(CreateOrderIntent.SetInputMode(it)) }
+                )
+            }
+
+            // 2. Mode Content
+            if (uiState.inputMode == OrderInputMode.QUICK) {
+                item {
+                    QuickOrderEditor(
+                        quickText = uiState.quickText,
+                        onQuickTextChange = { viewModel.onIntent(CreateOrderIntent.UpdateQuickText(it)) }
+                    )
+                }
+            } else {
+                // Structured Mode: Items Section Header
+                item {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = stringResource(R.string.create_order_items_section),
+                            fontSize = 16.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ForerunTextPrimary
+                        )
+                        OutlinedButton(
+                            onClick = { viewModel.onIntent(CreateOrderIntent.AddItem) },
+                            contentPadding = PaddingValues(horizontal = Dimens.Space12, vertical = Dimens.Space4),
+                            shape = RoundedCornerShape(Dimens.RadiusPill),
+                            colors = ButtonDefaults.outlinedButtonColors(contentColor = ForerunGreenDark)
+                        ) {
+                            Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
+                            Spacer(modifier = Modifier.width(Dimens.Space4))
+                            Text(stringResource(R.string.create_order_add_item), fontSize = 12.sp, fontWeight = FontWeight.Bold)
+                        }
+                    }
+                }
+
+                // Dynamic Structured Items List
+                itemsIndexed(uiState.items, key = { _, item -> item.id }) { index, item ->
+                    StructuredOrderItemCard(
+                        index = index + 1,
+                        item = item,
+                        canDelete = uiState.items.size > 1,
+                        onItemChange = { viewModel.onIntent(CreateOrderIntent.UpdateItemName(item.id, it)) },
+                        onAnyStoreToggle = { viewModel.onIntent(CreateOrderIntent.ToggleItemAnyStore(item.id, it)) },
+                        onCustomStoreChange = { viewModel.onIntent(CreateOrderIntent.UpdateItemCustomStore(item.id, it)) },
+                        onDelete = { viewModel.onIntent(CreateOrderIntent.RemoveItem(item.id)) }
+                    )
+                }
+
+                item {
+                    OutlinedButton(
+                        onClick = { viewModel.onIntent(CreateOrderIntent.AddItem) },
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = RoundedCornerShape(Dimens.RadiusMedium),
+                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ForerunGreenDark)
+                    ) {
+                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(18.dp))
+                        Spacer(modifier = Modifier.width(Dimens.Space8))
+                        Text(stringResource(R.string.create_order_add_item), fontWeight = FontWeight.Bold)
+                    }
+                }
+            }
+
+            // 3. Delivery Address Card
             item {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
@@ -330,7 +391,7 @@ fun CreateOrderScreen(
                             Icon(
                                 imageVector = Icons.Default.LocationOn,
                                 contentDescription = null,
-                                tint = if (uiState.deliveryAddress != null) ForerunGreen else ForerunWarning,
+                                tint = if (uiState.deliveryAddress != null) ForerunGreenDark else ForerunWarning,
                                 modifier = Modifier.size(24.dp)
                             )
                             Spacer(modifier = Modifier.width(Dimens.Space8))
@@ -349,7 +410,7 @@ fun CreateOrderScreen(
                                         stringResource(R.string.create_order_set_address_now)
                                     },
                                     fontSize = 13.sp,
-                                    color = ForerunGreen,
+                                    color = ForerunGreenDark,
                                     fontWeight = FontWeight.Bold
                                 )
                             }
@@ -373,46 +434,6 @@ fun CreateOrderScreen(
                         }
                     }
                 }
-            }
-
-            // 2. Items Section Header
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = stringResource(R.string.create_order_items_section),
-                        fontSize = 16.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = ForerunTextPrimary
-                    )
-                    OutlinedButton(
-                        onClick = { viewModel.onIntent(CreateOrderIntent.AddItem) },
-                        contentPadding = PaddingValues(horizontal = Dimens.Space12, vertical = Dimens.Space4),
-                        shape = RoundedCornerShape(Dimens.RadiusPill),
-                        colors = ButtonDefaults.outlinedButtonColors(contentColor = ForerunGreen)
-                    ) {
-                        Icon(Icons.Default.Add, contentDescription = null, modifier = Modifier.size(16.dp))
-                        Spacer(modifier = Modifier.width(Dimens.Space4))
-                        Text(stringResource(R.string.create_order_add_item), fontSize = 12.sp, fontWeight = FontWeight.Bold)
-                    }
-                }
-            }
-
-            // 3. Dynamic Order Items List
-            itemsIndexed(uiState.items, key = { _, item -> item.id }) { index, item ->
-                OrderItemCard(
-                    index = index + 1,
-                    item = item,
-                    canDelete = uiState.items.size > 1,
-                    onNameChange = { viewModel.onIntent(CreateOrderIntent.UpdateItemName(item.id, it)) },
-                    onQuantityChange = { viewModel.onIntent(CreateOrderIntent.UpdateItemQuantity(item.id, it)) },
-                    onAnyStoreToggle = { viewModel.onIntent(CreateOrderIntent.ToggleItemAnyStore(item.id, it)) },
-                    onCustomStoreChange = { viewModel.onIntent(CreateOrderIntent.UpdateItemCustomStore(item.id, it)) },
-                    onDelete = { viewModel.onIntent(CreateOrderIntent.RemoveItem(item.id)) }
-                )
             }
 
             // 4. Notes Section
@@ -444,9 +465,9 @@ fun CreateOrderScreen(
                             modifier = Modifier.fillMaxWidth(),
                             shape = RoundedCornerShape(Dimens.RadiusMedium),
                             colors = OutlinedTextFieldDefaults.colors(
-                                focusedBorderColor = ForerunGreen,
-                                focusedLabelColor = ForerunGreen,
-                                cursorColor = ForerunGreen
+                                focusedBorderColor = ForerunGreenDark,
+                                focusedLabelColor = ForerunGreenDark,
+                                cursorColor = ForerunGreenDark
                             )
                         )
                     }
@@ -488,7 +509,7 @@ fun CreateOrderScreen(
                             Icon(
                                 imageVector = Icons.Default.Person,
                                 contentDescription = null,
-                                tint = if (uiState.selectedRunnerId == null) ForerunGreen else ForerunTextMuted,
+                                tint = if (uiState.selectedRunnerId == null) ForerunGreenDark else ForerunTextMuted,
                                 modifier = Modifier.size(20.dp)
                             )
                             Spacer(modifier = Modifier.width(Dimens.Space8))
@@ -496,11 +517,11 @@ fun CreateOrderScreen(
                                 text = stringResource(R.string.create_order_any_runner),
                                 fontSize = 13.sp,
                                 fontWeight = if (uiState.selectedRunnerId == null) FontWeight.Bold else FontWeight.Normal,
-                                color = if (uiState.selectedRunnerId == null) ForerunGreen else ForerunTextPrimary
+                                color = if (uiState.selectedRunnerId == null) ForerunGreenDark else ForerunTextPrimary
                             )
                         }
 
-                        // Available Runners List (if any)
+                        // Available Runners List
                         if (uiState.availableRunners.isNotEmpty()) {
                             Spacer(modifier = Modifier.height(Dimens.Space8))
                             uiState.availableRunners.forEach { runner ->
@@ -517,7 +538,7 @@ fun CreateOrderScreen(
                                     Icon(
                                         imageVector = Icons.Default.Person,
                                         contentDescription = null,
-                                        tint = if (uiState.selectedRunnerId == runner.id) ForerunGreen else ForerunTextMuted,
+                                        tint = if (uiState.selectedRunnerId == runner.id) ForerunGreenDark else ForerunTextMuted,
                                         modifier = Modifier.size(20.dp)
                                     )
                                     Spacer(modifier = Modifier.width(Dimens.Space8))
@@ -525,7 +546,7 @@ fun CreateOrderScreen(
                                         text = runner.name,
                                         fontSize = 13.sp,
                                         fontWeight = if (uiState.selectedRunnerId == runner.id) FontWeight.Bold else FontWeight.Normal,
-                                        color = if (uiState.selectedRunnerId == runner.id) ForerunGreen else ForerunTextPrimary
+                                        color = if (uiState.selectedRunnerId == runner.id) ForerunGreenDark else ForerunTextPrimary
                                     )
                                     if (runner.avgRating != null) {
                                         Spacer(modifier = Modifier.weight(1f))
@@ -565,7 +586,7 @@ fun CreateOrderScreen(
                                     onCheckedChange = { viewModel.onIntent(CreateOrderIntent.ToggleWaitForPreferred(it)) },
                                     colors = SwitchDefaults.colors(
                                         checkedThumbColor = ForerunSurface,
-                                        checkedTrackColor = ForerunGreen
+                                        checkedTrackColor = ForerunGreenDark
                                     )
                                 )
                             }
@@ -595,12 +616,170 @@ fun CreateOrderScreen(
 }
 
 @Composable
-private fun OrderItemCard(
+private fun OrderModeTabs(
+    selectedMode: OrderInputMode,
+    onModeSelected: (OrderInputMode) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Row(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(Dimens.RadiusMedium))
+            .background(ForerunSurface)
+            .border(1.dp, ForerunBorder, RoundedCornerShape(Dimens.RadiusMedium))
+            .padding(4.dp),
+        horizontalArrangement = Arrangement.spacedBy(4.dp)
+    ) {
+        // Quick Mode Tab
+        val isQuick = selectedMode == OrderInputMode.QUICK
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                .background(if (isQuick) ForerunGreenLight else Color.Transparent)
+                .border(
+                    width = if (isQuick) 1.dp else 0.dp,
+                    color = if (isQuick) ForerunGreenDark.copy(alpha = 0.35f) else Color.Transparent,
+                    shape = RoundedCornerShape(Dimens.RadiusSmall)
+                )
+                .clickable { onModeSelected(OrderInputMode.QUICK) }
+                .padding(vertical = Dimens.Space10),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.create_order_tab_quick),
+                fontSize = 14.sp,
+                fontWeight = if (isQuick) FontWeight.Bold else FontWeight.Medium,
+                color = if (isQuick) ForerunGreenDark else ForerunTextMuted
+            )
+        }
+
+        // Structured Mode Tab
+        val isStructured = selectedMode == OrderInputMode.STRUCTURED
+        Box(
+            modifier = Modifier
+                .weight(1f)
+                .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                .background(if (isStructured) ForerunGreenLight else Color.Transparent)
+                .border(
+                    width = if (isStructured) 1.dp else 0.dp,
+                    color = if (isStructured) ForerunGreenDark.copy(alpha = 0.35f) else Color.Transparent,
+                    shape = RoundedCornerShape(Dimens.RadiusSmall)
+                )
+                .clickable { onModeSelected(OrderInputMode.STRUCTURED) }
+                .padding(vertical = Dimens.Space10),
+            contentAlignment = Alignment.Center
+        ) {
+            Text(
+                text = stringResource(R.string.create_order_tab_structured),
+                fontSize = 14.sp,
+                fontWeight = if (isStructured) FontWeight.Bold else FontWeight.Medium,
+                color = if (isStructured) ForerunGreenDark else ForerunTextMuted
+            )
+        }
+    }
+}
+
+@Composable
+private fun QuickOrderEditor(
+    quickText: String,
+    onQuickTextChange: (String) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(Dimens.RadiusMedium),
+        colors = CardDefaults.cardColors(containerColor = ForerunSurface),
+        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(Dimens.Space16)
+        ) {
+            // Title & badge
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.create_order_quick_title),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold,
+                    color = ForerunTextPrimary
+                )
+
+                val lineCount = quickText.lines().count { it.trim().isNotEmpty() }
+                if (lineCount > 0) {
+                    Box(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(Dimens.RadiusPill))
+                            .background(ForerunGreenLight)
+                            .padding(horizontal = Dimens.Space10, vertical = Dimens.Space4)
+                    ) {
+                        Text(
+                            text = "$lineCount مواد",
+                            fontSize = 12.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = ForerunGreenDark
+                        )
+                    }
+                }
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.Space8))
+
+            // Info note
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clip(RoundedCornerShape(Dimens.RadiusSmall))
+                    .background(ForerunGreenLight.copy(alpha = 0.6f))
+                    .padding(Dimens.Space10)
+            ) {
+                Text(
+                    text = stringResource(R.string.create_order_quick_note),
+                    fontSize = 12.sp,
+                    color = ForerunGreenDark,
+                    lineHeight = 16.sp
+                )
+            }
+
+            Spacer(modifier = Modifier.height(Dimens.Space12))
+
+            // Multi-line Editor
+            OutlinedTextField(
+                value = quickText,
+                onValueChange = onQuickTextChange,
+                placeholder = {
+                    Text(
+                        text = stringResource(R.string.create_order_quick_hint),
+                        fontSize = 13.sp,
+                        color = ForerunTextMuted,
+                        lineHeight = 20.sp
+                    )
+                },
+                minLines = 6,
+                maxLines = 14,
+                modifier = Modifier.fillMaxWidth(),
+                shape = RoundedCornerShape(Dimens.RadiusMedium),
+                colors = OutlinedTextFieldDefaults.colors(
+                    focusedBorderColor = ForerunGreenDark,
+                    unfocusedBorderColor = ForerunBorder,
+                    cursorColor = ForerunGreenDark
+                )
+            )
+        }
+    }
+}
+
+@Composable
+private fun StructuredOrderItemCard(
     index: Int,
     item: OrderItem,
     canDelete: Boolean,
-    onNameChange: (String) -> Unit,
-    onQuantityChange: (String) -> Unit,
+    onItemChange: (String) -> Unit,
     onAnyStoreToggle: (Boolean) -> Unit,
     onCustomStoreChange: (String) -> Unit,
     onDelete: () -> Unit
@@ -625,7 +804,7 @@ private fun OrderItemCard(
                     text = stringResource(R.string.create_order_item_header, index),
                     fontSize = 14.sp,
                     fontWeight = FontWeight.Bold,
-                    color = ForerunGreen
+                    color = ForerunGreenDark
                 )
                 if (canDelete) {
                     IconButton(
@@ -644,50 +823,32 @@ private fun OrderItemCard(
 
             Spacer(modifier = Modifier.height(Dimens.Space8))
 
-            // Item Name
+            // Combined Item + Quantity field
             OutlinedTextField(
                 value = item.itemName,
-                onValueChange = onNameChange,
-                label = { Text(stringResource(R.string.create_order_item_name_label)) },
-                placeholder = { Text(stringResource(R.string.create_order_item_name_hint), fontSize = 13.sp) },
+                onValueChange = onItemChange,
+                label = { Text(stringResource(R.string.create_order_item_combined_label), fontSize = 13.sp) },
+                placeholder = { Text(stringResource(R.string.create_order_item_combined_hint), fontSize = 13.sp) },
                 singleLine = true,
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(Dimens.RadiusMedium),
                 colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForerunGreen,
-                    focusedLabelColor = ForerunGreen,
-                    cursorColor = ForerunGreen
+                    focusedBorderColor = ForerunGreenDark,
+                    focusedLabelColor = ForerunGreenDark,
+                    cursorColor = ForerunGreenDark
                 )
             )
 
-            Spacer(modifier = Modifier.height(Dimens.Space8))
+            Spacer(modifier = Modifier.height(Dimens.Space10))
 
-            // Quantity
-            OutlinedTextField(
-                value = item.quantity,
-                onValueChange = onQuantityChange,
-                label = { Text(stringResource(R.string.create_order_item_quantity_label)) },
-                placeholder = { Text(stringResource(R.string.create_order_item_quantity_hint), fontSize = 13.sp) },
-                singleLine = true,
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(Dimens.RadiusMedium),
-                colors = OutlinedTextFieldDefaults.colors(
-                    focusedBorderColor = ForerunGreen,
-                    focusedLabelColor = ForerunGreen,
-                    cursorColor = ForerunGreen
-                )
-            )
-
-            Spacer(modifier = Modifier.height(Dimens.Space8))
-
-            // Any Store Toggle
+            // Store options
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Text(
-                    text = stringResource(R.string.create_order_any_store_toggle),
+                    text = stringResource(R.string.create_order_store_any_label),
                     fontSize = 13.sp,
                     fontWeight = FontWeight.Medium,
                     color = ForerunTextPrimary
@@ -697,7 +858,7 @@ private fun OrderItemCard(
                     onCheckedChange = onAnyStoreToggle,
                     colors = SwitchDefaults.colors(
                         checkedThumbColor = ForerunSurface,
-                        checkedTrackColor = ForerunGreen
+                        checkedTrackColor = ForerunGreenDark
                     )
                 )
             }
@@ -714,9 +875,9 @@ private fun OrderItemCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = RoundedCornerShape(Dimens.RadiusMedium),
                     colors = OutlinedTextFieldDefaults.colors(
-                        focusedBorderColor = ForerunGreen,
-                        focusedLabelColor = ForerunGreen,
-                        cursorColor = ForerunGreen
+                        focusedBorderColor = ForerunGreenDark,
+                        focusedLabelColor = ForerunGreenDark,
+                        cursorColor = ForerunGreenDark
                     )
                 )
             }
