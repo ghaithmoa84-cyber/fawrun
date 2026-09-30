@@ -1,36 +1,193 @@
 # FORERUN Android — Progress & Decisions Log
 
-> **Purpose:** Track what has been built, what decisions were made,
-> and what comes next.
-> **Last updated:** After Sprint 5 (FCM Push Notifications + MapLibre Polish)
+> **Purpose:** Track what has been built, what decisions were made, and what comes next.
+> **Last updated:** 30 September 2026 (after Sprint 8C merged into `master`)
 
 ---
 
 ## Current Status
 
-| Component | Status |
-|-----------|--------|
-| **Sprint 1.1** — Skeleton | ✅ Complete |
-| **Sprint 1.2** — Design System | ✅ Complete |
-| **Fix** — statusBarColor deprecation | ✅ Complete |
-| **Sprint 1.3** — Hilt + Networking | ✅ Complete |
-| **Sprint 1.4** — Auth Flow | ✅ Complete |
-| **Sprint 2** — Home, Address & Orders | ✅ مكتملة (غير مدموجة في master) |
-| **Sprint 3** — Order Detail, Rating & Socket.IO | ✅ مكتملة (غير مدموجة في master) |
-| **Sprint 4** — Account, Support & WebSocket Hardening | ✅ مكتملة (غير مدموجة في master) |
-| **Sprint 5** — FCM Push Notifications & MapLibre Polish | ✅ مكتملة (غير مدموجة في master) |
-| **Sprint 6** — UI Redesign (Google Stitch UI + RTL) | ✅ مكتملة (غير مدموجة في master) |
-| **Sprint 7** — Production Readiness & Release Pipeline | ✅ مكتملة (جاهزة للتوقيع والدمج) |
+| Sprint | الحالة | آخر commit |
+|--------|--------|------------|
+| **1.1** Skeleton | ✅ Done | `3b91d1e` |
+| **1.2** Design System | ✅ Done | `7b076b5` |
+| **1.3** Hilt + Networking | ✅ Done | `db3e290` |
+| **1.4** Auth Flow | ✅ Done | `2d7a77a` |
+| **2** Home + Address + Create Order | ✅ Done | `e60efc8` |
+| **3** Order Detail + Rating + Socket.IO | ✅ Done | `9d02b4f` |
+| **4** Account + Support + WebSocket Hardening | ✅ Done | `1aeb02c` |
+| **5** FCM + MapLibre Polish | ✅ Done | `0570467` |
+| **6** UI Redesign (Stitch) + Global RTL | ✅ Done | `9be1637` |
+| **7** Production Readiness & Release Pipeline | ✅ Done | `fd42d5e` |
+| **8A** Critical Architecture Fixes | ✅ Done | `081cad4` |
+| **8B** Quick Wins + UI Blockers | ✅ Done | `a880d1d` / `c752b28` / `5c78cd4` |
+| **8C** Account Clean Architecture | ✅ Done | `6e25aed` |
+| **8D-10** | ⏳ Planned | — see [`ROADMAP.md`](./ROADMAP.md) |
 
-**Active branch:** `feature/android-sprint-7-production`
+**Active branch:** `master` (Android work is fully merged; no open Android feature branch)
 
-**Last commit:** `chore(android): prepare production release pipeline`
-**Total tests:** 152/152 passed (100% passing)
+**Last commit on `master`:** `e5bfbc1` — `merge(android): sprint 8c - account clean architecture`
+**Total tests:** 223 `@Test` / 223 passing (100%)
 **Lint status:** 0 errors (clean)
-**APK size (ABI split):**
-- `app-arm64-v8a-debug.apk`: ~29 MB
-- `app-armeabi-v7a-debug.apk`: ~26 MB
-- `app-x86_64-debug.apk`: ~29 MB
+**Release APK sizes (ABI split, R8 minified):**
+- `app-arm64-v8a-release.apk`: 15.07 MB
+- `app-armeabi-v7a-release.apk`: 12.25 MB
+- `app-x86_64-release.apk`: 15.35 MB
+
+> **Debug APKs** (for reference): arm64-v8a 36.13 MB · armeabi-v7a 33.31 MB · x86_64 36.40 MB
+
+---
+
+## Completed Sprints
+
+### Sprint 1-6: البنية + Features
+
+Foundation and the full v1 feature surface, delivered across six sprints:
+
+- **1.1 Skeleton** — project structure, Compose, first building APK. `buildToolsVersion` pinning conflict removed; AGP auto-selects.
+- **1.2 Design System** — Cairo font (4 weights), 15 colors, 11 text styles, spacing + radii, `ForerunTheme`.
+- **1.3 Hilt + Networking** — Hilt/KSP, Retrofit + OkHttp + Moshi, `ApiResponse<T>` sealed interface with `ApiCallAdapter`, 4 interceptors, `EncryptedSharedPreferences` token storage, `TokenRefreshManager` with `Mutex`, base URL fixed to the production Railway host.
+- **1.4 Auth Flow** — NavGraph with 7 routes, DataStore onboarding prefs, auth domain + data layers, 6 auth screens, session-expiry navigation, and the first live E2E pass on the `ForerunTest` AVD (5/5 scenarios, 0 crashes).
+- **2 Home / Address / Create Order** — bottom nav, MapLibre + OSM with Nominatim reverse geocoding, dynamic item builder, preferred-runner picker, order confirmation, orders list with filters and pagination. Verified live on production: order `FW-000015` created with server-calculated fees.
+- **3 Order Detail / Rating / Socket.IO** — live tracking timeline, store-purchase grouping, runner contact actions, `/orders` namespace with JWT auth and exponential-backoff reconnect, 5-star rating bottom sheet.
+- **4 Account / Support / WebSocket Hardening** — profile update via `PATCH /customer/me` (modified fields only), support screen with WhatsApp + dialer, socket lifecycle and token-rotation reconnect.
+- **5 FCM + MapLibre Polish** — Firebase messaging, high-priority notification channel, `POST_NOTIFICATIONS` runtime flow, notification deep links, device-token register/unregister, reverse-geocode LRU cache.
+- **6 UI Redesign + RTL** — 17 screens realigned to the Google Stitch designs; global `LayoutDirection.Rtl` via `CompositionLocalProvider`.
+
+### Sprint 7: Production Readiness
+
+Release pipeline, nothing shipped without it:
+
+- Release signing pipeline (`keystore.properties.example` template; keystores and credentials gitignored).
+- `isMinifyEnabled` + `isShrinkResources` for release, with a `proguard-rules.pro` covering Moshi (codegen), Retrofit 2, Socket.IO / Engine.IO, OkHttp 3, and MapLibre.
+- Pre-production audit: debug tools gated behind `BuildConfig.DEBUG`, no TODO/FIXME/placeholder text left in UI.
+- `RELEASE-CHECKLIST.md` written.
+
+**Quality gates at Sprint 7:** 152/152 tests · 0 lint errors · debug + release builds clean · all three ABI APKs under 30 MB.
+
+### Sprint 8A: Critical Architecture Fixes (6 مشاكل)
+
+`081cad4` — refactor/fix sprint driven by the deep architectural review. Six critical issues closed:
+
+| # | المشكلة | الحل |
+|---|---------|------|
+| DEEP-CRITICAL-01 | WebSocket not connected after login | `socketManager.connect()` invoked on successful login (defensive `try/catch`) |
+| DEEP-CRITICAL-02 | Verified user stuck on "قيد المراجعة" | `checkSession` now queries `GET /customer/me` live and refreshes stored status, with full offline fallback |
+| DEEP-CRITICAL-03 | 401 wrongly invalidated sessions | `refreshTokenIfNeeded(force = true)` on 401 + `X-Retry-After-Refresh` retry header + auth-path exclusion + `Mutex` |
+| DEEP-CRITICAL-04 | Cold-start deep link clashed with splash routing | Intent handling moved to thread-safe `DeepLinkHolder` (single-consumption `StateFlow`); consumed only when server state is `VERIFIED` |
+| DEEP-CRITICAL-05 | Double-submit race on order/address/rating | `AtomicBoolean` guards with `try/finally` reset, released on validation early-returns |
+| DEEP-MEDIUM-05 | Socket leak on logout | `logout` now disconnects the socket and unregisters the FCM token before clearing storage |
+
+**Result:** 172/172 tests, 0 lint errors, debug + release builds successful. Full analysis in [`SPRINT-8A-REPORT.md`](./SPRINT-8A-REPORT.md).
+
+### Sprint 8B: Quick Wins + UI Blockers (5 مشاكل UI)
+
+`a880d1d` + `c752b28` + `5c78cd4`. Closed the user-facing blockers and the debug-scaffolding leaks:
+
+| # | المشكلة | الحل |
+|---|---------|------|
+| CRITICAL-01 | Rating button stayed tappable after the 24h window | Button hidden/disabled once the rating deadline passes |
+| CRITICAL-02 | Pending/Suspended screens unscrollable — buttons cut off | `verticalScroll` added; redundant top `Spacer` removed |
+| CRITICAL-03 | Account screen had no loading or retry state | `AccountUiState.isLoading` (defaults `true` so the first frame is the spinner) + retry action |
+| CRITICAL-04 | Orders list load failure showed a misleading empty state | Explicit error state with retry; the snackbar is now limited to the non-empty-list case |
+| CRITICAL-05 | Runner phone cleanup could emit a duplicate country code | WhatsApp URL builder corrected; `wa.me` link verified |
+| MEDIUM (A1/A6/A24/A25) | Debug code shipped in release | `NotificationPayloadParser.toDestinationRoute/deepLinkUrl/hasDeepLink` deleted (removes the `core → ui` inverted edge), `MainActivity.testLogin()` + `authApi` + preview composables removed, `triggerSessionExpiry` and the release debug button removed, dead `ErrorMapper`/`UiError` deleted |
+| DEEP-MEDIUM-01 | Address not refreshed after returning from the map | Address reloaded on Activity resume |
+
+**Result:** 196/196 tests, 0 lint errors.
+
+### Sprint 8C: Account Clean Architecture (A2, A4, A5, A9, A20)
+
+`6e25aed` — the Account feature was the last feature still wired straight to the data layer. Closed end to end:
+
+| Item | Resolution |
+|---|---|
+| **A2** `AccountRepository` imported DTOs | Contract is now `Result<CustomerProfile>`; zero `data.remote` imports remain in `domain/` |
+| **A4** `ui/navigation` imported `data.remote.token` | `ForerunNavGraph` now takes `core.auth.SessionExpiryNotifier`; `ui/navigation` has zero `data.*` imports |
+| **A5** `AccountUiState.profile` was a DTO | Replaced with the `CustomerProfile` domain model |
+| **A9** `AccountViewModel` injected a repository | Injects `GetAccountProfileUseCase`, `UpdateAccountProfileUseCase`, `ChangeAccountPasswordUseCase`, `GetCustomerAddressUseCase`, `LogoutUseCase` |
+| **A16** Redundant `provideTokenRefreshManager` | Deleted; the `@Inject constructor` is the only binding (`SessionModule` added) |
+| **A20** `AccountRepositoryImpl` wrapped two repositories | Constructor is `CustomerApi` only; the 3 delegation methods (and latent Cycle 3) removed |
+| **D8/D12/D13/D14** dead members | `saveProfile()`, `getAddress`, `updateAddress`, `logout` and the DTO-building defaults all deleted |
+| **A21 (Account part)** no mapper files existed | `data/remote/mapper/AccountMapper.kt` — the project's first mapper |
+
+New tests: `AccountMapperTest`, `AccountRepositoryImplTest`, and 3 UseCase tests plus a rewritten `AccountViewModelTest`.
+
+**Deferred:** A17 (see Known Gaps). Follow-up: `CustomerProfile.status` is still `String`, not `UserStatus`.
+
+**Result:** 223/223 tests, 0 lint errors.
+
+### Branch Cleanup: 12 فرع محذوف
+
+`480b812` — 21 local branches → 9. All 12 deleted branches were verified fully merged (`git log master..<branch>` empty) and removed with the safe `git branch -d`; no force deletion, no remote pushes.
+
+| # | Branch removed | Reference commit |
+|:-:|---|:---:|
+| 1 | `feature/android-sprint-1-1-skeleton` | `21b9195` |
+| 2 | `feature/android-sprint-1-3-networking` | `db3e290` |
+| 3 | `feature/android-sprint-1-4-auth-flow` | `2d7a77a` |
+| 4 | `feature/android-sprint-2-home-order` | `e60efc8` |
+| 5 | `feature/android-sprint-3-order-detail` | `9d02b4f` |
+| 6 | `feature/android-sprint-4-account-support` | `1aeb02c` |
+| 7 | `feature/android-sprint-5-fcm-maplibre` | `0570467` |
+| 8 | `feature/android-sprint-6-ui-redesign` | `9be1637` |
+| 9 | `feature/android-sprint-7-production` | `fd42d5e` |
+| 10 | `feature/android-sprint-8a-architecture` | `081cad4` |
+| 11 | `feature/android-sprint-8b-ui-blockers` | `ab9a119` |
+| 12 | `feature/android-stitch-ui-redesign` | `0570467` |
+
+Sprint 8C was merged into `master` and deleted afterwards (`e5bfbc1`, branch tip `6e25aed`).
+
+**Retained (8 backend branches + `master` + `tmp-master`):** `feature/admin-mobile-responsive`, `feature/review-session-fixes`, `feature/sprint-2-clean-review`, `feature/sprint-2-order-core`, `feature/sprint-3-runner-endpoints`, `feature/sprint-4-financial-ratings`, `fix/node-version-dockerfile`, `tmp-master`. Full table in [`BRANCH-CLEANUP.md`](./BRANCH-CLEANUP.md).
+
+---
+
+## Test Count Evolution
+
+| Sprint | @Test count | Δ | Notes |
+|--------|-------------|---|-------|
+| Sprint 7 | 152 | — | Baseline for the release pipeline |
+| Sprint 8A | 172 | +20 | 15 new deep-architecture tests + supporting coverage |
+| Sprint 8B | 196 | +24 | UI blocker regressions + ViewModel state coverage |
+| Sprint 8C | 223 | +27 | Mapper, repository, 3 UseCases, rewritten AccountViewModel |
+
+All 223 pass. No test has ever been deleted to make a gate pass.
+
+---
+
+## Decisions Log
+
+| التاريخ | القرار | السبب |
+|---------|--------|-------|
+| Session 1 | Rename FAWRUN → FORERUN | User preference |
+| Session 1 | Package: `com.forerun.customer` | Final |
+| Session 2 | Maps: MapLibre + OSM | Free, no credit card required |
+| Session 2 | WebSocket: Socket.IO client | Backend already runs Socket.IO |
+| Session 3 | Firebase for FCM | Industry standard, free tier |
+| Session 3 | No Room / no offline mode | Always-online is the v1 model |
+| Session 3 | Services: grocery only | Packages/rides routed through WhatsApp |
+| Session 4 | Direct APK distribution | No Play Store in v1 |
+| Session 4 | Design System: mint green + Cairo | Matches brand |
+| 2026-09-28 | E2E verified on a real AVD (`ForerunTest`, API 34) | Automated unit tests alone did not prove the auth/navigation flows |
+| 2026-09-30 | Merge Android sprints 1-8C into `master` (`3fc4119`, then `e5bfbc1`) | Android became the source of truth on master; the cumulative-branch strategy had served its purpose |
+| 2026-09-30 | Delete only fully-merged branches with `git branch -d` | Never risk losing unmerged work; `-D` was explicitly rejected |
+| 2026-09-30 | Keep `TokenRefreshManager` in `data/remote/token/` (A17 deferred) | Moving it would relocate the violation, not fix it — the real fix is the `Authenticator` conversion in Sprint 8D |
+| 2026-09-30 | Adopt the `core.*` ownership pattern for cross-layer singletons | `SessionExpiryNotifier` proves a `core` interface + `data` implementation keeps `ui` free of `data` imports |
+
+---
+
+## Known Gaps
+
+| # | Gap | Impact | Target |
+|---|-----|--------|--------|
+| 1 | **A17 — `TokenRefreshManager` still in `data/`** | `core.network.interceptor` imports `data.remote.token`; 3 cycles remain, silently broken by `Provider`. Deferred because the correct fix is the `Authenticator` conversion | Sprint 8D |
+| 2 | **81 نص hardcoded** | 73 table rows spanning ~14 files, including 9+10 duplicated order-status labels, 4× `"إخفاء"/"إظهار"`, and 10 FAQ strings. Blocks translation and consistent terminology | Sprint 9 |
+| 3 | **FCM without a real Firebase project** | `google-services.json` is a test file (gitignored); no server push reaches real devices | Sprint 8F (needs user setup) |
+| 4 | **No automated E2E** | `scripts/e2e-test.ps1` exists but is manual; no CI. 223 unit tests cannot catch navigation or process-death regressions | Sprint 10 |
+| 5 | **DEEP-MEDIUM-02/03/06/07 still open** | Home and Orders do not observe socket events; order filtering is client-side and breaks under pagination; duplicate order-confirmation UI (dialog + screen); `https://forerun.app/orders/{id}` has no manifest intent-filter | Sprint 8E / 8F / 9 |
+| 6 | **D23 `WebSocketEvent.AccountVerified` unhandled** | The socket subscribes to `account:verified` with no consumer — a live feature gap, not a stub | Sprint 8E |
+| 7 | **B3/B5/B6 Gradle debt** | Unused `libs.material` (~1 MB APK weight), `isReturnDefaultValues` masks missing mocks, `security-crypto` pinned to `1.1.0-alpha06` | Sprint 8D |
+| 8 | **Production keystore not provisioned** | `keystore.properties` and the real key must come from the owner before `assembleRelease` is distributable | Sprint 8F |
 
 ---
 
@@ -41,13 +198,21 @@
 | JDK 21 | `C:\Program Files\Eclipse Adoptium\jdk-21.0.12.101-hotspot` |
 | Android SDK | `C:\Users\Dell User\AppData\Local\Android\Sdk` |
 | Android Studio | `C:\Program Files\Android\Android Studio` |
-| Terminal | MINGW64 (Git Bash) inside Antigravity |
+| AVD | `ForerunTest` (Pixel 6 profile, API 34) |
+| Terminal | MINGW64 (Git Bash) |
 | IDE | Antigravity (primary) + Android Studio (preview) |
 | minSdk / targetSdk | 26 / 35 |
 | Kotlin | 2.0.21 |
 | AGP | 8.7.3 |
+| KSP | 2.0.21-1.0.28 |
 | Gradle | 8.11.1 |
+| Hilt | 2.53.1 |
 | Compose BOM | 2024.12.01 |
+| Retrofit / OkHttp / Moshi | 2.11.0 / 4.12.0 / 1.15.1 |
+| Socket.IO client | 2.1.1 |
+| MapLibre | 11.5.2 |
+| Firebase BOM | 33.7.0 |
+| Test stack | JUnit 4.13.2 · Coroutines Test 1.9.0 · Turbine 1.1.0 · MockWebServer 4.12.0 |
 
 ### `~/.bashrc` Setup
 
@@ -64,85 +229,11 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-t
 
 ```bash
 cd apps/android
-./gradlew clean assembleDebug     # build APK
+./gradlew clean assembleDebug     # build debug APKs
+./gradlew assembleRelease         # release APKs (needs keystore.properties)
 ./gradlew lint                    # lint
-./gradlew test                    # unit tests
-
-ls -la app/build/outputs/apk/debug/app-debug.apk   # check APK
-java -version                     # verify JDK 21
+./gradlew test                    # unit tests (223)
 ```
-
----
-
-## Sprint 1.1 — Skeleton ✅
-
-**Completed:** First session
-
-**Deliverables:**
-- Full Android project structure
-- Compose set up
-- `./gradlew assembleDebug` succeeds
-- APK: 12.27 MB
-- Branch: `feature/android-sprint-1-1-skeleton`
-- Commits: `3b91d1e` (initial), `7b076b5` (design system)
-
-**Issues encountered:**
-- `buildToolsVersion = "36.0.0"` with `compileSdk = 35` — non-standard
-- **Fix:** Removed the line; AGP auto-selected `build-tools;34.0.0`
-
----
-
-## Sprint 1.2 — Design System ✅
-
-**Completed:** Second session
-
-**Deliverables:**
-- Cairo font (4 weights: Regular, Medium, SemiBold, Bold)
-- Each ~41 KB in `res/font/`
-- `Color.kt` — 15 colors
-- `Type.kt` — 11 text styles
-- `Dimens.kt` — spacing + radii
-- `Theme.kt` — `ForerunTheme`
-- `MainActivity.kt` — `DesignSystemPreview` composable
-- APK: 12.36 MB (+90 KB for fonts)
-
-**Files created:**
-```
-app/src/main/java/com/forerun/customer/ui/theme/
-├── Color.kt
-├── Type.kt
-├── Dimens.kt
-└── Theme.kt
-```
-
----
-
-## Fix — statusBarColor Deprecation ✅
-
-**Completed:** Third session
-
-**Change:**
-- Migrated from `Window.statusBarColor` (deprecated in Android 15) to `enableEdgeToEdge()`
-- Removed `WindowCompat` usage from `Theme.kt`
-- Added `enableEdgeToEdge()` in `MainActivity.onCreate()`
-
-**Result:**
-- Warning disappeared from build
-- APK unchanged: 12.36 MB
-- Commit: `198f997`
-
----
-
-## Problems Encountered & Solutions
-
-| Problem | Cause | Solution |
-|---------|-------|----------|
-| `java: command not found` | JAVA_HOME not set in bash | Configured `~/.bashrc` |
-| JDK 25 from Android Studio JBR | Incompatible with AGP 8.7 | Installed Temurin JDK 21 |
-| `buildToolsVersion = "36.0.0"` mismatch | Manual pinning conflict | Removed the line |
-| `gradle wrapper` missing | Not in repo | Downloaded from GitHub |
-| Repo name `fawrun` vs `forerun` | Naming inconsistency | `gh repo rename` |
-| `statusBarColor is deprecated` | Android 15 API change | `enableEdgeToEdge()` |
 
 ---
 
@@ -167,446 +258,43 @@ app/src/main/java/com/forerun/customer/ui/theme/
 
 ### Typography
 
-**Font:** Cairo (400/500/600/700)
+**Font:** Cairo (400/500/600/700) — 11 styles from 11sp (`labelSmall`) to 32sp (`displayLarge`)
 
-**Scale:** 11 styles from 11sp (labelSmall) to 32sp (displayLarge)
+### Spacing & Shape
 
-### Spacing
-
-4dp grid: 2, 4, 8, 10, 12, 16, 20, 24, 32, 48
-
-### Corner Radii
-
-8 / 12 / 16 / 20 / pill (999)
+4dp grid: 2, 4, 8, 10, 12, 16, 20, 24, 32, 48 · Radii: 8 / 12 / 16 / 20 / pill (999)
 
 ---
 
-## Backend Status (unchanged)
+## Backend Status
 
 - **Production:** Railway (`forerun-api-production.up.railway.app`)
 - **Database:** PostgreSQL
-- **WebSocket:** Socket.IO on `/orders` namespace
-- **Auth:** JWT RS256, access 2h + refresh (rotated)
+- **WebSocket:** Socket.IO on the `/orders` namespace
+- **Auth:** JWT RS256, 2h access + rotated refresh
 - **Endpoints:** 55+ under `/api/v1/`
 - **State Machine:** 10 order states, enforced server-side
 - **Limitation:** Backend is grocery-only. No `serviceType` field.
+- **Fee policy:** the server is the source of truth — the client never computes fees.
 
-**WebSocket events for customer (8):**
-- `order:status_changed`
-- `order:runner_assigned`
-- `order:fee_updated`
-- `order:store_purchased`
-- `order:out_for_delivery`
-- `order:delivered`
-- `order:cancelled`
-- `account:verified`
+**WebSocket events for the customer (8):** `order:status_changed`, `order:runner_assigned`, `order:fee_updated`, `order:store_purchased`, `order:out_for_delivery`, `order:delivered`, `order:cancelled`, `account:verified`
 
 ---
 
-## Screens Designed (Google Stitch)
-
-**18 screens ready as visual reference:**
-
-1. Splash
-2. Onboarding — Identity
-3. Onboarding — Trust
-4. Onboarding — Services
-5. Home (default)
-6. Home (with active order)
-7. Sign Up
-8. Pending Verification
-9. Login
-10. Suspended
-11. Create Order — Quick Mode
-12. Create Order — Structured Mode
-13. Create Order — Location Modal
-14. Create Order — Submit Loading
-15. Order Detail — Active
-16. Order Detail — Delivered
-17. Order Detail — Cancelled
-18. Orders List (List + Empty + Skeleton)
-
-**Note:** Stitch designs are a visual reference, not a spec. Colors
-must be corrected to match `Color.kt` during Compose implementation.
-
----
-
-## Decisions Log
-
-| Date | Decision | Reason |
-|------|----------|--------|
-| Session 1 | Rename FAWRUN → FORERUN | User preference |
-| Session 1 | Package: `com.forerun.customer` | Final |
-| Session 2 | Maps: MapLibre + OSM | Free, no credit card |
-| Session 2 | WebSocket: Socket.IO client | Backend uses Socket.IO |
-| Session 3 | Firebase for FCM | Industry standard, free |
-| Session 3 | No Room / no offline | Always-online in v1 |
-| Session 3 | Services: grocery only | Packages/rides via WhatsApp |
-| Session 4 | Direct APK distribution | No Play Store |
-| Session 4 | Design System: mint green + Cairo | Matches brand |
-
----
-
-## Sprint 1.3 — Hilt + Networking ✅
-
-**Completed:** Session 5
-**Branch:** `feature/android-sprint-1-3-networking`
-
-**Deliverables:**
-- Hilt DI configured with KSP (`hilt-android`, `hilt-compiler` 2.53.1)
-- Retrofit 2.11.0 + OkHttp 4.12.0 + Moshi 1.15.1 (codegen via KSP)
-- `ApiResponse<T>` sealed interface (`Success`, `Error`) with custom `ApiCallAdapter` & `ApiCallAdapterFactory`
-- Interceptors:
-  1. `HeaderInterceptor` (`Accept-Language: ar-SY`, `X-Client: android`)
-  2. `AuthInterceptor` (`Authorization: Bearer <token>`)
-  3. `RefreshInterceptor` (single refresh attempt on 401, `X-Retry-After-Refresh: true`)
-  4. `HttpLoggingInterceptor` (BODY on debug, NONE on release)
-- Secure token storage via `EncryptedSharedPreferences` (`TokenStorage` + `EncryptedTokenStorage`)
-- `TokenRefreshManager` with `Mutex` for concurrent request synchronization
-- `UiError` sealed hierarchy + `ErrorMapper` with localized Arabic error mapping
-- Hilt Modules: `NetworkModule`, `StorageModule`, `ApiModule`
-- API Interfaces: `AuthApi` (`login`, `refresh`, `logout`) + `CustomerApi` (`me`)
-- DTOs strictly aligned with `shared-types` and MVP Tech Spec
-- Unit test suite for `ApiCallAdapter` (via `MockWebServer`) and `ErrorMapper` (6 passing tests)
-- Temporary "Test Login" button integrated in `MainActivity.kt` with secure masked token logging
-- Production Base URL verified & fixed: `https://fawrun-api-production.up.railway.app/api/v1/`
-
----
-
-## Handoff from Sprint 1.3
-
-### 1. `handleSessionExpired()` Mechanism
-- `TokenRefreshManager` exposes `val sessionExpiredEvent: SharedFlow<Unit>`.
-- When a 401 response occurs and silent refresh fails, `handleSessionExpired()` clears tokens via `TokenStorage.clearAll()` and emits to `sessionExpiredEvent`.
-- **Sprint 1.4 action:** Collect `sessionExpiredEvent` in `MainActivity` or root `ForerunNavGraph` and navigate to the `login` route, clearing the back stack.
-
-### 2. Sprint 1.3 Remaining TODOs (for Sprint 1.4+)
-- [ ] Add unit test for `HeaderInterceptor` (`Accept-Language: ar-SY`, `X-Client: android`).
-- [ ] Add unit test for `TokenRefreshManager` covering concurrent `Mutex` access and token expiry calculations.
-- [ ] Consider separating `ApiErrorParser` if `ApiCall.kt` exceeds 150 lines.
-- [ ] Review 13 unstaged docs/config files in root repo before first production APK.
-
-### 3. Production Base URL
-- Verified and fixed in spec and code: `https://fawrun-api-production.up.railway.app/api/v1/`
-
----
-
-## Sprint 1.4: Auth Flow ✅ (مكتمل ومُعتمد 100%)
-
-**Status:** مكتمل بنسبة 100% — معتمد نهائياً بعد إتمام اختبارات E2E على المحاكي
-**Completed:** Session 6
-**Branch:** `feature/android-sprint-1-4-auth-flow`
-
-**Deliverables:**
-- **Navigation Infrastructure:** `ForerunNavGraph.kt` with NavHost and 7 routes (`splash`, `onboarding`, `login`, `register`, `pending_verification`, `suspended`, `home`).
-- **DataStore Storage:** `OnboardingPrefs` interface + `DefaultOnboardingPrefs` using AndroidX DataStore Preferences for the `onboarding_seen` flag (clean separation from `EncryptedSharedPreferences`).
-- **Auth Domain Layer:**
-  - Models: `User`, `UserStatus` (`PENDING_VERIFICATION`, `VERIFIED`, `REJECTED`, `SUSPENDED`), `SessionState` (`NeedsOnboarding`, `Unauthenticated`, `Authenticated`).
-  - Repository: `AuthRepository` interface.
-  - Use Cases: `LoginUseCase`, `RegisterUseCase`, `LogoutUseCase`, `CheckSessionUseCase`.
-- **Auth Data Layer:**
-  - `AuthRepositoryImpl` implementing `AuthRepository`.
-  - DTOs: `AddressDto`, `RegisterRequest`, `RegisterResponse`, `LoginResponse` (with optional `expiresIn`).
-  - Endpoints: added `POST auth/register` to `AuthApi`.
-  - Hilt DI: `RepositoryModule` with `@Binds` for `AuthRepository`.
-- **Screens & ViewModels (100% Compose + Cairo font + Mint Green `#00C1A7`):**
-  1. **Splash:** `SplashScreen` + `SplashViewModel` with scale/fade animations, branding, and automatic session-based routing.
-  2. **Onboarding:** `OnboardingScreen` + `OnboardingViewModel` with 3-screen `HorizontalPager`, animated dot indicators, "تخطي" / "التالي" / "ابدأ الآن" buttons, saving state to DataStore.
-  3. **Login:** `LoginScreen` + `LoginViewModel` with Syrian phone validation (`^09\d{8}$`), password input with visibility toggle, localized Arabic errors from `strings.xml`.
-  4. **Register:** `RegisterScreen` + `RegisterViewModel` with full client-side validation, Al-Qanjara address stub (`lat = 35.5234`, `lng = 35.9876`), and routing to pending verification.
-  5. **Pending Verification:** `PendingVerificationScreen` + `PendingVerificationViewModel` with status warning badge, WhatsApp direct button (`wa.me`), and logout.
-  6. **Suspended:** `SuspendedScreen` + `SuspendedViewModel` with danger badge, support contact button, and logout.
-  7. **Home (Stub):** `HomeScreen` + `HomeViewModel` displaying personalized greeting, verified badge, Sprint 2 coming soon notice, and logout.
-- **Session Expiration Event Handling:**
-  - `MainActivity` injects `@Singleton TokenRefreshManager` and provides it to `ForerunNavGraph`.
-  - When silent refresh fails (`handleSessionExpired()`), `sessionExpiredEvent` emits and automatically resets navigation backstack directly to `Routes.LOGIN`.
-- **Unit Testing Suite:**
-  - Tested with `kotlinx-coroutines-test`, `Turbine`, and `FakeAuthRepository` / `FakeTokenStorage`.
-  - `AuthRepositoryImplTest`: repository login token storage and session state determination.
-  - `LoginViewModelTest`: phone formatting, validation errors, successful auth, network/API failure handling.
-  - `SplashViewModelTest`: complete routing coverage for all session and user status variants.
-  - `RegisterViewModelTest`: form validation, conflict/failure handling, and successful registration.
-- **Quality Gates:**
-  - `./gradlew test`: 100% passed (both debug and release).
-  - `./gradlew lint`: 0 errors.
-  - `./gradlew clean assembleDebug`: successful clean build.
-  - APK Size: **14.93 MB** (well below the 16.0 MB maximum budget).
-
-### Known Issues & Technical Debt
-
-#### BUG-ANDROID-001: ADMIN_WHATSAPP Placeholder
-- **File:** `PendingVerificationScreen.kt:118`
-- **Value:** `963951111111` (placeholder)
-- **Impact:** زر "فتح WhatsApp" في PendingVerification يوجّه لرقم غير حقيقي.
-- **Fix:** استبداله بالرقم الإنتاجي قبل أول APK يُوزَّع.
-- **Blocker:** يجب الحصول على الرقم الحقيقي من الإدارة.
-
-#### Known Gap — S5b: Active Session Expiration Ejection (مؤجل إلى Sprint 2)
-- **الوصف:** سيناريو طرد المستخدم النشط لشاشة تسجيل الدخول (`sessionExpiredEvent` -> `Routes.LOGIN`) عند استلام 401 وفشل الـ Silent Refresh تلقائياً أثناء استخدام التطبيق.
-- **الوضع الحالي:** تم التحقق منه معمارياً وتغطيته بالكامل عبر اختبارات الـ Unit Tests في `ForerunNavGraph` و `AuthRepositoryImplTest`.
-- **سبب التأجيل:** يتطلب محاكاة حية لاستدعاءات محمية حقيقية تتلقى 401 بعد انتهاء الصلاحية. تم تأجيل الاختبار اليدوي الحي إلى **Sprint 2** تزامناً مع استدعاء نقاط النهاية الفعلية للطلبات والعميل (`GET /api/v1/customer/me` و `POST /api/v1/orders`).
-
-### Test Fixtures
-
-#### Test Fixture: Production Test Account
-- **whatsapp:** `0999999999`
-- **userId:** `cmuk9n8e1000624il3fg7soqp`
-- **status:** `PENDING_VERIFICATION`
-- **purpose:** Contract verification (Sprint 1.4 live curl test)
-- **action:** Do not delete — may be useful for future tests and fixtures.
-
-### Session Prep — 2026-09-28
-
-- **Task 1 — cmdline-tools & AVD:**
-  - Installed Android `cmdline-tools:latest` (12.0) and accepted SDK licenses.
-  - Installed `platforms;android-34` and `system-images;android-34;google_apis;x86_64`.
-  - Created AVD: `ForerunTest` (Pixel 6 profile, API 34).
-  - AVD readiness: **Yes (`ForerunTest` verified in `emulator -list-avds`)**.
-- **Task 2 — Code Review & Robustness Fixes (`4d63c7b`):**
-  - Resolved session expired navigation re-entry loop in `ForerunNavGraph.kt`.
-  - Added 4-second timeout and exception safety in `SplashViewModel.kt`.
-  - Prevented double-tap duplicate submissions in `LoginViewModel.kt` and `RegisterViewModel.kt`.
-  - Added `FLAG_ACTIVITY_NEW_TASK` to WhatsApp Intent in `PendingVerificationScreen.kt`.
-  - Verified 23/23 unit tests pass.
-- **Task 3 — Automated E2E Test Script (`055106c`):**
-  - Created automated PowerShell E2E test script: `apps/android/scripts/e2e-test.ps1`.
-- **Task 4 — Repository Alignment Cleanup (`a14d871`):**
-  - Cleaned up and committed 14 documentation and config references (`fawrun-api` -> `forerun-api`).
-- **New TODOs (Architectural Hardening):**
-  - `TokenStorage`: Combine token and user persistence into an atomic DataStore transaction (`saveUserSession`).
-  - `TokenRefreshManager`: Add `AtomicBoolean` guard against race conditions in concurrent silent refresh requests.
-- **E2E Testing Results (Executed on ForerunTest / Android 34):**
-  - **S1 (Onboarding):** ✅ نجح (التنقل بين الشرائح الثلاث وتخطيها/إكمالها).
-  - **S2 (Register):** ✅ نجح (إنشاء حساب جديد والتوجيه التلقائي لشاشة المراجعة).
-  - **S3 (WhatsApp Intent):** ✅ نجح (فتح الرابط الخارجي للدعم دون أي تعليق).
-  - **S4 (Logout / Login):** ✅ نجح (تسجيل الخروج والعودة لتسجيل الدخول بنجاح مع استعادة حالة الحساب).
-  - **S5 (Session Persistence):** ✅ نجح (إعادة فتح التطبيق تحتفظ بالتوكنات وتوجّه مباشرة لشاشة قيد المراجعة عبر Splash).
-  - **تحليل Logcat:** 0 انهيارات (0 Fatal, 0 AndroidRuntime exceptions, 0 ANR).
-  - **حالة الاعتماد:** **معتمد 100% — جاهز للانطلاق إلى Sprint 2.**
-
----
-
-## Sprint 2: Home, Address & Orders ✅ (مكتملة — غير مدموجة في master)
-
-**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
-**Completed:** Session 7 (2026-09-28)
-**Branch:** `feature/android-sprint-2-home-order`
-
-### Deliverables Breakdown
-
-1. **Commit 1 — Home Screen & Bottom Navigation (`5cac4a2`, `7cb0285`):**
-   - Bottom navigation bar with 3 tabs: الرئيسية (Home), طلباتي (Orders), حسابي (Account).
-   - Modern Google Stitch dashboard layout with greeting, verified account status badge, and stats summary card.
-   - Active order card banner (showing active order status, runner ETA, quick track button) and quick actions (طلب جديد, إضافة عنوان).
-   - `HomeViewModel` + `FakeHomeRepository` with complete intent processing (`HomeIntent.Load`, `HomeIntent.Refresh`).
-
-2. **Logo Optimization & Brand Refresh (`d14b6ce`):**
-   - Converted 3.4 MB oversized raster logo to modern WebP format (~36 KB), maintaining ultra-crisp resolution with 99% size reduction.
-
-3. **Sprint 1.4 Deferred Verifications (S5a & S5b) (`e172a7e`, `6a1f80c`):**
-   - **S5a (Pull to Refresh):** Added Material 3 `PullToRefreshBox` to `HomeScreen` with non-blocking refresh indicator and `HomeIntent.Refresh`.
-   - **S5b (Active Session Expiration Ejection):** Added debug session expiry trigger on `AccountScreen` (calling `/auth/logout` and clearing access token while retaining refresh token). Verified live on emulator that triggering refresh on expired session rejects with 401, fails silent refresh, emits `sessionExpiredEvent`, and immediately resets navigation backstack to `Routes.LOGIN`.
-
-4. **Commit 2 — Account Screen (`6a1f80c`):**
-   - Customer profile details, verified badge, quick navigation to Address Setup and Orders, and secure logout.
-
-5. **Commit 3 — Address Setup Screen (MapLibre Native Android + OSM) (`dedb86d`, `99dcee9`, `776e9c3`):**
-   - Integrated MapLibre Native Android SDK (`org.maplibre.gl:android-sdk:11.5.1`) with OpenStreetMap raster tile style JSON (`styles/osm_raster.json`).
-   - Center pin with coordinate tracking on camera idle (`onCameraIdle`).
-   - Reverse geocoding via OpenStreetMap Nominatim API (`https://nominatim.openstreetmap.org/reverse?lat=&lon=&format=json`) with custom User-Agent `Forerun/1.0 (android)` and 500ms debounce.
-   - Runtime GPS permissions (`ACCESS_FINE_LOCATION`, `ACCESS_COARSE_LOCATION`) with animated "موقعي الحالي" FAB.
-   - Full API integration: `GET /customer/me/address` (detects create vs. edit mode) and `PUT /customer/me/address` with validation.
-   - **ABI Splits Configured:** Excluded obsolete `x86`, generating targeted APKs for `arm64-v8a`, `armeabi-v7a`, and `x86_64`.
-
-6. **Commit 4 — Create Order Screen (`b8e01de`):**
-   - Google Stitch dynamic item builder with Arabic UI.
-   - Dynamic items list: item description, quantity counter, "أي متجر" toggle or custom store name input.
-   - Preferred Runner picker fetching available captains (`GET /customer/runners`) with "انتظار الكابتن المفضل" checkbox toggle.
-   - General notes field for runner instructions.
-   - Saved address preview card with "تغيير" navigation button.
-   - Strict client-side validation (at least 1 non-empty item, store specified if not any-store, address selected).
-   - Backend integration: `POST /customer/orders`.
-   - **Server Source of Truth:** Zero local fee calculation; server calculates and returns official fees.
-   - Live verified on production Railway backend: created order **`FW-000015`** with 3 items and 80 SYP fee.
-
-7. **Commit 5 — Order Confirmation Screen (`3786974`):**
-   - Pure argument-driven screen (no ViewModel) receiving `orderNumber` and `estimatedFee` from navigation arguments.
-   - Success badge, order number, estimated fee, and disclaimer note: *"الرسم النهائي يُحدد بعد المراجعة"*.
-   - Action buttons: "تتبع الطلب" (navigates to Orders tab) and "طلب جديد" (re-opens Create Order with cleared stack).
-
-8. **Commit 6 — Orders List Screen (`de1ba2b`):**
-   - Full integration with `GET /customer/orders?page=&limit=&status=`.
-   - Material 3 `PullToRefreshBox` for seamless manual refresh.
-   - Pagination support with infinite scrolling ("جاري تحميل المزيد…").
-   - Filter chips: **الكل** (ALL), **النشطة** (ACTIVE), **المكتملة** (DELIVERED), **الملغاة** (CANCELLED).
-   - Order cards displaying: `orderNumber`, status badge with themed color and Arabic label, `totalFee` formatted with Syrian Pound ("80 ل.س"), item count, and localized Arabic date/time (`dd/MM/yyyy - hh:mm a`).
-   - Arabic empty state illustration and CTA ("ابدأ طلباً جديداً").
-   - MVI/MVVM: `OrdersListViewModel` + `OrdersListUiState` + `OrdersListIntent`.
-   - **Live Verification:** Verified live order **`FW-000015`** displayed correctly on emulator under "النشطة" and "الكل" with status "قيد المراجعة".
-
----
-
-## Sprint 3: Order Detail, Rating & Socket.IO ✅ (مكتملة — غير مدموجة في master)
-
-**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
-**Branch:** `feature/android-sprint-3-order-detail`
-**Commit:** `9d02b4f`
-
-### Deliverables Breakdown
-1. **Order Detail Screen & Tracking (`OrderDetailScreen`):**
-   - Live order tracking with dynamic Arabic status badges and order progression timeline.
-   - Store purchase items list (`isPurchased` badges and store grouping).
-   - Dynamic runner info card with direct WhatsApp and phone call intent launchers.
-   - Price breakdown (base fee, peripheral fee, extra stores, total).
-2. **Real-time Socket.IO Integration:**
-   - Dedicated `/orders` namespace connection with JWT authentication.
-   - Event listeners for `order:status_changed`, `order:runner_assigned`, `order:fee_updated`, `order:store_purchased`, `order:delivered`, `order:cancelled`.
-   - Foreground lifecycle integration and automatic reconnect with exponential backoff.
-3. **Rating BottomSheet & Screen (`RatingScreen`):**
-   - 5-star interactive rating component with optional customer feedback note.
-   - Integrated with backend `POST /customer/orders/{id}/rating`.
-
----
-
-## Sprint 4: Account, Support & WebSocket Hardening ✅ (مكتملة — غير مدموجة في master)
-
-**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
-**Branch:** `feature/android-sprint-4-account-support`
-**Commits:** `a364571`, `1aeb02c`
-
-### Deliverables Breakdown
-1. **Account Screen Management (`AccountScreen`):**
-   - Full profile display and update via `PATCH /customer/me` (selective update sending only modified fields).
-   - Saved address shortcut, order history shortcut, and secure token revocation on logout.
-   - Debug session expiration trigger guarded by `BuildConfig.DEBUG`.
-2. **Support Screen (`SupportScreen`):**
-   - Support info retrieval via `GET /customer/support/info`.
-   - Contact channels: direct WhatsApp launch with prefilled message, phone dialer intent, and working hours display.
-3. **WebSocket & Session Hardening:**
-   - Improved socket event handling, lifecycle binding, and token rotation auto-reconnect.
-
----
-
-## Sprint 5: FCM Push Notifications & MapLibre Polish ✅ (مكتملة — غير مدموجة في master)
-
-**Status:** مكتملة بنسبة 100% (غير مدموجة في master)
-**Branch:** `feature/android-sprint-5-fcm-maplibre`
-**Commit:** `abf02d8`
-
-### Deliverables Breakdown
-1. **Firebase Cloud Messaging (FCM) Integration:**
-   - Firebase BOM `33.7.0` + `firebase-messaging` integrated cleanly with `google-services` plugin 4.4.2.
-   - `ForerunFirebaseMessagingService` handling background push notifications and token refreshes.
-   - High-priority Notification Channel: "FORERUN — تحديثات الطلبات" (`IMPORTANCE_HIGH`) with custom sound and vibration.
-   - Runtime `POST_NOTIFICATIONS` permission request flow for Android 13+ (API 33+).
-   - Deep linking navigation: extracts `orderId` from notification payload and opens `OrderDetailScreen` directly.
-2. **Device Token Management (`DeviceTokenRepository`):**
-   - Registration: `POST /customer/me/device-token` on login and token refresh.
-   - Unregistration: `DELETE /customer/me/device-token` on user logout.
-3. **MapLibre & Geocoding Polish:**
-   - Reverse geocoding in-memory LRU cache (`AddressReverseGeocodeCache`) with 4-decimal coordinate rounding to eliminate redundant network hits.
-   - MapLibre lifecycle handling enhancements in `AddressSetupScreen`.
-
----
-
----
-
-## Sprint 6: UI Redesign (Google Stitch) & RTL Enforcement ✅ (مكتملة — غير مدموجة في master)
-
-**Status:** مكتملة بنسبة 100% (غير مدموجة في master)  
-**Branch:** `feature/android-sprint-6-ui-redesign`  
-**Commits:** `415174e`, `9be1637`  
-
-### Deliverables Breakdown
-1. **Google Stitch UI Alignment:**
-   - إعادة تصميم وتحديث كافة الشاشات (17 شاشة وتدفق) لتتطابق بنسبة 100% مع تصاميم Google Stitch المعتمدة.
-   - تطبيق نظام الألوان والسمات الموحد (ForerunGreen `#15803D`، Dark `#191A23`، Soft Backgrounds، Typography، Card Styling).
-2. **Global RTL Layout Direction:**
-   - تطبيق اتجاه الكتابة والعرض العربي من اليمين إلى اليسار (RTL) شاملاً عبر التطبيق بالكامل باستخدام `CompositionLocalProvider(LocalLayoutDirection provides LayoutDirection.Rtl)`.
-   - تدقيق كافة المحاذات والأيقونات والمؤشرات لضمان تجربة مستخدم عربية أصلية وسلسة.
-
----
-
-## Sprint 7: Production Readiness & Release Pipeline ✅ (مكتملة — جاهزة للدمج)
-
-**Status:** مكتملة بنسبة 100% (جاهزة للإصدار الأول)  
-**Branch:** `feature/android-sprint-7-production`  
-**Commit:** `chore(android): prepare production release pipeline`  
-
-### Deliverables Breakdown
-1. **Release Signing Pipeline:**
-   - إعداد ملف `keystore.properties.example` كنموذج إعداد التوقيع للإنتاج.
-   - تهيئة `app/build.gradle.kts` لقراءة بيانات التوقيع بأمان من `keystore.properties` دون إيقاف بناء الـ Debug.
-   - عزل وحظر ملفات الـ Keystore وبيانات الاعتماد نهائياً من الـ Git عبر `.gitignore` (`*.jks`, `*.keystore`, `keystore.properties`).
-2. **Hardening & Optimization (R8 / ProGuard):**
-   - تفعيل `isMinifyEnabled = true` و `isShrinkResources = true` لنسخة الإنتاج.
-   - إعداد ملف `proguard-rules.pro` الشامل لحماية وضمان عمل Moshi (مع Codegen الكود المولد)، Retrofit 2، Socket.IO / Engine.IO، OkHttp 3، و MapLibre دون تعارض مع R8.
-3. **Pre-Production Audit & Cleanup:**
-   - حماية أدوات التطوير (Debug Tools) في `AccountScreen.kt` بشرط `BuildConfig.DEBUG` لمنع ظهورها للمستخدم النهائي.
-   - التأكد من خلو واجهات التطبيق وموارده من نصوص TODO أو FIXME أو نصوص وهمية.
-   - إعداد دليل الإصدار والتشغيل `docs/android/RELEASE-CHECKLIST.md`.
-
----
-
-### Quality & Verification Summary
-
-| Gate | Target | Result | Status |
-|------|--------|--------|--------|
-| **Unit Tests** | 100% passing | 152 / 152 passed | ✅ PASS |
-| **Lint** | 0 errors | 0 errors (`lint` clean) | ✅ PASS |
-| **Build** | Debug APKs | Clean build (`assembleDebug`) | ✅ PASS |
-| **Server Truth** | Zero client fee logic | 100% server calculated fees | ✅ PASS |
-| **APK Split Sizes** | < 30 MB per ABI | 26.16 MB (armeabi-v7a) / 29.12 MB (arm64-v8a) / 29.41 MB (x86_64) | ✅ PASS |
-
----
-
-## Active Branches in Repository
-
-| الفرع (Branch) | المرحلة / السبرنت | الحالة |
-|----------------|-------------------|--------|
-| `feature/android-sprint-1-1-skeleton` | Sprint 1.1 — الهيكل الأساسي | مكتمل (محلي + remote) |
-| `feature/android-sprint-1-3-networking` | Sprint 1.3 — شبكة الاتصال والـ DTOs | مكتمل |
-| `feature/android-sprint-1-4-auth-flow` | Sprint 1.4 — تسجيل الدخول والتسجيل | مكتمل |
-| `feature/android-sprint-2-home-order` | Sprint 2 — الطلبات والعناوين والخريطة | مكتمل |
-| `feature/android-sprint-3-order-detail` | Sprint 3 — تفاصيل الطلب والتقييم والسوكيت | مكتمل |
-| `feature/android-sprint-4-account-support` | Sprint 4 — الحساب والدعم وتجديد الجلسة | مكتمل |
-| `feature/android-sprint-5-fcm-maplibre` | Sprint 5 — إشعارات FCM وتحسين الخرائط | مكتمل |
-| `feature/android-sprint-6-ui-redesign` | Sprint 6 — إعادة تصميم الواجهات ودعم RTL | مكتمل |
-| `feature/android-sprint-7-production` | Sprint 7 — خط الإنتاج والتوقيع والتجهيز | **الفرع الحالي النشط** ✅ |
-
----
-
-## Known Gaps
-
-1. **FCM (Firebase Cloud Messaging):** ملف `google-services.json` الحالي هو ملف تجريبي؛ يتطلب ربط مشروع Firebase فعلي لاستقبال التنبيهات من السيرفر على الأجهزة الحقيقية.
-2. **دمج الفروع في master:** جميع فروع الأندرويد تراكمية ومنظمة محلياً، وبانتظار أمر الدمج النهائي في `master` لإنشاء أول Release رسمي.
-3. **وضع مفتاح Keystore الحقيقي:** تم تجهيز خط البناء بالكامل، وينتظر وضع ملف `keystore.properties` والمفتاح الحقيقي من قبل المسؤول لبناء `assembleRelease`.
-
----
-
-## Next Steps
-
-**دمج الفروع في master + Firebase project + أول إصدار (Production Release 1.0.0)**
-
-1. تنفيذ دمج الفروع التراكمية في فرع `master`.
-2. وضع ملف `google-services.json` الحقيقي لمشروع Firebase.
-3. إنشاء مفتاح الـ Keystore الخاص بالإنتاج وتعبئة `keystore.properties`.
-4. تشغيل `./gradlew assembleRelease` أو `bundleRelease` واستخراج حزم الإنتاج الموقعة للمستخدمين.
-
----
-
-## Contact & Handoff
-
-**Repository:** `github.com/ghaithmoa84-cyber/forerun`  
-**Active branch:** `feature/android-sprint-7-production`  
-**Quality status:** 152/152 tests passed, 0 lint errors, build clean  
-**Reference documents:**
-- `docs/android/RELEASE-CHECKLIST.md` — دليل وإرشادات إصدار النسخة وتوقيعها
-- `AGENTS.md` — قواعد ومعايير التطوير
-- `MASTER-SPEC.md` — مواصفات تطبيق أندرويد الكاملة
-- `CURRENT_STATE.md` — ملخص حالة تطبيق أندرويد
+## Reference Documents
+
+| Document | Contents |
+|----------|----------|
+| [`ARCHITECTURE-REVIEW.md`](./ARCHITECTURE-REVIEW.md) | 37 violations catalogued (A1-A25, B1-B9, D1-D24), dependency graph, cycles, §6 = Sprint 8C resolution matrix |
+| [`CODE-REVIEW.md`](./CODE-REVIEW.md) | 26 code/UI issues (CRITICAL-01..05, MEDIUM, SURFACE, DEEP-CRITICAL, DEEP-MEDIUM) + the 81 hardcoded-string table + bottom-nav analysis |
+| [`SPRINT-8A-REPORT.md`](./SPRINT-8A-REPORT.md) | Per-file diff analysis for the 6 critical fixes |
+| [`BRANCH-CLEANUP.md`](./BRANCH-CLEANUP.md) | The 12 deleted branches and the 9 retained, with unmerged-commit counts |
+| [`ROADMAP.md`](./ROADMAP.md) | Sprints 8D-10 |
+| [`CURRENT_STATE.md`](./CURRENT_STATE.md) | Point-in-time snapshot |
+| [`RELEASE-CHECKLIST.md`](./RELEASE-CHECKLIST.md) | Release + signing runbook |
+| [`MASTER-SPEC.md`](./MASTER-SPEC.md) | Full Android specification |
+| `AGENTS.md` (repo root) | Development standards |
 
 ---
 
 **End of PROGRESS.md**
-
