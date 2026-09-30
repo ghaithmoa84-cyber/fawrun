@@ -238,9 +238,10 @@ fun OrderDetailScreen(
                         StatusBanner(order = order)
 
                         // 2. Delivered / Rating Action Card
-                        if (order.status == "DELIVERED") {
+                        if (order.status == "DELIVERED" && (uiState.canRate || order.rating != null)) {
                             DeliveredRatingCard(
                                 order = order,
+                                canRate = uiState.canRate,
                                 onRateClick = { onNavigateToRating(order.id) }
                             )
                         }
@@ -257,8 +258,7 @@ fun OrderDetailScreen(
                             RunnerCard(
                                 runner = order.runner,
                                 onWhatsAppClick = { phone ->
-                                    val cleaned = phone.removePrefix("+").removePrefix("0")
-                                    val url = "https://wa.me/963$cleaned"
+                                    val url = com.forerun.customer.core.config.AppConfig.buildRunnerWhatsAppUrl(phone)
                                     try {
                                         context.startActivity(Intent(Intent.ACTION_VIEW, Uri.parse(url)))
                                     } catch (_: Exception) {}
@@ -409,6 +409,7 @@ private fun StatusBanner(order: CustomerOrderDetail) {
 @Composable
 private fun DeliveredRatingCard(
     order: CustomerOrderDetail,
+    canRate: Boolean,
     onRateClick: () -> Unit
 ) {
     Card(
@@ -454,20 +455,22 @@ private fun DeliveredRatingCard(
                     }
                 }
 
-                Button(
-                    onClick = onRateClick,
-                    colors = ButtonDefaults.buttonColors(containerColor = ForerunGreen),
-                    shape = RoundedCornerShape(Dimens.RadiusMedium)
-                ) {
-                    Text(
-                        text = if (order.rating != null) {
-                            stringResource(R.string.order_detail_edit_rating_btn)
-                        } else {
-                            stringResource(R.string.order_detail_rate_runner_btn)
-                        },
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold
-                    )
+                if (canRate) {
+                    Button(
+                        onClick = onRateClick,
+                        colors = ButtonDefaults.buttonColors(containerColor = ForerunGreen),
+                        shape = RoundedCornerShape(Dimens.RadiusMedium)
+                    ) {
+                        Text(
+                            text = if (order.rating != null) {
+                                stringResource(R.string.order_detail_edit_rating_btn)
+                            } else {
+                                stringResource(R.string.order_detail_rate_runner_btn)
+                            },
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
                 }
             }
         }

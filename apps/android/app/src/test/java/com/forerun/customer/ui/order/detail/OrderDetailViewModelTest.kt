@@ -311,4 +311,64 @@ class OrderDetailViewModelTest {
         advanceUntilIdle()
         assertTrue(viewModel.uiState.value.canContactRunner)
     }
+
+    @Test
+    fun canRate_false_when_order_not_delivered() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals("PENDING_REVIEW", viewModel.uiState.value.order?.status)
+        assertFalse(viewModel.uiState.value.canRate)
+    }
+
+    @Test
+    fun canRate_true_when_delivered_without_deliveredAt() = runTest(testDispatcher) {
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "DELIVERED", deliveredAt = null)
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canRate)
+    }
+
+    @Test
+    fun canRate_false_when_24h_window_expired() = runTest(testDispatcher) {
+        val expired = java.time.Instant.now()
+            .minus(25, java.time.temporal.ChronoUnit.HOURS)
+            .toString()
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "DELIVERED", deliveredAt = expired)
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertEquals("DELIVERED", viewModel.uiState.value.order?.status)
+        assertFalse(viewModel.uiState.value.canRate)
+    }
+
+    @Test
+    fun canRate_true_when_delivered_within_24h_window() = runTest(testDispatcher) {
+        val recent = java.time.Instant.now()
+            .minus(2, java.time.temporal.ChronoUnit.HOURS)
+            .toString()
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "DELIVERED", deliveredAt = recent)
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canRate)
+    }
+
+    @Test
+    fun canRate_true_when_deliveredAt_is_unparseable() = runTest(testDispatcher) {
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "DELIVERED", deliveredAt = "not-a-date")
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canRate)
+    }
 }

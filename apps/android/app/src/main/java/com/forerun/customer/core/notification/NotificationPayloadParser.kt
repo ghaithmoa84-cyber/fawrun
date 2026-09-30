@@ -3,7 +3,6 @@ package com.forerun.customer.core.notification
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
-import com.forerun.customer.ui.navigation.Routes
 
 data class NotificationPayload(
     val orderId: String? = null,
@@ -12,16 +11,6 @@ data class NotificationPayload(
     val type: String? = null,
     val rawData: Map<String, String> = emptyMap()
 ) {
-    val hasDeepLink: Boolean
-        get() = !orderId.isNullOrBlank()
-
-    val deepLinkUrl: String?
-        get() = orderId?.let { "forerun://orders/$it" }
-
-    fun toDestinationRoute(): String? {
-        return orderId?.let { Routes.orderDetail(it) }
-    }
-
     fun toDeepLinkUri(): Uri? {
         return orderId?.let { Uri.parse("forerun://orders/$it") }
     }

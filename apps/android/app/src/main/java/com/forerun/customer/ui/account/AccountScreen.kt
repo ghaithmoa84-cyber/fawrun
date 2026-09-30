@@ -64,7 +64,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import com.forerun.customer.BuildConfig
 import com.forerun.customer.R
 import com.forerun.customer.ui.theme.Dimens
 import com.forerun.customer.ui.theme.ForerunBackground
@@ -116,6 +115,53 @@ fun AccountScreen(
     }
 
     val scrollState = rememberScrollState()
+
+    if (uiState.isLoading && uiState.profile == null) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(ForerunBackground),
+            contentAlignment = Alignment.Center
+        ) {
+            CircularProgressIndicator(color = ForerunGreen)
+        }
+        return
+    }
+
+    val loadError = uiState.errorMessage
+    if (loadError != null && uiState.profile == null) {
+        Box(
+            modifier = modifier
+                .fillMaxSize()
+                .background(ForerunBackground)
+                .padding(Dimens.Space16),
+            contentAlignment = Alignment.Center
+        ) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Icon(
+                    imageVector = Icons.Default.Warning,
+                    contentDescription = null,
+                    tint = ForerunDanger,
+                    modifier = Modifier.size(48.dp)
+                )
+                Spacer(modifier = Modifier.height(Dimens.Space12))
+                Text(
+                    text = loadError,
+                    fontSize = 15.sp,
+                    color = ForerunTextPrimary,
+                    textAlign = TextAlign.Center
+                )
+                Spacer(modifier = Modifier.height(Dimens.Space16))
+                Button(
+                    onClick = { viewModel.loadAccountData() },
+                    colors = ButtonDefaults.buttonColors(containerColor = ForerunGreen)
+                ) {
+                    Text(stringResource(R.string.home_retry))
+                }
+            }
+        }
+        return
+    }
 
     Column(
         modifier = modifier
@@ -695,46 +741,6 @@ fun AccountScreen(
                     text = stringResource(R.string.logout),
                     fontWeight = FontWeight.Bold
                 )
-            }
-        }
-
-        // Section 6: Debug Tools (Under BuildConfig.DEBUG only)
-        if (BuildConfig.DEBUG) {
-            Spacer(modifier = Modifier.height(Dimens.Space16))
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                shape = RoundedCornerShape(Dimens.RadiusSmall),
-                colors = CardDefaults.cardColors(containerColor = Color(0xFFFBE9E7)),
-                border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFFFFCCBC))
-            ) {
-                Column(
-                    modifier = Modifier.padding(Dimens.Space12),
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Text(
-                        text = "أدوات التطوير (Debug Tools)",
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.Bold,
-                        color = Color(0xFFD32F2F)
-                    )
-                    Spacer(modifier = Modifier.height(Dimens.Space8))
-                    Button(
-                        onClick = { viewModel.triggerSessionExpiry() },
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xFFD32F2F))
-                    ) {
-                        Text("🔧 محاكاة انتهاء الجلسة (Debug S5b)", color = Color.White)
-                    }
-
-                    if (uiState.debugStatus != null) {
-                        Spacer(modifier = Modifier.height(Dimens.Space8))
-                        Text(
-                            text = uiState.debugStatus ?: "",
-                            fontSize = 12.sp,
-                            color = ForerunTextPrimary,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
             }
         }
 

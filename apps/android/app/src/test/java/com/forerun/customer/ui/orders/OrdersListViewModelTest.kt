@@ -15,6 +15,7 @@ import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
+import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
@@ -214,5 +215,71 @@ class OrdersListViewModelTest {
         assertNotNull(state.errorMessage)
         assertEquals("Network Timeout", state.errorMessage)
         assertEquals(0, state.allOrders.size)
+    }
+
+    @Test
+    fun initialLoad_failure_withEmptyList_triggersErrorStateNotEmptyState() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        // OrdersErrorState requires both: an error present AND an empty list
+        assertNotNull(state.errorMessage)
+        assertTrue(state.displayedOrders.isEmpty())
+    }
+
+    @Test
+    fun retry_afterFailure_clearsErrorAndPopulatesOrders() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+        assertNotNull(vm.uiState.value.errorMessage)
+        assertTrue(vm.uiState.value.displayedOrders.isEmpty())
+
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_retry",
+                        orderNumber = "FW-000020",
+                        status = "PENDING_REVIEW",
+                        totalFee = 90,
+                        itemCount = 2,
+                        createdAt = "2026-09-29T10:00:00.000Z"
+                    )
+                ),
+                total = 1,
+                page = 1,
+                limit = 20,
+                totalPages = 1
+            )
+        )
+
+        vm.onIntent(OrdersListIntent.LoadInitial)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertNull(state.errorMessage)
+        assertEquals(1, state.displayedOrders.size)
+        assertEquals("FW-000020", state.displayedOrders[0].orderNumber)
+    }
+
+    @Test
+    fun loadFailure_withExistingOrders_keepsListVisible() = runTest(testDispatcher) {
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+        assertTrue(vm.uiState.value.displayedOrders.isNotEmpty())
+
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+        vm.onIntent(OrdersListIntent.Refresh)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        // OrdersErrorState must NOT trigger because the list is not empty
+        assertNotNull(state.errorMessage)
+        assertTrue(state.displayedOrders.isNotEmpty())
     }
 }

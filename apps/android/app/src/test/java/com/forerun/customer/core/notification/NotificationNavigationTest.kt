@@ -1,10 +1,7 @@
 package com.forerun.customer.core.notification
 
-import com.forerun.customer.ui.navigation.Routes
 import org.junit.Assert.assertEquals
-import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
-import org.junit.Assert.assertTrue
 import org.junit.Test
 
 class NotificationNavigationTest {
@@ -19,9 +16,7 @@ class NotificationNavigationTest {
 
         assertEquals("ord_abc123", payload.orderId)
         assertEquals("order:runner_assigned", payload.type)
-        assertTrue(payload.hasDeepLink)
-        assertEquals(Routes.orderDetail("ord_abc123"), payload.toDestinationRoute())
-        assertEquals("forerun://orders/ord_abc123", payload.deepLinkUrl)
+        assertEquals("ord_abc123", payload.rawData["orderId"])
     }
 
     @Test
@@ -34,8 +29,7 @@ class NotificationNavigationTest {
 
         assertEquals("ord_xyz789", payload.orderId)
         assertEquals("order:delivered", payload.type)
-        assertTrue(payload.hasDeepLink)
-        assertEquals("orders/ord_xyz789", payload.toDestinationRoute())
+        assertEquals("ord_xyz789", payload.rawData["order_id"])
     }
 
     @Test
@@ -72,15 +66,20 @@ class NotificationNavigationTest {
     }
 
     @Test
-    fun parse_emptyPayload_hasNoDeepLink() {
+    fun parse_emptyPayload_hasNoOrderId() {
         val payload = NotificationPayloadParser.parse(emptyMap())
 
         assertNull(payload.orderId)
         assertNull(payload.title)
         assertNull(payload.body)
-        assertFalse(payload.hasDeepLink)
-        assertNull(payload.toDestinationRoute())
-        assertNull(payload.deepLinkUrl)
+        assertNull(payload.type)
+    }
+
+    @Test
+    fun parse_blankOrderId_isTreatedAsNull() {
+        val payload = NotificationPayloadParser.parse(mapOf("orderId" to "   "))
+
+        assertNull(payload.orderId)
     }
 
     @Test

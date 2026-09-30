@@ -1,11 +1,7 @@
 package com.forerun.customer.ui.account
 
-import android.util.Log
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.forerun.customer.core.storage.TokenStorage
-import com.forerun.customer.data.remote.api.AuthApi
-import com.forerun.customer.data.remote.dto.auth.LogoutRequest
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.repository.AccountRepository
@@ -29,15 +25,12 @@ data class AccountUiState(
     val isLoggingOut: Boolean = false,
     val errorMessage: String? = null,
     val profileSuccessMessage: String? = null,
-    val passwordSuccessMessage: String? = null,
-    val debugStatus: String? = null
+    val passwordSuccessMessage: String? = null
 )
 
 @HiltViewModel
 class AccountViewModel @Inject constructor(
-    private val accountRepository: AccountRepository,
-    private val tokenStorage: TokenStorage,
-    private val authApi: AuthApi
+    private val accountRepository: AccountRepository
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountUiState())
@@ -176,25 +169,6 @@ class AccountViewModel @Inject constructor(
             accountRepository.logout()
             _uiState.value = _uiState.value.copy(isLoggingOut = false)
             _navigateToLogin.emit(Unit)
-        }
-    }
-
-    fun triggerSessionExpiry() {
-        viewModelScope.launch {
-            try {
-                val refreshToken = tokenStorage.getRefreshToken()
-                Log.d("ForerunTest", "triggerSessionExpiry: found refreshToken in storage")
-                if (!refreshToken.isNullOrBlank()) {
-                    val res = authApi.logout(LogoutRequest(refreshToken))
-                    Log.d("ForerunTest", "authApi.logout executed on server: $res")
-                }
-                tokenStorage.clearAccessTokenOnly()
-                Log.d("ForerunTest", "clearAccessTokenOnly completed. RefreshToken retained for S5b flow.")
-                _uiState.value = _uiState.value.copy(debugStatus = "تم إبطال التوكن بنجاح! انتقل لشاشة Home واسحب للتحديث")
-            } catch (e: Exception) {
-                Log.e("ForerunTest", "Error triggering session expiry: ${e.message}", e)
-                _uiState.value = _uiState.value.copy(debugStatus = "خطأ: ${e.message}")
-            }
         }
     }
 

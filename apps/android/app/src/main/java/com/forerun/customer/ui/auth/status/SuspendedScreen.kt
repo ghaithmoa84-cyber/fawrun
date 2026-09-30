@@ -3,6 +3,7 @@ package com.forerun.customer.ui.auth.status
 import android.content.Intent
 import android.net.Uri
 import androidx.compose.foundation.background
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,6 +13,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -65,10 +67,13 @@ fun SuspendedScreen(
         modifier = modifier
             .fillMaxSize()
             .background(ForerunBackground)
+            .verticalScroll(rememberScrollState())
             .padding(horizontal = Dimens.ScreenMargin, vertical = Dimens.Space24),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        Spacer(modifier = Modifier.height(Dimens.Space16))
+
         Box(
             modifier = Modifier
                 .size(100.dp)

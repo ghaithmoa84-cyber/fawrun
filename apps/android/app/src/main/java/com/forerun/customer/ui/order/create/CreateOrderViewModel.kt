@@ -133,6 +133,22 @@ class CreateOrderViewModel @Inject constructor(
         }
     }
 
+    fun refreshAddress() {
+        viewModelScope.launch {
+            when (val addressResult = getCustomerAddressUseCase()) {
+                is AddressResult.Success -> {
+                    _uiState.update { it.copy(isLoadingAddress = false, deliveryAddress = addressResult.address) }
+                }
+                is AddressResult.NotFound -> {
+                    _uiState.update { it.copy(isLoadingAddress = false, deliveryAddress = null) }
+                }
+                is AddressResult.Error -> {
+                    _uiState.update { it.copy(isLoadingAddress = false, errorMessage = addressResult.message) }
+                }
+            }
+        }
+    }
+
     private fun addItem() {
         _uiState.update { state ->
             state.copy(items = state.items + OrderItem(itemName = "", quantity = "1"))

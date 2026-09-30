@@ -1,16 +1,6 @@
 package com.forerun.customer.ui.account
 
 import app.cash.turbine.test
-import com.forerun.customer.core.network.ApiResponse
-import com.forerun.customer.core.storage.FakeTokenStorage
-import com.forerun.customer.data.remote.api.AuthApi
-import com.forerun.customer.data.remote.dto.auth.LoginRequest
-import com.forerun.customer.data.remote.dto.auth.LoginResponse
-import com.forerun.customer.data.remote.dto.auth.LogoutRequest
-import com.forerun.customer.data.remote.dto.auth.RefreshRequest
-import com.forerun.customer.data.remote.dto.auth.RefreshResponse
-import com.forerun.customer.data.remote.dto.auth.RegisterRequest
-import com.forerun.customer.data.remote.dto.auth.RegisterResponse
 import com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest
@@ -37,20 +27,13 @@ class AccountViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var fakeAccountRepository: FakeAccountRepository
-    private lateinit var fakeTokenStorage: FakeTokenStorage
-    private lateinit var fakeAuthApi: FakeAuthApi
     private lateinit var viewModel: AccountViewModel
 
     @Before
     fun setUp() {
         fakeAccountRepository = FakeAccountRepository()
-        fakeTokenStorage = FakeTokenStorage(token = "valid_access_token")
-        fakeTokenStorage.refresh = "valid_refresh_token"
-        fakeAuthApi = FakeAuthApi()
         viewModel = AccountViewModel(
-            accountRepository = fakeAccountRepository,
-            tokenStorage = fakeTokenStorage,
-            authApi = fakeAuthApi
+            accountRepository = fakeAccountRepository
         )
     }
 
@@ -71,9 +54,7 @@ class AccountViewModelTest {
     fun init_loadsAccountData_failure_setsErrorMessage() {
         fakeAccountRepository.shouldFailGetProfile = true
         val errorVm = AccountViewModel(
-            accountRepository = fakeAccountRepository,
-            tokenStorage = fakeTokenStorage,
-            authApi = fakeAuthApi
+            accountRepository = fakeAccountRepository
         )
 
         val state = errorVm.uiState.value
@@ -245,13 +226,21 @@ class AccountViewModelTest {
     }
 
     @Test
-    fun triggerSessionExpiry_clearsAccessTokenOnly() {
-        viewModel.triggerSessionExpiry()
+    fun loadAccountData_afterFailure_recoversOnRetry() {
+        fakeAccountRepository.shouldFailGetProfile = true
+        val errorVm = AccountViewModel(accountRepository = fakeAccountRepository)
 
-        assertNull(fakeTokenStorage.token)
-        assertEquals("valid_refresh_token", fakeTokenStorage.getRefreshToken())
-        assertTrue(fakeAuthApi.logoutCalled)
-        assertNotNull(viewModel.uiState.value.debugStatus)
+        assertNull(errorVm.uiState.value.profile)
+        assertEquals("فشل الاتصال بالخادم", errorVm.uiState.value.errorMessage)
+
+        fakeAccountRepository.shouldFailGetProfile = false
+        errorVm.loadAccountData()
+
+        val state = errorVm.uiState.value
+        assertFalse(state.isLoading)
+        assertNotNull(state.profile)
+        assertEquals("محمد علي", state.profile?.name)
+        assertNull(state.errorMessage)
     }
 
     private class FakeAccountRepository : AccountRepository {
@@ -318,17 +307,6 @@ class AccountViewModelTest {
         override suspend fun logout(): Result<Unit> {
             logoutCalled = true
             return Result.success(Unit)
-        }
-    }
-
-    private class FakeAuthApi : AuthApi {
-        var logoutCalled = false
-        override suspend fun login(body: LoginRequest): ApiResponse<LoginResponse> = throw NotImplementedError()
-        override suspend fun register(body: RegisterRequest): ApiResponse<RegisterResponse> = throw NotImplementedError()
-        override suspend fun refresh(body: RefreshRequest): ApiResponse<RefreshResponse> = throw NotImplementedError()
-        override suspend fun logout(body: LogoutRequest): ApiResponse<Unit> {
-            logoutCalled = true
-            return ApiResponse.Success(Unit)
         }
     }
 }

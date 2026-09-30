@@ -25,7 +25,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material.icons.filled.Info
 import androidx.compose.material.icons.filled.Person
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.ShoppingCart
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -139,6 +141,12 @@ fun OrdersScreen(
                         ) {
                             CircularProgressIndicator(color = ForerunGreen)
                         }
+                    }
+
+                    uiState.errorMessage != null && uiState.displayedOrders.isEmpty() -> {
+                        OrdersErrorState(
+                            onRetryClick = { viewModel.onIntent(OrdersListIntent.LoadInitial) }
+                        )
                     }
 
                     uiState.displayedOrders.isEmpty() -> {
@@ -467,6 +475,66 @@ private fun OrderCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun OrdersErrorState(onRetryClick: () -> Unit) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .padding(Dimens.ScreenMargin),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .size(80.dp)
+                .clip(CircleShape)
+                .background(Color(0xFFFFEBEE)),
+            contentAlignment = Alignment.Center
+        ) {
+            Icon(
+                imageVector = Icons.Default.Info,
+                contentDescription = null,
+                tint = ForerunDanger,
+                modifier = Modifier.size(44.dp)
+            )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.Space16))
+
+        Text(
+            text = stringResource(R.string.orders_error_loading),
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            color = ForerunTextPrimary,
+            textAlign = TextAlign.Center
+        )
+
+        Spacer(modifier = Modifier.height(Dimens.Space24))
+
+        Button(
+            onClick = onRetryClick,
+            shape = RoundedCornerShape(Dimens.RadiusPill),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = ForerunGreen,
+                contentColor = ForerunTextOnPrimary
+            ),
+            contentPadding = PaddingValues(horizontal = Dimens.Space24, vertical = Dimens.Space12)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(18.dp)
+            )
+            Spacer(modifier = Modifier.width(Dimens.Space8))
+            Text(
+                text = stringResource(R.string.home_retry),
+                fontSize = 15.sp,
+                fontWeight = FontWeight.Bold
+            )
         }
     }
 }

@@ -398,4 +398,60 @@ class CreateOrderViewModelTest {
         assertFalse(viewModel.uiState.value.isSubmitting)
         assertNotNull(viewModel.uiState.value.createdOrder)
     }
+
+    @Test
+    fun refreshAddress_picksUpAddressChangedOnMapScreen() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "العنوان القديم")
+        )
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        assertEquals("العنوان القديم", viewModel.uiState.value.deliveryAddress?.description)
+
+        // Simulate the user picking a new pin on the map and coming back
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.61, lng = 35.92, description = "العنوان الجديد من الخريطة")
+        )
+        viewModel.refreshAddress()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoadingAddress)
+        assertEquals("العنوان الجديد من الخريطة", state.deliveryAddress?.description)
+        assertEquals(35.61, state.deliveryAddress?.lat)
+    }
+
+    @Test
+    fun refreshAddress_notFound_clearsDeliveryAddress() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "بسنادا")
+        )
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        assertNotNull(viewModel.uiState.value.deliveryAddress)
+
+        fakeAddressRepository.getAddressResult = AddressResult.NotFound
+        viewModel.refreshAddress()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoadingAddress)
+        assertNull(state.deliveryAddress)
+    }
+
+    @Test
+    fun refreshAddress_error_setsErrorMessage() = runTest(testDispatcher) {
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        fakeAddressRepository.getAddressResult = AddressResult.Error("تعذر جلب العنوان")
+        viewModel.refreshAddress()
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertFalse(state.isLoadingAddress)
+        assertEquals("تعذر جلب العنوان", state.errorMessage)
+    }
 }
