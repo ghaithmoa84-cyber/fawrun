@@ -466,26 +466,59 @@ apps/android/app/src/main/java/com/fawrun/customer/
 
 ## معايير الإنجاز (Definition of Done) — Sprint 5
 
-- [ ] **Admin Dashboard:**
-  - [ ] صفحات: Dashboard, Users, Runners, Orders, Settlements/Ledger كلها تعمل
-  - [ ] WebSocket events تُحدّث الواجهة فورياً
+> **تدقيق 2026-09-30 — قاعدة حاكمة: لا يُعلَّم `[x]` إلا بدليل `file:line` في الكود.** كل `[ ]` باقٍ يحمل سطر سبب.
+> النتيجة: **بلوك Admin: 4 ✅ / 2 ⬜** · **بلوك Runner PWA: 6 ✅ / 0 ⬜** · **بلوك Android: 8 صفوف تحويل (6 ✅ + 2 ⊘ بقرار موثَّق)** — بلا مربّعات.
+>
+> ℹ️ **ملاحظة ترقيم:** هذه سبرنتات **backend/web**. سبرنتات Android تُرقَّم `8A..10` بشكل مستقل — انظر `docs/android/ROADMAP.md`. لا تخلط بين الترقيمين.
+
+- [x] **Admin Dashboard:**
+  - [x] صفحات: Dashboard, Users, Runners, Orders, Settlements/Ledger كلها تعمل
+        → `apps/admin-web/src/app/`: `dashboard/` · `users/` · `runners/` · `orders/` · `orders/[id]/` · `settlements/` · `login/` · `page.tsx` — كلها مُنفَّذة فعليًا (جلب بيانات + جداول + نماذج). لا توجد صفحة `ledger/` مستقلة، لكن تبويب **Ledger** مدمج في صفحة التسويات (`settlements/page.tsx:544-636`) — وهذا يحقّق صياغة البند «Settlements/Ledger».
+  - [x] WebSocket events تُحدّث الواجهة فورياً
+        → `useAdminWebSocket.ts:104-135` سجلّ مستمعين · `dashboard/page.tsx:277-278` `fetchPendingOrders()` + `fetchStats()` عند `order:new` (مع تمييز 5 ثوانٍ بـ `:262-269`) · `:289-290` إعادة جلب عند `order:status_changed` · `settlements/page.tsx:200-209` يعيد الجلب عند `settlement:reminder`
   - [ ] أصوات الإشعار تعمل (new_order, urgent, success)
+        → **1 من 3 فقط.** `new_order` ✅ (`dashboard/page.tsx:258` `playNewOrderSound()`، مُعرَّف `:70-94`).
+        ⛔ `urgent` **لا صوت له إطلاقًا** — `'urgent'` نمط toast بصري فقط (`components/Toast.tsx:8,25,85-90`: خلفية حمراء + نبض) ويُمرَّر كوسيط في `:273` و`:300`.
+        ⛔ `success` **لا مسار صوتي له إطلاقًا.**
+        ⛔ والربط **صلب بالحدث لا بالحقل**: `playNewOrderSound()` تُستدعى مباشرةً وتتجاهل `payload.sound` بالكامل — لا يوجد جدول `sound → صوت` في admin-web.
   - [ ] Pagination وFilters تعمل في كل القوائم
-  - [ ] خرائط Leaflet تعرض مواقع التسليم
-  - [ ] JWT refresh تلقائي
-- [ ] **Runner PWA:**
-  - [ ] شاشات: Login, Available, ActiveOrder, Settlements كلها تعمل
-  - [ ] استقبال الطلبات عبر WebSocket مع صوت وانتقال تلقائي
-  - [ ] إدارة المتاجر (شراء، تخطي، إضافة، حذف) تعمل
-  - [ ] رفع الإيصالات عبر Presigned URL يعمل
-  - [ ] PWA installable من المتصفح
-  - [ ] JWT refresh تلقائي
-- [ ] **Android App:**
-  - [ ] الشاشات السبع (Login, Home, CreateOrder, OrdersList, OrderDetail, Rating, Account) تعمل
-  - [ ] RTL بالكامل
-  - [ ] MVVM architecture مع Hilt DI
-  - [ ] Retrofit + JWT refresh تلقائي
-  - [ ] WebSocket مع reconnection
-  - [ ] Room DB + offline sync
-  - [ ] Google Maps SDK لتحديد الموقع
-  - [ ] المواد والمتاجر نص حر (لا كتالوج)
+        → **الترقيم ✅ في كل القوائم · الفلاتر ⛔ ناقصة.** `users/page.tsx:26,40` + `statusFilter:28` · `orders/page.tsx:71,81` + `statusFilter:75` · `settlements/page.tsx:61-63` (page/limit/totalPages) + فلاتر status/runnerId/dateFrom/dateTo · `runners/page.tsx:19,47` ترقيم فقط.
+        ⛔ صفحة **Runners بلا أي فلتر ولا بحث** — `RUNNER_STATUS_*` (`:163-184`) شارات عرض فقط، ولا `statusFilter` ولا `searchParams` في الملف.
+  - [x] خرائط Leaflet تعرض مواقع التسليم
+        → `apps/admin-web/src/components/OrderMap.tsx:40` `L.map(...).setView([lat, lng], 15)` (خام Leaflet لا react-leaflet؛ التبعيات `leaflet ^1.9.4` في `package.json:16` + `@types/leaflet:24`) · مُستخدم فعليًا في `dashboard/page.tsx:9,437` بم props `lat`/`lng`/`description`
+  - [x] JWT refresh تلقائي
+        → `apps/admin-web/src/lib/api.ts:14` `REFRESH_THRESHOLD_MS = 10min` · `:94` فحص قرب الانتهاء · `:97-123` `refreshAccessToken()` (يُحدّث `accessToken` و`refreshToken` في التخزين) · `:146-165` request interceptor ينتظر `pendingRefresh`. **تجديد استباقي قبل انتهاء الصلاحية** لا تفاعلي على 401.
+- [x] **Runner PWA:**
+  - [x] شاشات: Login, Available, ActiveOrder, Settlements كلها تعمل
+        → `apps/runner-pwa/src/pages/`: `LoginPage.tsx` · `AvailablePage.tsx` · `ActiveOrderPage.tsx` · `SettlementsPage.tsx` (تستهلك `/runner/settlements/current` و`/runner/settlements` في `:35-36`)
+  - [x] استقبال الطلبات عبر WebSocket مع صوت وانتقال تلقائي
+        → `AvailablePage.tsx:142` `playSound(payload.sound ?? 'new_order')` · `:143` `navigate('/active-order')` مباشرةً بعده · `playSound` مُعرَّف `:37-82`
+  - [x] إدارة المتاجر (شراء، تخطي، إضافة، حذف) تعمل
+        → شراء `StoreCard.tsx:54` · تخطي `:74` · حذف `:128` · إضافة `ActiveOrderPage.tsx:138`
+  - [x] رفع الإيصالات عبر Presigned URL يعمل
+        → `ReceiptUploader.tsx:79` طلب presigned-url · `:87` رفع `method: 'PUT'` إلى تخزين R2
+  - [x] PWA installable من المتصفح
+        → `vite.config.ts:13-16` `VitePWA({ registerType: 'autoUpdate', manifest: {...} })` · مخرجات `dist/manifest.webmanifest` موجودة · أيقونات `public/pwa-icon-192.png` و`pwa-icon-512.png`
+  - [x] JWT refresh تلقائي
+        → `client.ts:173,184` التقاط 401 · `:79-99` مسار التحديث (`refreshToken` → `/auth/refresh` → حفظ `accessToken` + `refreshToken` الجديد)
+- **Android App — جدول تحويل (بلا مربّعات):**
+  > سبرنتات Android موثّقة في `docs/android/ROADMAP.md` (8A–8C) و`PROGRESS.md`، وهي **مستقلة عن ترقيم `Sprint N` للـ backend**. نُسجّ هنا حكم تحويل كل بند من بنود هذه السبرنت مقابل الواقع المُتحقَّق منه في `apps/android/`:
+
+  | بند المواصفة (Sprint 5) | الواقع المُتحقَّق | الحكم |
+  |---|---|---|
+  | الشاشات السبع | **15 شاشة** — 15 وجهة في `ForerunNavGraph.kt:32-50` + 15 ملف `*Screen.kt`؛ والمطالَب السبعة كلها موجودة (Login · Home · CreateOrder · OrdersList · OrderDetail · Rating · Account) | ✅ **مُحقَّق بأقوى من المطلوب** |
+  | RTL بالكامل | `AndroidManifest.xml:15` `android:supportsRtl="true"` · النصوص العربية هي الافتراضية في `res/values/strings.xml` (لا مجلد `values-ar` لأن العربية أصلية) | ✅ |
+  | MVVM architecture مع Hilt DI | `@HiltAndroidApp` في `ForerunApp.kt:12` · `@AndroidEntryPoint` في `MainActivity.kt:40` · **14** `@HiltViewModel` (منها `LoginViewModel.kt:35`) | ✅ |
+  | Retrofit + JWT refresh تلقائي | `AuthApi.kt:11-22` / `CustomerApi.kt:10-12` بـ `@POST`/`@GET`/`@PUT` · التجديد **تلقائي بالكامل**: `RefreshInterceptor.kt:20` يلتقط 401 → `:28` `refreshTokenIfNeeded(force = true)` · مسجَّل كـ OkHttp interceptor في `NetworkModule.kt:58` · تخزين مشفَّر `EncryptedTokenStorage.kt:96-101` | ✅ |
+  | WebSocket مع reconnection | `SocketManager.kt:64-67` `reconnection = true` · `reconnectionAttempts = Int.MAX_VALUE` · backoff `1000ms → 16000ms` (`:41-42`) · `reconnect()` يدوي `:117-118` | ✅ |
+  | المواد/المتاجر نص حر (لا كتالوج) | `CreateOrderDtos.kt:8` `itemName: String` · `:10` `customStoreName: String?` · **صفر** مرجع لكتالوج منتجات في التطبيق | ✅ |
+  | **`Room DB + offline sync`** | **لا وجود لـ Room إطلاقًا** — بحث `@Database`/`@Entity`/`RoomDatabase` = **0 نتيجة**. النموذج always-online | ⊘ **مُستبعَد — قرار مُوثَّق**: `PROGRESS.md:167` «Session 3 · No Room / no offline mode · Always-online is the v1 model» |
+  | **`Google Maps SDK`** | **MapLibre + OSM** — `libs.versions.toml:31` `org.maplibre.gl:android-sdk` v11.5.2 (`build.gradle.kts:127`)؛ **لا** `play-services-maps` (المستخدَم `play-services-location` للموقع فقط) | ⊘ **مُستبدل — قرار مُوثَّق**: `PROGRESS.md:164` «Session 2 · Maps: MapLibre + OSM · Free, no credit card required» |
+
+  **الخلاصة:** من 8 بنود Android — **6 مُحقَّقة**، **2 مُستبعَدة/مُستبدَلة بقرار موثَّق** (لا مُتخَلَّفة). التطبيق مكتمل في `docs/android/PROGRESS.md` — **223 `@Test`** في 33 ملف اختبار، **مدمج في `master` منذ `e5bfbc1`**.
+
+  ⚠️ **تعارض توثيقي ثانٍ (خارج النطاق — سُجّل لا يُصلَح):** `docs/android/PROGRESS.md:55` يقول «17 شاشة» بينما المتحقَّق منه **15**. لم تُعدَّل `PROGRESS.md` هنا لأنها خارج نطاق هذه الخطة.
+
+---
+
+**Sprint 5 — الواجهات الثلاث مكتملة؛ لم يُضبط ختم «Complete»** لأن بندين في بلوك Admin لم يتحقّق (أصوات الإشعار · فلاتر صفحة Runners) وبلوك Android استُبدل بجدول التحويل.

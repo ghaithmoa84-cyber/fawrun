@@ -4,6 +4,8 @@
 > **نقطة الانطلاق:** `master` عند `e5bfbc1` — بعد دمج Sprint 8C
 > **المرجع:** [`ARCHITECTURE-REVIEW.md`](./ARCHITECTURE-REVIEW.md) §5 · [`CODE-REVIEW.md`](./CODE-REVIEW.md) · [`PROGRESS.md`](./PROGRESS.md)
 
+> ℹ️ **تنبيه ترقيم (عكس [`docs/sprints/Sprint 1 Brief.md`](../../docs/sprints/Sprint%201%20Brief.md)):** هذا الملف يخصّ **سبرنتات Android** (`1–8C` منجزة · `8D–10` مخططة). سبرنتات **backend** تُرقَّم `Sprint 1..6` في [`docs/sprints/`](../../docs/sprints/). **لا تخلط بين الترقيمين** — «Sprint 8» يعني Android دائمًا. خريطة التوثيق الكاملة في [`PROJECT_STATUS.md` §11](../../PROJECT_STATUS.md).
+
 Sprints 1-8C منجز ومدمج. المتبقي هو: إغلاق الديون المعمارية المتبقية، تقسيم WebSocket، تفعيل FCM الحقيقي، نصوص `strings.xml`، ثم QA وإطلاق.
 
 ---

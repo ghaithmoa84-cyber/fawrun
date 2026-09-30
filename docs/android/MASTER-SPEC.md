@@ -873,7 +873,7 @@ All three must pass. No exceptions.
 **Rules:**
 - Branch per Sprint
 - Semantic commits: `feat(android):`, `fix(android):`, `chore(android):`
-- No direct push to master
+- Android: branch per sprint + `git merge --no-ff` into `master` (same policy as root `AGENTS.md` — no fast-forward, keeps the merge history visible)
 - Wait for review before merge
 
 ---

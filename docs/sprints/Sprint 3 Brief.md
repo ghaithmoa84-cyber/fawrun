@@ -468,16 +468,40 @@
 
 ## معايير الإنجاز (Definition of Done) — Sprint 3
 
-- [ ] Runner يستطيع: عرض بياناته، تبديل حالته (AVAILABLE/UNAVAILABLE)، عرض الطلب النشط
-- [ ] Runner يستطيع: بدء التنفيذ (`ASSIGNED` → `IN_PROGRESS`)
-- [ ] Runner يستطيع: إضافة متجر، حذف متجر (قبل Purchase)، تأكيد الشراء، تخطي متجر
-- [ ] Runner يستطيع: طلب Presigned URL ورفع إيصال وحذفه
+> **تدقيق 2026-09-30 — قاعدة حاكمة: لا يُعلَّم `[x]` إلا بدليل `file:line` في الكود.** كل `[ ]` باقٍ يحمل سطر سبب. النتيجة: **9/13** ✅ · **4/13** ⬜
+
+- [x] Runner يستطيع: عرض بياناته، تبديل حالته (AVAILABLE/UNAVAILABLE)، عرض الطلب النشط
+      → `runners.controller.ts:84` (`GET runner/me`) · `:92` (`PUT runner/me/status`) · `:101` (`GET runner/orders/active`) · الانتقالات مسموحة لـ `RUNNER` في `runner-transitions.ts:16,26`
+- [x] Runner يستطيع: بدء التنفيذ (`ASSIGNED` → `IN_PROGRESS`)
+      → `runner-orders.service.ts:110-206` · الانتقال مُعرَّف في `order-transitions.ts:60` (actor `RUNNER`) · `orders.controller.ts:247`
+- [x] Runner يستطيع: إضافة متجر، حذف متجر (قبل Purchase)، تأكيد الشراء، تخطي متجر
+      → إضافة `:343` · حذف `:415` (يقصر على `PENDING` عند `:452`، أي قبل الشراء) · شراء `:208` · تخطي `:555`
+- [x] Runner يستطيع: طلب Presigned URL ورفع إيصال وحذفه
+      → `receipts.controller.ts:67` (presigned) · `:92` (تأكيد الرفع) · `:113` (حذف) · `receipts.service.ts:56,93,109`
 - [ ] التحقق من نوع الملف (jpg/png) وحجمه (5MB) وعدد الصور (5 لكل متجر) يعمل
-- [ ] Runner يستطيع: الانتقال للتوصيل (`IN_PROGRESS` → `OUT_FOR_DELIVERY`)
-- [ ] Runner يستطيع: تأكيد التسليم (`OUT_FOR_DELIVERY` → `DELIVERED`) — Idempotent
+      → **جزئي.** النوع ✅ (Zod `order.types.ts:442` + `receipts.service.ts:61-68`) · الحجم ✅ (`receipts.service.ts:70`) · **العدد ⛔ قابل للتحايل**: عدّ الـ 5 يتم في `generatePresignedUrl` فقط (`receipts.service.ts:76-83`) و**ليس** في `createReceipt` (`:93-107`) — يطلب العميل 5 روابط بالتوازي ثم يؤكدها فيتجاوز 5 إيصالات حيّة. يحتاج إغلاق الثغرة في `createReceipt`.
+- [x] Runner يستطيع: الانتقال للتوصيل (`IN_PROGRESS` → `OUT_FOR_DELIVERY`)
+      → `runner-orders.service.ts:648-740` · يمنع الانتقال ما دام هناك متجر `PENDING` (`:675-682`)
+- [x] Runner يستطيع: تأكيد التسليم (`OUT_FOR_DELIVERY` → `DELIVERED`) — Idempotent
+      → `runner-orders.service.ts:742-1014` · مطالبة `idempotencyKey` ذرّية `updateMany ... idempotencyKey: null` (`:816-843`) · إعادة الطلب بالمفتاح نفسه تعيد `idempotent: true` بلا ledger جديد (`:780-796`).
+      ⚠️ **دقّة**: إعادة الطلب على طلب مُسلَّم مسبقًا ترجع `409 ORDER_ALREADY_DELIVERED` من الفحص المسبق (`:755-760`) لا `200` بإعادة تشغيل. الأمان المالي محقّق (لا ازدواج في الرسم/Ledger) لكن سلوك «replay» حرفيًا غير مطابق.
 - [ ] عند التسليم: الرسم النهائي يُقفل، LedgerEntry (3 سجلات) تُنشأ، Runner يعود AVAILABLE، Customer إحصائيات تُحدّث
-- [ ] كل شيء في المهمة 3.4 يحدث في transaction واحدة
-- [ ] `GET /api/v1/admin/ledger` يعمل مع Pagination
+      → **3 من 4 فقط.** الـ Ledger trio ✅ (`:892-920`: `ORDER_FEE_TOTAL` + `RUNNER_SHARE` + `PLATFORM_SHARE`) · Runner→`AVAILABLE` ✅ (`:870-882`) · إحصائيات Customer ✅ (`:884-890`: `completedOrders` + `totalFeesPaid`).
+      ⛔ **«يُقفل» غير منفَّذ**: لا يوجد حقل `feeLocked` في `schema.prisma` ولا أي منطق قفل في `pricing.service.ts` (بحث: صفر نتيجة). الثبات العملي ناتج عن حاجز الحالة `DELIVERED` (`:798-802`) + الـ Ledger append-only، **لا** عن قفل صريح.
+- [x] كل شيء في المهمة 3.4 يحدث في transaction واحدة
+      → `runner-orders.service.ts:762` `prisma.$transaction` واحد يحوي: مطابقة الـ idempotency (`:816`) · تحديث الطلب (`:853`) · Runner (`:876`) · Customer (`:884`) · الـ Ledger trio (`:892`) · 3 سجلات AuditLog (`:922,937,951`) — كلها تمرّ بـ `tx`.
+      ℹ️ **استثناء مقصود**: إشعارات WebSocket (`:978-1003`) خارج المعاملة عمدًا (best-effort لا يُفشل التسليم).
+- [x] `GET /api/v1/admin/ledger` يعمل مع Pagination
+      → `ledger.controller.ts:23` · DTO `LedgerQuerySchema` (`ledger.types.ts:14-22`, `page`/`limit` بحد أقصى 100) · `skip/take` + `total` في `ledger.service.ts:103-111` · استجابة `meta.totalPages` في `:113-121`
 - [ ] جميع WebSocket events من القسم 10 مُنفّذة وتُرسل فعلياً
+      → **15 من 16 فقط.** ⛔ `order:needs_attention` **غير مُنفَّذ إطلاقًا** — لا يوجد له emit site، فقط تعليق TODO في `admin-order-command.service.ts:792-798`. المؤجَّل إلى cron لم يُبنَ.
+      ⛔ **نمط Outbox** الذي تفرضه المهمة 3.6 نفسها (`:333-340`) **غير موجود** — `OutboxEntry` لا وجود له في الكود؛ كل الإرسال fire-and-forget داخل `try/catch` بعد الـ commit. لا إعادة محاولة ولا سجل `PENDING/SENT`.
 - [ ] أصوات الإشعار معرّفة ومُرفقة بالأحداث
-- [ ] Runner PWA يعمل: Login, شاشة Available مع استقبال أحداث, شاشة الطلب النشط
+      → **جزئي.** النوع معرَّف ✅ (`shared-types/websocket.events.ts:3-10`) ومُرفق في ~24 من ~30 موقع emit ✅ (`notifications.service.ts:16` يدمج `sound` في الـ payload).
+      ⛔ لكن: `urgent` **لا يُرسله أي موقع إطلاقًا** (0 emit sites) · 5 أحداث بلا `sound` (`order:store_purchased` `runner-orders.service.ts:298` · `account:verified` ×2 `users.service.ts:137,269` · `user:new_registration` `auth.service.ts:85` · `settlement:reminder` `settlements.service.ts:458`) · **لا يوجد ملف صوتي واحد في المستودع** (0 `mp3/wav/ogg`) — كل الأصوات مولّدات Web Audio · `customer-web` يتجاهل حقل `sound` كليًا (`useCustomerWebSocket.ts:62-65`) ويلعب صفرة واحدة · `admin-web` يربط الصوت صلبًا بالحدث ويتجاهل `payload.sound` (`app/dashboard/page.tsx:258`) · `runner-pwa` وحده يقرأ `sound` (`AvailablePage.tsx:142`) لكن جدوله ثنائي مختزل: 3 من 4 قيم تسقط في نغمة واحدة.
+- [x] Runner PWA يعمل: Login, شاشة Available مع استقبال أحداث, شاشة الطلب النشط
+      → `apps/runner-pwa/src/pages/`: `LoginPage.tsx` · `AvailablePage.tsx` · `ActiveOrderPage.tsx` (المتطلبات موجودة). استقبال `order:assigned` في `AvailablePage.tsx:138-145`
+
+---
+
+**Sprint 3 — مكتمل جزئيًا (2026-09-30).** لم يُضبط ختم «Complete» لأن 4 بنود لم تتحقّق. البنود المتبقّية: قفل الرسم النهائي · `order:needs_attention` · نمط Outbox · إغلاق ثغرة عدّ الإيصالات + استكمال خريطة الأصوات.

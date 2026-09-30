@@ -630,3 +630,9 @@ const result = await prisma.$transaction(async (tx) => {
 - [x] WebSocket events تُرسل للعميل والإدارة عند كل تغيير
 - [x] خرائط Leaflet + OpenStreetMap مدمجة في Frontends
 - [x] Admin Dashboard (Next.js) يعرض الطلبات والمستخدمين مع العمليات الأساسية
+
+---
+
+**Sprint 2 Complete — 2026-09-30**
+
+> الختم أُضيف في تدقيق 2026-09-30: البنود الـ15 كانت مُعلَّمة `[x]` كلها منذ إنشائها لكن **بدون ختم إنجاز** — الفجوة الوحيدة المتبقّية كانت إدارية لا تقنية. (ختم Sprint 1 سُجّل مسبقًا في `Sprint 1 Brief.md:819` بتاريخ 2026-09-11.)

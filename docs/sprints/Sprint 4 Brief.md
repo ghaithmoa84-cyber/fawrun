@@ -304,17 +304,41 @@
 
 ## معايير الإنجاز (Definition of Done) — Sprint 4
 
-- [ ] `POST /api/v1/admin/settlements/close-day` يُغلق يوم التسوية — Idempotent (نفس المندوب + نفس اليوم لا يُكرَّر)
-- [ ] `PUT /api/v1/admin/settlements/:id/mark-settled` يُؤكد التسوية مع المندوب
-- [ ] Settlement يُنشئ SettlementItem لكل طلب مع حساب الحصص (75%/25%)
+> **تدقيق 2026-09-30 — قاعدة حاكمة: لا يُعلَّم `[x]` إلا بدليل `file:line` في الكود.** كل `[ ]` باقٍ يحمل سطر سبب. النتيجة: **11/14** ✅ · **3/14** ⬜
+
+- [x] `POST /api/v1/admin/settlements/close-day` يُغلق يوم التسوية — Idempotent (نفس المندوب + نفس اليوم لا يُكرَّر)
+      → Route `settlements.controller.ts:87` · service `settlements.service.ts:66` داخل معاملة واحدة (`:72`) · الضمان الحقيقي **قيد قاعدة البيانات** `@@unique([runnerId, operationalDate])` في `schema.prisma:399` · طبقة ثانية: `findUnique` + `continue` عند `settlements.service.ts:107-116`
+- [x] `PUT /api/v1/admin/settlements/:id/mark-settled` يُؤكد التسوية مع المندوب
+      → Route `settlements.controller.ts:100` · service `settlements.service.ts:195` · انتقال `PENDING → SETTLED` (`:215-222`) · حارس إعادة الدخول (`:203-211`) · AuditLog `SETTLEMENT_MARKED_SETTLED` (`:239-249`)
+      ⚠️ **انحراف عن المعيار**: ينفّذ الانتقال بـ `updateMany` على `status` مباشرةً (`:215-222`) **دون آلة حالة** — لا يوجد `SettlementStateMachine` في المشروع (مجلد `state-machine/` يحوي Order/OrderStore/Runner فقط). يخالف `AGENTS.md` §2. البند نفسه يعمل، لكن الآلية تتجاوز آلة الحالة.
+- [x] Settlement يُنشئ SettlementItem لكل طلب مع حساب الحصص (75%/25%)
+      → الثوابت `shared-constants/src/pricing.ts:5-6` (`RUNNER_SHARE: 0.75` · `PLATFORM_SHARE: 0.25`) · التقسيم `settlements.service.ts:129-130` (`floor` للمندوب / `ceil` للمنصة) · `SettlementItem` لكل طلب `:155-165` · `orderId @unique` في `schema.prisma:407` يمنع ازدواج نفس الطلب
 - [ ] LedgerEntry يُنشأ مع كل عملية Settlement
-- [ ] `operationalDate` تُحسب بتوقيت دمشق (`Asia/Damascus`) بناءً على `createdAt`
-- [ ] Cron Job يعمل يومياً في 23:00 بتوقيت دمشق ويُرسل تذكير WebSocket إذا وُجدت تسويات معلقة
-- [ ] `POST /api/v1/customer/orders/:id/ratings` يعمل — فقط بعد DELIVERED
-- [ ] `PUT /api/v1/customer/orders/:id/ratings` يعمل — خلال 24 ساعة فقط
-- [ ] `stars`: 1-5, `note`: خاص للإدارة فقط
-- [ ] متوسط تقييم المندوب يُحدّث تلقائياً عند كل تقييم جديد أو تعديل
-- [ ] Unique constraint `(orderId, runnerId)` يمنع التكرار
+      → **جزئي — نصيب واحد فقط.** `mark-settled` ✅ يُنشئ `LedgerEntry` نوع `SETTLEMENT_PAID` (`:230-237`). لكن `close-day` (`:66-193`) **لا يُنشئ أي LedgerEntry** — يكتب `Settlement` + `SettlementItem` + AuditLog فقط (`:170-182`؛ `ledgerEntry.create` غير موجود داخل `closeDay` في كل الملف). ناقص في المسار الأهم.
+- [x] `operationalDate` تُحسب بتوقيت دمشق (`Asia/Damascus`) بناءً على `createdAt`
+      → تحويل حقيقي وواعٍ بالمنطقة الزمنية: `Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Damascus' })` في `settlements.service.ts:31-38` · العكس عبر `fromZonedTime` (`:22-29`) لبناء نافذة UTC للاستعلام · الثابت `DAMASCUS_TIMEZONE` في `config.ts:16` · اختبار يُثبّت إزاحة `+03:00` في `settlements.cron.spec.ts:52-55` (أي ليس قصًّا ساذجًا لـ UTC)
+- [x] Cron Job يعمل يومياً في 23:00 بتوقيت دمشق ويُرسل تذكير WebSocket إذا وُجدت تسويات معلقة
+      → `@Cron('0 23 * * *', { timeZone: 'Asia/Damascus' })` في `settlements.service.ts:453` · استعلام المعلّق `checkPendingOrders` (`:432-451`) · الإرسال `emitToAdmin('settlement:reminder', …)` (`:458`) · اختبار affirms الإرسال عند وجود معلّق وعدمه `settlements.cron.spec.ts:70-103`
+- [x] `POST /api/v1/customer/orders/:id/ratings` يعمل — فقط بعد DELIVERED
+      → Route `ratings.controller.ts:30` · الحارس `ratings.service.ts:56-60` (`Only delivered orders can be rated`) · فحص `ratings.service.spec.ts:144-156`
+- [x] `PUT /api/v1/customer/orders/:id/ratings` يعمل — خلال 24 ساعة فقط
+      → Route `ratings.controller.ts:43` · نافذة 24h تُطبَّق بحقل `expiresAt` (`ratings.service.ts:190`) · الثابت `RATING_EDIT_WINDOW_HOURS: 24` في `config.ts:8` · عند الانتهاء يُثبَّت `isFinal` ويُرفض التحديث (`ratings.service.spec.ts:261-295`)
+      ⚠️ **دقّة**: نافذة التعديل تُقاس من **إنشاء التقييم** (`Date.now() + 24h` عند `:90-92`) لا من `deliveredAt`. لكن نافذة **الإنشاء** نفسها تُقاس من `deliveredAt` (`:67-73`)، فالمجموع سلوكه الصحيح/user-facing كما هو مطلوب.
+- [x] `stars`: 1-5, `note`: خاص للإدارة فقط
+      → Zod `rating.types.ts:29,35` (`z.number().int().min(1).max(5)`) · الإخفاء **مُنفَّذ في الكود لا موثّق فقط**: `rating.mapper.ts:12` (`note: isAllowed ? rating.note : null` مع `isAllowed = role === 'ADMIN'` عند `:4`) · يُطبَّق في `createRating` (`:143`) و`updateRating` (`:253`) · اختبار `ratings.service.spec.ts:58-64`
+- [x] متوسط تقييم المندوب يُحدّث تلقائياً عند كل تقييم جديد أو تعديل
+      → الإنشاء: إعادة حساب ترجيحية `ratings.service.ts:106-126` · التعديل: طرح القديم وجمع الجديد `:221-239` — **المساران** داخل معاملتهما
+- [x] Unique constraint `(orderId, runnerId)` يمنع التكرار
+      → `schema.prisma:349` `@@unique([orderId, runnerId])` (**composite** لا `@unique` على حقل) · يُستخدم باسم `orderId_runnerId` في `ratings.service.ts:79-83` و`:174-178`
 - [ ] `GET /api/v1/customer/orders` و `/:id` تعرض بيانات كاملة (تقييمات + مالية + timeline)
+      → **جزئي — `/:id` ✅ لكن `/` ⛔.** التفصيل `customer-orders.service.ts:309-435`: مالية كاملة (`:366-371`) + timeline كامل (`:415-422`) ✅ لكن التقييم **جزئي**: `stars` فقط (`:411-414`).
+      ⛔ القائمة `customer-orders.service.ts:228-307`: لا timeline إطلاقًا · التقييم مُختزل إلى مؤشّر `hasRating` (`:284`) · المالي مُختزل إلى `totalFee` (`:280`) بلا تفصيل. النوع `CustomerOrderListItem` (`customer.types.ts:96-112`) لا يحوي حقل timeline أصلًا.
 - [ ] `GET /api/v1/runner/settlements` و `/current` تعملان — المندوب يرى حصته فقط
-- [ ] صفحة التسويات في Admin Dashboard تعمل
+      → **جزئي — النطاق ✅ لكن «حصته فقط» ⛔.** العزل مُنفَّذ: `resolveRunner` من الـ JWT فقط (`settlements.controller.ts:42-57`) ثم `where: { runnerId }` في الخدمة (`:300,302,374`) — لا يمكنه رؤية غيره.
+      ⛔ لكن الاستجابة تُعيد **حصّة المنصّة أيضًا**: `RunnerSettlement` يحوي `platformShare` (`shared-types/settlement.types.ts:88`، تُملأ `settlements.service.ts:309-316`) و`estimatedPlatformShare` في `/current` (`:366`). الواجهة لا تعرضها (`SettlementsPage.tsx:174`) لكن **عقد الـ API يكشفها** — وهو ما يخالف العبارة.
+- [x] صفحة التسويات في Admin Dashboard تعمل
+      → `apps/admin-web/src/app/settlements/page.tsx:76` · تبويباه Daily Settlements + Ledger · جدول المعلّق (`:325-404`) مع زر تأكيد يستدعي `PUT /admin/settlements/:id/mark-settled` (`:236-249`) · فلاتر (`:406-459`) · ترقيم صفحات (`:461-515`) · تبويب Ledger (`:544-636`) · نافذة Close Day (`:638-685`) · مستمع WebSocket للتذكير (`:200-209`)
+
+---
+
+**Sprint 4 — مكتمل جزئيًا (2026-09-30).** لم يُضبط ختم «Complete» لأن 3 بنود لم تتحقّق. البنود المتبقّية: LedgerEntry في `close-day` · بيانات القائمة الكاملة للعميل · استبعاد `platformShare` من استجابة المندوب.
