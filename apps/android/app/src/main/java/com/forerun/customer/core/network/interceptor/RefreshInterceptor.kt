@@ -25,7 +25,7 @@ class RefreshInterceptor @Inject constructor(
                 response.close()
 
                 val refreshed = kotlinx.coroutines.runBlocking {
-                    tokenRefreshManager.refreshTokenIfNeeded()
+                    tokenRefreshManager.refreshTokenIfNeeded(force = true)
                 }
 
                 if (refreshed) {

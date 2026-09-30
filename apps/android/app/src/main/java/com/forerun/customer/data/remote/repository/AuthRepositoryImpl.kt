@@ -23,7 +23,9 @@ class AuthRepositoryImpl @Inject constructor(
     private val tokenStorage: TokenStorage,
     private val onboardingPrefs: OnboardingPrefs,
     private val tokenRefreshManager: TokenRefreshManager,
-    private val fcmTokenManager: com.forerun.customer.core.notification.FcmTokenManager? = null
+    private val fcmTokenManager: com.forerun.customer.core.notification.FcmTokenManager? = null,
+    private val socketManager: com.forerun.customer.core.websocket.SocketManager? = null,
+    private val customerApiProvider: javax.inject.Provider<com.forerun.customer.data.remote.api.CustomerApi>? = null
 ) : AuthRepository {
 
     override suspend fun login(whatsapp: String, password: String): ApiResponse<User> {
@@ -57,6 +59,10 @@ class AuthRepositoryImpl @Inject constructor(
 
                 try {
                     fcmTokenManager?.registerDeviceToken()
+                } catch (_: Exception) {}
+
+                try {
+                    socketManager?.connect()
                 } catch (_: Exception) {}
 
                 ApiResponse.Success(user)
@@ -110,6 +116,10 @@ class AuthRepositoryImpl @Inject constructor(
             fcmTokenManager?.unregisterDeviceToken()
         } catch (_: Exception) {}
 
+        try {
+            socketManager?.disconnect()
+        } catch (_: Exception) {}
+
         val refreshToken = tokenStorage.getRefreshToken()
         if (!refreshToken.isNullOrBlank()) {
             try {
@@ -128,8 +138,47 @@ class AuthRepositoryImpl @Inject constructor(
             return SessionState.NeedsOnboarding
         }
 
-        val hasValidToken = tokenStorage.hasValidAccessToken()
+        var hasValidToken = tokenStorage.hasValidAccessToken()
+        if (!hasValidToken) {
+            val refreshToken = tokenStorage.getRefreshToken()
+            if (!refreshToken.isNullOrBlank()) {
+                val refreshed = tokenRefreshManager.refreshTokenIfNeeded(force = false)
+                if (refreshed) {
+                    hasValidToken = tokenStorage.hasValidAccessToken()
+                }
+            }
+        }
+
         if (hasValidToken) {
+            // Refresh user status from server if possible (handles pending verification approval)
+            try {
+                val customerApi = customerApiProvider?.get()
+                if (customerApi != null) {
+                    when (val profileRes = customerApi.me()) {
+                        is ApiResponse.Success -> {
+                            tokenStorage.setUserStatus(profileRes.data.status)
+                            tokenStorage.setUserName(profileRes.data.name)
+                        }
+                        is ApiResponse.Error -> {
+                            if (profileRes.statusCode == 401) {
+                                val refreshed = tokenRefreshManager.refreshTokenIfNeeded(force = true)
+                                if (refreshed) {
+                                    val retryRes = customerApi.me()
+                                    if (retryRes is ApiResponse.Success) {
+                                        tokenStorage.setUserStatus(retryRes.data.status)
+                                        tokenStorage.setUserName(retryRes.data.name)
+                                    }
+                                } else {
+                                    return SessionState.Unauthenticated
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // Network failure: proceed with cached user credentials
+            }
+
             val user = getCurrentUser()
             return if (user != null) {
                 SessionState.Authenticated(user)

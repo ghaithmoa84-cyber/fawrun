@@ -113,9 +113,16 @@ class RatingViewModel @Inject constructor(
         }
     }
 
+    private val isSubmittingGuard = java.util.concurrent.atomic.AtomicBoolean(false)
+
     fun submitRating() {
+        if (_uiState.value.isSubmitting || !isSubmittingGuard.compareAndSet(false, true)) {
+            return
+        }
+
         val state = _uiState.value
         if (state.isExpired) {
+            isSubmittingGuard.set(false)
             _uiState.update {
                 it.copy(validationError = "انتهت مهلة التقييم (يمكن التقييم خلال 24 ساعة فقط بعد تسليم الطلب)")
             }
@@ -123,6 +130,7 @@ class RatingViewModel @Inject constructor(
         }
 
         if (state.stars < 1 || state.stars > 5) {
+            isSubmittingGuard.set(false)
             _uiState.update {
                 it.copy(validationError = "يرجى اختيار عدد النجوم (من 1 إلى 5)")
             }
@@ -131,21 +139,25 @@ class RatingViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errorMessage = null, validationError = null) }
-            val result = submitRatingUseCase(
-                orderId = orderId,
-                stars = state.stars,
-                note = state.note.trim().ifEmpty { null },
-                isUpdate = state.isExistingRating
-            )
+            try {
+                val result = submitRatingUseCase(
+                    orderId = orderId,
+                    stars = state.stars,
+                    note = state.note.trim().ifEmpty { null },
+                    isUpdate = state.isExistingRating
+                )
 
-            result.onSuccess {
-                _uiState.update {
-                    it.copy(isSubmitting = false, isSuccess = true)
+                result.onSuccess {
+                    _uiState.update {
+                        it.copy(isSubmitting = false, isSuccess = true)
+                    }
+                }.onFailure { err ->
+                    _uiState.update {
+                        it.copy(isSubmitting = false, errorMessage = err.message)
+                    }
                 }
-            }.onFailure { err ->
-                _uiState.update {
-                    it.copy(isSubmitting = false, errorMessage = err.message)
-                }
+            } finally {
+                isSubmittingGuard.set(false)
             }
         }
     }

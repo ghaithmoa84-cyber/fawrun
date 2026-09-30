@@ -24,6 +24,8 @@ class FakeOrderRepository : OrderRepository {
     )
 
     var lastCreatedItems: List<OrderItem>? = null
+    var createOrderCallCount: Int = 0
+    var createOrderDelayMs: Long = 0
 
     override suspend fun createOrder(
         items: List<OrderItem>,
@@ -32,6 +34,10 @@ class FakeOrderRepository : OrderRepository {
         waitForPreferred: Boolean,
         deliveryAddress: CustomerAddress
     ): Result<CreatedOrder> {
+        createOrderCallCount++
+        if (createOrderDelayMs > 0) {
+            kotlinx.coroutines.delay(createOrderDelayMs)
+        }
         lastCreatedItems = items
         return createOrderResult
     }
@@ -108,11 +114,19 @@ class FakeOrderRepository : OrderRepository {
             expiresAt = "2026-09-29T12:00:00Z"
         )
     )
+    var submitRatingCallCount: Int = 0
+    var submitRatingDelayMs: Long = 0
 
     override suspend fun submitRating(
         orderId: String,
         stars: Int,
         note: String?,
         isUpdate: Boolean
-    ): Result<com.forerun.customer.domain.model.RatingResult> = submitRatingResult
+    ): Result<com.forerun.customer.domain.model.RatingResult> {
+        submitRatingCallCount++
+        if (submitRatingDelayMs > 0) {
+            kotlinx.coroutines.delay(submitRatingDelayMs)
+        }
+        return submitRatingResult
+    }
 }

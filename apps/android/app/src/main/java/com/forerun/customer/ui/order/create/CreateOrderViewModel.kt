@@ -192,11 +192,18 @@ class CreateOrderViewModel @Inject constructor(
         }
     }
 
+    private val isSubmittingGuard = java.util.concurrent.atomic.AtomicBoolean(false)
+
     private fun submitOrder() {
+        if (_uiState.value.isSubmitting || !isSubmittingGuard.compareAndSet(false, true)) {
+            return
+        }
+
         val state = _uiState.value
 
         // Validation
         if (state.deliveryAddress == null) {
+            isSubmittingGuard.set(false)
             _uiState.update { it.copy(validationError = "يرجى تحديد عنوان التوصيل أولاً قبل إرسال الطلب") }
             return
         }
@@ -208,6 +215,7 @@ class CreateOrderViewModel @Inject constructor(
                     .filter { it.isNotEmpty() }
 
                 if (lines.isEmpty()) {
+                    isSubmittingGuard.set(false)
                     _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
                     return
                 }
@@ -223,20 +231,24 @@ class CreateOrderViewModel @Inject constructor(
             }
             OrderInputMode.STRUCTURED -> {
                 if (state.items.isEmpty()) {
+                    isSubmittingGuard.set(false)
                     _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
                     return
                 }
 
                 for (item in state.items) {
                     if (item.itemName.trim().isEmpty()) {
+                        isSubmittingGuard.set(false)
                         _uiState.update { it.copy(validationError = "يرجى كتابة اسم المادة") }
                         return
                     }
                     if (item.quantity.trim().isEmpty()) {
+                        isSubmittingGuard.set(false)
                         _uiState.update { it.copy(validationError = "يرجى تحديد الكمية للمادة: ${item.itemName}") }
                         return
                     }
                     if (!item.anyStore && (item.customStoreName == null || item.customStoreName.trim().isEmpty())) {
+                        isSubmittingGuard.set(false)
                         _uiState.update { it.copy(validationError = "يرجى تحديد اسم المتجر للمادة: ${item.itemName} أو تفعيل خيار أي متجر") }
                         return
                     }
@@ -254,32 +266,36 @@ class CreateOrderViewModel @Inject constructor(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSubmitting = true, errorMessage = null, validationError = null) }
-            val result = createOrderUseCase(
-                items = orderItems,
-                notes = state.notes,
-                preferredRunnerId = state.selectedRunnerId,
-                waitForPreferred = state.waitForPreferred,
-                deliveryAddress = state.deliveryAddress
-            )
-            result.fold(
-                onSuccess = { createdOrder ->
-                    _uiState.update {
-                        it.copy(
-                            isSubmitting = false,
-                            createdOrder = createdOrder
-                        )
+            try {
+                val result = createOrderUseCase(
+                    items = orderItems,
+                    notes = state.notes,
+                    preferredRunnerId = state.selectedRunnerId,
+                    waitForPreferred = state.waitForPreferred,
+                    deliveryAddress = state.deliveryAddress
+                )
+                result.fold(
+                    onSuccess = { createdOrder ->
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                createdOrder = createdOrder
+                            )
+                        }
+                        _events.emit(CreateOrderEvent.OrderCreated(createdOrder))
+                    },
+                    onFailure = { error ->
+                        _uiState.update {
+                            it.copy(
+                                isSubmitting = false,
+                                errorMessage = error.localizedMessage ?: "فشل إنشاء الطلب"
+                            )
+                        }
                     }
-                    _events.emit(CreateOrderEvent.OrderCreated(createdOrder))
-                },
-                onFailure = { error ->
-                    _uiState.update {
-                        it.copy(
-                            isSubmitting = false,
-                            errorMessage = error.localizedMessage ?: "فشل إنشاء الطلب"
-                        )
-                    }
-                }
-            )
+                )
+            } finally {
+                isSubmittingGuard.set(false)
+            }
         }
     }
 }

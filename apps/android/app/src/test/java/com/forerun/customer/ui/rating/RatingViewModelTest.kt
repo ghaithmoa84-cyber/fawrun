@@ -221,4 +221,22 @@ class RatingViewModelTest {
         assertFalse(state.isSubmitting)
         assertEquals("انتهت صلاحية الجلسة", state.errorMessage)
     }
+
+    @Test
+    fun submitRating_double_click_invokes_useCase_only_once() = runTest(testDispatcher) {
+        fakeRepository.submitRatingDelayMs = 100
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        viewModel.onIntent(RatingIntent.SetStars(5))
+
+        // Simulate rapid double submit
+        viewModel.onIntent(RatingIntent.Submit)
+        viewModel.onIntent(RatingIntent.Submit)
+        advanceUntilIdle()
+
+        assertEquals(1, fakeRepository.submitRatingCallCount)
+        assertFalse(viewModel.uiState.value.isSubmitting)
+        assertTrue(viewModel.uiState.value.isSuccess)
+    }
 }

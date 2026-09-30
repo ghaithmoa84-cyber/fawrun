@@ -165,43 +165,54 @@ class AddressSetupViewModel @Inject constructor(
         }
     }
 
+    private val isSavingGuard = java.util.concurrent.atomic.AtomicBoolean(false)
+
     private fun saveAddress() {
+        if (_uiState.value.isSaving || !isSavingGuard.compareAndSet(false, true)) {
+            return
+        }
+
         val currentState = _uiState.value
         val trimmedDesc = currentState.description.trim()
 
         if (trimmedDesc.isEmpty()) {
+            isSavingGuard.set(false)
             _uiState.update { it.copy(descriptionError = "يرجى إدخال وصف للعنوان") }
             return
         }
 
         viewModelScope.launch {
             _uiState.update { it.copy(isSaving = true, errorMessage = null, descriptionError = null) }
-            val result = updateCustomerAddressUseCase(
-                lat = currentState.lat,
-                lng = currentState.lng,
-                description = trimmedDesc
-            )
-            result.fold(
-                onSuccess = { savedAddress ->
-                    _uiState.update {
-                        it.copy(
-                            isSaving = false,
-                            isEditMode = true,
-                            saveSuccess = true,
-                            description = savedAddress.description
-                        )
+            try {
+                val result = updateCustomerAddressUseCase(
+                    lat = currentState.lat,
+                    lng = currentState.lng,
+                    description = trimmedDesc
+                )
+                result.fold(
+                    onSuccess = { savedAddress ->
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                isEditMode = true,
+                                saveSuccess = true,
+                                description = savedAddress.description
+                            )
+                        }
+                        _events.emit(AddressSetupEvent.AddressSaved(savedAddress))
+                    },
+                    onFailure = { error ->
+                        _uiState.update {
+                            it.copy(
+                                isSaving = false,
+                                errorMessage = error.localizedMessage ?: "فشل حفظ العنوان"
+                            )
+                        }
                     }
-                    _events.emit(AddressSetupEvent.AddressSaved(savedAddress))
-                },
-                onFailure = { error ->
-                    _uiState.update {
-                        it.copy(
-                            isSaving = false,
-                            errorMessage = error.localizedMessage ?: "فشل حفظ العنوان"
-                        )
-                    }
-                }
-            )
+                )
+            } finally {
+                isSavingGuard.set(false)
+            }
         }
     }
 }

@@ -111,15 +111,40 @@ fun ForerunNavGraph(
         composable(Routes.SPLASH) {
             SplashScreen(
                 onNavigate = { destination ->
-                    val targetRoute = when (destination) {
-                        SplashDestination.Onboarding -> Routes.ONBOARDING
-                        SplashDestination.Login -> Routes.LOGIN
-                        SplashDestination.Home -> Routes.HOME
-                        SplashDestination.PendingVerification -> Routes.PENDING_VERIFICATION
-                        SplashDestination.Suspended -> Routes.SUSPENDED
-                    }
-                    navController.navigate(targetRoute) {
-                        popUpTo(Routes.SPLASH) { inclusive = true }
+                    when (destination) {
+                        SplashDestination.Onboarding -> {
+                            navController.navigate(Routes.ONBOARDING) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        }
+                        SplashDestination.Login -> {
+                            navController.navigate(Routes.LOGIN) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        }
+                        SplashDestination.Home -> {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        }
+                        SplashDestination.PendingVerification -> {
+                            navController.navigate(Routes.PENDING_VERIFICATION) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        }
+                        SplashDestination.Suspended -> {
+                            navController.navigate(Routes.SUSPENDED) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                        }
+                        is SplashDestination.OrderDetail -> {
+                            navController.navigate(Routes.HOME) {
+                                popUpTo(Routes.SPLASH) { inclusive = true }
+                            }
+                            navController.navigate(Routes.orderDetail(destination.orderId)) {
+                                launchSingleTop = true
+                            }
+                        }
                     }
                 }
             )

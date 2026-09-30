@@ -172,4 +172,187 @@ class AuthRepositoryImplTest {
         assertEquals("Ahmad", user.name)
         assertEquals(UserStatus.VERIFIED, user.status)
     }
+
+    private class FakeSocketManager(storage: TokenStorage) : com.forerun.customer.core.websocket.SocketManager(storage) {
+        var connectCalled = false
+        var disconnectCalled = false
+
+        override fun connect() {
+            connectCalled = true
+        }
+
+        override fun disconnect() {
+            disconnectCalled = true
+        }
+    }
+
+    private class FakeCustomerApi : com.forerun.customer.data.remote.api.CustomerApi {
+        var meResponse: ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> =
+            ApiResponse.Success(
+                com.forerun.customer.data.remote.dto.customer.CustomerProfileDto(
+                    id = "user_1",
+                    name = "Verified User",
+                    whatsapp = "0912345678",
+                    altPhone = null,
+                    status = "VERIFIED",
+                    completedOrders = 0,
+                    totalFeesPaid = 0,
+                    createdAt = "2026-09-01T00:00:00Z"
+                )
+            )
+
+        override suspend fun me(): ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> = meResponse
+        override suspend fun updateProfile(body: com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest) = throw NotImplementedError()
+        override suspend fun changePassword(body: com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest) = throw NotImplementedError()
+        override suspend fun getAddress() = throw NotImplementedError()
+        override suspend fun updateAddress(body: com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest) = throw NotImplementedError()
+        override suspend fun getAvailableRunners() = throw NotImplementedError()
+    }
+
+    @Test
+    fun login_success_triggers_socket_connect() = runTest {
+        val fakeApi = FakeAuthApi()
+        val fakeStorage = FakeTokenStorage()
+        val fakePrefs = FakeOnboardingPrefs(seen = true)
+        val refreshManager = TokenRefreshManager(fakeStorage, Provider { fakeApi })
+        val fakeSocket = FakeSocketManager(fakeStorage)
+
+        val repository = AuthRepositoryImpl(
+            authApi = fakeApi,
+            tokenStorage = fakeStorage,
+            onboardingPrefs = fakePrefs,
+            tokenRefreshManager = refreshManager,
+            socketManager = fakeSocket
+        )
+
+        val result = repository.login("0912345678", "password123")
+        assertTrue(result is ApiResponse.Success)
+        assertTrue(fakeSocket.connectCalled)
+    }
+
+    @Test
+    fun logout_triggers_socket_disconnect() = runTest {
+        val fakeApi = FakeAuthApi()
+        val fakeStorage = FakeTokenStorage().apply {
+            setAccessToken("token_123")
+            setRefreshToken("refresh_123")
+        }
+        val fakePrefs = FakeOnboardingPrefs(seen = true)
+        val refreshManager = TokenRefreshManager(fakeStorage, Provider { fakeApi })
+        val fakeSocket = FakeSocketManager(fakeStorage)
+
+        val repository = AuthRepositoryImpl(
+            authApi = fakeApi,
+            tokenStorage = fakeStorage,
+            onboardingPrefs = fakePrefs,
+            tokenRefreshManager = refreshManager,
+            socketManager = fakeSocket
+        )
+
+        val result = repository.logout()
+        assertTrue(result is ApiResponse.Success)
+        assertTrue(fakeSocket.disconnectCalled)
+        assertEquals(null, fakeStorage.getAccessToken())
+    }
+
+    @Test
+    fun checkSession_updates_pending_user_to_verified_when_server_me_returns_verified() = runTest {
+        val fakeApi = FakeAuthApi()
+        val fakeStorage = FakeTokenStorage().apply {
+            setAccessToken("valid_token")
+            setTokenExpiry(System.currentTimeMillis() + 60_000L)
+            setUserId("user_pending")
+            setUserName("Pending User")
+            setUserRole("CUSTOMER")
+            setUserStatus("PENDING_VERIFICATION")
+        }
+        val fakePrefs = FakeOnboardingPrefs(seen = true)
+        val refreshManager = TokenRefreshManager(fakeStorage, Provider { fakeApi })
+        val fakeCustomerApi = FakeCustomerApi().apply {
+            meResponse = ApiResponse.Success(
+                com.forerun.customer.data.remote.dto.customer.CustomerProfileDto(
+                    id = "user_pending",
+                    name = "Approved User",
+                    whatsapp = "0912345678",
+                    altPhone = null,
+                    status = "VERIFIED",
+                    completedOrders = 1,
+                    totalFeesPaid = 5000,
+                    createdAt = "2026-09-01T00:00:00Z"
+                )
+            )
+        }
+
+        val repository = AuthRepositoryImpl(
+            authApi = fakeApi,
+            tokenStorage = fakeStorage,
+            onboardingPrefs = fakePrefs,
+            tokenRefreshManager = refreshManager,
+            customerApiProvider = Provider { fakeCustomerApi }
+        )
+
+        val session = repository.checkSession()
+        assertTrue(session is SessionState.Authenticated)
+        val user = (session as SessionState.Authenticated).user
+        assertEquals(UserStatus.VERIFIED, user.status)
+        assertEquals("Approved User", user.name)
+        assertEquals("VERIFIED", fakeStorage.getUserStatus())
+    }
+
+    @Test
+    fun checkSession_handles_401_with_force_refresh_and_updates_status() = runTest {
+        val fakeApi = FakeAuthApi()
+        val fakeStorage = FakeTokenStorage().apply {
+            setAccessToken("expired_access")
+            setRefreshToken("valid_refresh")
+            setTokenExpiry(System.currentTimeMillis() + 60_000L)
+            setUserId("user_42")
+            setUserName("Old Name")
+            setUserStatus("PENDING_VERIFICATION")
+        }
+        val fakePrefs = FakeOnboardingPrefs(seen = true)
+        val refreshManager = TokenRefreshManager(fakeStorage, Provider { fakeApi })
+        var meCallCount = 0
+        val fakeCustomerApi = object : com.forerun.customer.data.remote.api.CustomerApi {
+            override suspend fun me(): ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> {
+                meCallCount++
+                return if (meCallCount == 1) {
+                    ApiResponse.Error(401, "UNAUTHORIZED", "Token expired")
+                } else {
+                    ApiResponse.Success(
+                        com.forerun.customer.data.remote.dto.customer.CustomerProfileDto(
+                            id = "user_42",
+                            name = "Refreshed Name",
+                            whatsapp = "0912345678",
+                            altPhone = null,
+                            status = "VERIFIED",
+                            completedOrders = 0,
+                            totalFeesPaid = 0,
+                            createdAt = "2026-09-01T00:00:00Z"
+                        )
+                    )
+                }
+            }
+            override suspend fun updateProfile(body: com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest) = throw NotImplementedError()
+            override suspend fun changePassword(body: com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest) = throw NotImplementedError()
+            override suspend fun getAddress() = throw NotImplementedError()
+            override suspend fun updateAddress(body: com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest) = throw NotImplementedError()
+            override suspend fun getAvailableRunners() = throw NotImplementedError()
+        }
+
+        val repository = AuthRepositoryImpl(
+            authApi = fakeApi,
+            tokenStorage = fakeStorage,
+            onboardingPrefs = fakePrefs,
+            tokenRefreshManager = refreshManager,
+            customerApiProvider = Provider { fakeCustomerApi }
+        )
+
+        val session = repository.checkSession()
+        assertTrue(session is SessionState.Authenticated)
+        val user = (session as SessionState.Authenticated).user
+        assertEquals(UserStatus.VERIFIED, user.status)
+        assertEquals("new_access", fakeStorage.getAccessToken())
+        assertEquals(2, meCallCount)
+    }
 }

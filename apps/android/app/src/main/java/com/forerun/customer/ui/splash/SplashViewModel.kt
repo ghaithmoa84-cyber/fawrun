@@ -19,11 +19,13 @@ sealed interface SplashDestination {
     data object Home : SplashDestination
     data object PendingVerification : SplashDestination
     data object Suspended : SplashDestination
+    data class OrderDetail(val orderId: String) : SplashDestination
 }
 
 @HiltViewModel
 class SplashViewModel @Inject constructor(
-    private val checkSessionUseCase: CheckSessionUseCase
+    private val checkSessionUseCase: CheckSessionUseCase,
+    private val deepLinkHolder: com.forerun.customer.core.notification.DeepLinkHolder? = null
 ) : ViewModel() {
 
     private val _destination = MutableSharedFlow<SplashDestination>(replay = 1)
@@ -44,7 +46,14 @@ class SplashViewModel @Inject constructor(
                         is SessionState.Unauthenticated -> _destination.emit(SplashDestination.Login)
                         is SessionState.Authenticated -> {
                             when (state.user.status) {
-                                UserStatus.VERIFIED -> _destination.emit(SplashDestination.Home)
+                                UserStatus.VERIFIED -> {
+                                    val pendingOrderId = deepLinkHolder?.consumePendingOrderId()
+                                    if (!pendingOrderId.isNullOrBlank()) {
+                                        _destination.emit(SplashDestination.OrderDetail(pendingOrderId))
+                                    } else {
+                                        _destination.emit(SplashDestination.Home)
+                                    }
+                                }
                                 UserStatus.PENDING_VERIFICATION -> _destination.emit(SplashDestination.PendingVerification)
                                 UserStatus.SUSPENDED -> _destination.emit(SplashDestination.Suspended)
                                 else -> _destination.emit(SplashDestination.Login)

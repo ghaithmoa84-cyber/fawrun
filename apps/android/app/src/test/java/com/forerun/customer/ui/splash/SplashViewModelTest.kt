@@ -100,4 +100,62 @@ class SplashViewModelTest {
             assertEquals(SplashDestination.Suspended, destination)
         }
     }
+
+    @Test
+    fun splash_when_verified_and_has_pending_deep_link_routes_to_order_detail() = runTest {
+        val fakeRepo = FakeAuthRepository().apply {
+            sessionStateResult = SessionState.Authenticated(
+                User("user_1", "Test", "CUSTOMER", UserStatus.VERIFIED)
+            )
+        }
+        val useCase = CheckSessionUseCase(fakeRepo)
+        val deepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder().apply {
+            setPendingOrderId("order_abc_123")
+        }
+        val viewModel = SplashViewModel(useCase, deepLinkHolder)
+
+        viewModel.destination.test {
+            advanceTimeBy(600)
+            val destination = awaitItem()
+            assertEquals(SplashDestination.OrderDetail("order_abc_123"), destination)
+        }
+    }
+
+    @Test
+    fun splash_when_unauthenticated_and_has_pending_deep_link_routes_to_login() = runTest {
+        val fakeRepo = FakeAuthRepository().apply {
+            sessionStateResult = SessionState.Unauthenticated
+        }
+        val useCase = CheckSessionUseCase(fakeRepo)
+        val deepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder().apply {
+            setPendingOrderId("order_abc_123")
+        }
+        val viewModel = SplashViewModel(useCase, deepLinkHolder)
+
+        viewModel.destination.test {
+            advanceTimeBy(600)
+            val destination = awaitItem()
+            assertEquals(SplashDestination.Login, destination)
+        }
+    }
+
+    @Test
+    fun splash_when_pending_and_has_deep_link_routes_to_pending() = runTest {
+        val fakeRepo = FakeAuthRepository().apply {
+            sessionStateResult = SessionState.Authenticated(
+                User("user_2", "Pending User", "CUSTOMER", UserStatus.PENDING_VERIFICATION)
+            )
+        }
+        val useCase = CheckSessionUseCase(fakeRepo)
+        val deepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder().apply {
+            setPendingOrderId("order_abc_123")
+        }
+        val viewModel = SplashViewModel(useCase, deepLinkHolder)
+
+        viewModel.destination.test {
+            advanceTimeBy(600)
+            val destination = awaitItem()
+            assertEquals(SplashDestination.PendingVerification, destination)
+        }
+    }
 }

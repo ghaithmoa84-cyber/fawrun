@@ -31,7 +31,7 @@ enum class SocketConnectionState {
 }
 
 @Singleton
-class SocketManager @Inject constructor(
+open class SocketManager @Inject constructor(
     private val tokenStorage: TokenStorage
 ) {
     companion object {
@@ -46,7 +46,7 @@ class SocketManager @Inject constructor(
 
     private var socket: Socket? = null
     var isForeground: Boolean = false
-        private set
+        protected set
 
     private val isConnecting = AtomicBoolean(false)
     val isConnectingState: Boolean
@@ -71,7 +71,7 @@ class SocketManager @Inject constructor(
     }
 
     @Synchronized
-    fun connect() {
+    open fun connect() {
         if (!isForeground) {
             Log.d(TAG, "Not connecting: app is in background")
             return
@@ -121,7 +121,7 @@ class SocketManager @Inject constructor(
     }
 
     @Synchronized
-    fun disconnect() {
+    open fun disconnect() {
         isConnecting.set(false)
         disconnectInternal()
         _connectionState.value = SocketConnectionState.DISCONNECTED

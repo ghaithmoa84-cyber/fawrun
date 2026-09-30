@@ -105,4 +105,21 @@ class LoginViewModelTest {
             assertEquals(LoginNavigationEvent.NavigateToRegister, event)
         }
     }
+
+    @Test
+    fun login_success_triggers_socket_connect() = runTest {
+        var connectCalled = false
+        val fakeStorage = com.forerun.customer.core.storage.FakeTokenStorage(token = "token")
+        val fakeSocket = object : com.forerun.customer.core.websocket.SocketManager(fakeStorage) {
+            override fun connect() {
+                connectCalled = true
+            }
+        }
+        val vm = LoginViewModel(loginUseCase, fakeSocket)
+        vm.onWhatsappChanged("0912345678")
+        vm.onPasswordChanged("password123")
+        vm.login()
+
+        assertTrue(connectCalled)
+    }
 }

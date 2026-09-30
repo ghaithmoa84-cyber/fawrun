@@ -376,4 +376,26 @@ class CreateOrderViewModelTest {
         assertNull(state.createdOrder)
         assertEquals("خطأ في الاتصال بالخادم", state.errorMessage)
     }
+
+    @Test
+    fun submitOrder_double_click_calls_useCase_only_once() = runTest(testDispatcher) {
+        fakeAddressRepository.getAddressResult = AddressResult.Success(
+            CustomerAddress(lat = 35.55, lng = 35.80, description = "بسنادا")
+        )
+        fakeOrderRepository.createOrderDelayMs = 100
+        val viewModel = CreateOrderViewModel(createOrderUseCase, getCustomerAddressUseCase, getAvailableRunnersUseCase)
+        advanceUntilIdle()
+
+        viewModel.onIntent(CreateOrderIntent.SetInputMode(OrderInputMode.QUICK))
+        viewModel.onIntent(CreateOrderIntent.UpdateQuickText("حليب\nخبز"))
+
+        // Simulate rapid double submit
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        viewModel.onIntent(CreateOrderIntent.SubmitOrder)
+        advanceUntilIdle()
+
+        assertEquals(1, fakeOrderRepository.createOrderCallCount)
+        assertFalse(viewModel.uiState.value.isSubmitting)
+        assertNotNull(viewModel.uiState.value.createdOrder)
+    }
 }

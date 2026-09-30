@@ -31,14 +31,14 @@ class TokenRefreshManager @Inject constructor(
         return (expiry - now) < tenMinutesMillis
     }
 
-    suspend fun refreshTokenIfNeeded(): Boolean {
-        if (!shouldRefresh()) {
+    suspend fun refreshTokenIfNeeded(force: Boolean = false): Boolean {
+        if (!force && !shouldRefresh()) {
             return true
         }
 
         return refreshMutex.withLock {
             // Re-check inside lock
-            if (!shouldRefresh()) {
+            if (!force && !shouldRefresh()) {
                 return@withLock true
             }
 

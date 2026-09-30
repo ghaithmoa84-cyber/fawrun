@@ -53,7 +53,8 @@ class MainActivity : ComponentActivity() {
     @Inject
     lateinit var tokenRefreshManager: com.forerun.customer.data.remote.token.TokenRefreshManager
 
-    private val pendingDeepLinkOrderId = MutableStateFlow<String?>(null)
+    @Inject
+    lateinit var deepLinkHolder: com.forerun.customer.core.notification.DeepLinkHolder
 
     override fun onCreate(savedInstanceState: Bundle?) {
         enableEdgeToEdge(
@@ -68,13 +69,12 @@ class MainActivity : ComponentActivity() {
 
         val initialOrderId = NotificationPayloadParser.extractOrderId(intent)
         if (!initialOrderId.isNullOrBlank()) {
-            pendingDeepLinkOrderId.value = initialOrderId
+            deepLinkHolder.setPendingOrderId(initialOrderId)
         }
 
         setContent {
             ForerunTheme {
                 val navController = rememberNavController()
-                val pendingOrderId by pendingDeepLinkOrderId.collectAsStateWithLifecycle()
 
                 // POST_NOTIFICATIONS permission request for Android 13+ (API 33+)
                 val notificationPermissionLauncher = rememberLauncherForActivityResult(
@@ -92,13 +92,20 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Handle deep linking from notification payload
-                LaunchedEffect(pendingOrderId) {
-                    pendingOrderId?.let { orderId ->
-                        navController.navigate(Routes.orderDetail(orderId)) {
-                            launchSingleTop = true
+                // Handle deep linking from notification payload while app is already past splash
+                LaunchedEffect(navController) {
+                    deepLinkHolder.pendingOrderId.collect { orderId ->
+                        if (!orderId.isNullOrBlank()) {
+                            val currentRoute = navController.currentDestination?.route
+                            if (currentRoute != null && currentRoute != Routes.SPLASH) {
+                                val consumed = deepLinkHolder.consumePendingOrderId()
+                                if (!consumed.isNullOrBlank()) {
+                                    navController.navigate(Routes.orderDetail(consumed)) {
+                                        launchSingleTop = true
+                                    }
+                                }
+                            }
                         }
-                        pendingDeepLinkOrderId.value = null
                     }
                 }
 
@@ -120,7 +127,7 @@ class MainActivity : ComponentActivity() {
         setIntent(intent)
         val orderId = NotificationPayloadParser.extractOrderId(intent)
         if (!orderId.isNullOrBlank()) {
-            pendingDeepLinkOrderId.value = orderId
+            deepLinkHolder.setPendingOrderId(orderId)
         }
     }
 

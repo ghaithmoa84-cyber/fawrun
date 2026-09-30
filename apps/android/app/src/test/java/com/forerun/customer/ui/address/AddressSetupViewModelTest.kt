@@ -244,4 +244,36 @@ class AddressSetupViewModelTest {
         assertEquals("الموقع الثاني", viewModel.uiState.value.description)
         assertFalse(viewModel.uiState.value.isGeocodingLoading)
     }
+
+    @Test
+    fun saveAddress_double_click_invokes_update_only_once() = runTest(testDispatcher) {
+        var updateCallCount = 0
+        val countingRepo = object : com.forerun.customer.domain.repository.AddressRepository {
+            override suspend fun getAddress(): AddressResult = AddressResult.NotFound
+            override suspend fun updateAddress(
+                lat: Double,
+                lng: Double,
+                description: String
+            ): Result<CustomerAddress> {
+                updateCallCount++
+                kotlinx.coroutines.delay(100)
+                return Result.success(CustomerAddress(lat = lat, lng = lng, description = description))
+            }
+        }
+        val customGetUseCase = GetCustomerAddressUseCase(countingRepo)
+        val customUpdateUseCase = UpdateCustomerAddressUseCase(countingRepo)
+        val viewModel = AddressSetupViewModel(customGetUseCase, customUpdateUseCase, fakeGeocodingService)
+        advanceUntilIdle()
+
+        viewModel.onIntent(AddressSetupIntent.UpdateDescription("شارع الكورنيش"))
+
+        // Simulate rapid double click
+        viewModel.onIntent(AddressSetupIntent.SaveAddress)
+        viewModel.onIntent(AddressSetupIntent.SaveAddress)
+        advanceUntilIdle()
+
+        assertEquals(1, updateCallCount)
+        assertFalse(viewModel.uiState.value.isSaving)
+        assertTrue(viewModel.uiState.value.saveSuccess)
+    }
 }
