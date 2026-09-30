@@ -549,8 +549,9 @@ For the full detail, refer to:
 - BUG-023: Latent stored XSS on user.name (no exploit path in current React code).
 - RefreshToken cleanup: 28+ records per user; needs a scheduled cleanup job.
 
-### Blocked (environmental)
-- BUG-015: R2 upload failure UX — no R2 mock available locally.
+### Deferred by product decision — after MVP (2026-09-30)
+- **Receipt upload (Cloudflare R2) is postponed until after MVP.** The code exists and passes review, but it is not operationally enabled: `r2.service.ts:32` throws while `R2_*` remains `<dummy-for-now>`. Decision and consequences recorded in [PROJECT_STATUS.md §12 · D5](PROJECT_STATUS.md#12-سجل-القرارات).
+- Consequences to keep in mind before MVP: (1) `ReceiptUploader.tsx:44` leaks the raw backend config error to runners in English; (2) the Android customer app renders receipt lists that will always be empty (`OrderModels.kt:89,98`).
 
 ### Known coverage gaps
 - WebSocket notifications: not tested.

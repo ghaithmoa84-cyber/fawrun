@@ -30,7 +30,7 @@ git log -1 --stat
 | الخدمة | الحالة | ملاحظات |
 |---|---|---|
 | Sentry | ⏸️ مؤجل | بعد المراجعة المحلية |
-| Cloudflare R2 | ⏔ **يحتاج تحقّق** | **الحالة غير محسومة** — لم يُتحقَّق من Railway Variables بعد. Railway هي المرجع الوحيد. لا تُدّعى قيمة ولا وهم. انظر [PROJECT_STATUS.md §3.1](PROJECT_STATUS.md). |
+| Cloudflare R2 | ⏔ **مؤجَّل بقرار** | **ميزة رفع الإيصالات مُؤجَّلة لما بعد MVP** (قرار 2026-09-30). الكود موجود ويعمل لكنه غير مُفعَّل: `r2.service.ts:32` يرمي ما دام `R2_*` = `<dummy-for-now>`. التفاصيل والآثار في [PROJECT_STATUS.md §12 · D5](PROJECT_STATUS.md#12-سجل-القرارات). |
 
 ---
 
@@ -45,7 +45,7 @@ git log -1 --stat
 ## الخطوة التالية (Next Action)
 1. ✅ تشغيل `pnpm lint` + `pnpm typecheck` + `pnpm test` محليًا — مكتمل.
 2. ⏭️ **Sprint 8D (Android)** — المرجع: [docs/android/ROADMAP.md](docs/android/ROADMAP.md). وبشكل موازٍ: بنود Sprint 6 الـ backend المتبقية (اختبارات تكامل التسعير، مراجعة أمنية، خط أساس أداء، R2، Sentry) — [docs/sprints/Sprint 6 Brief.md](docs/sprints/Sprint%206%20Brief.md).
-3. 🔴 **حاجز — R2**: الحالة ⏔ غير محسومة؛ يجب التحقّق من Railway Variables قبل أي ميزة تعتمد على الإيصالات.
+3. ⏔ **R2 والإيصالات مؤجَّلة لما بعد MVP** بقرار 2026-09-30 — ليست عائقاً. المرجع: [PROJECT_STATUS.md §12 · D5](PROJECT_STATUS.md#12-سجل-القرارات).
 
 > **ملاحظة:** أُلغي بند «اختبار يدوي لكل الشاشات» كخطوة أولى — 223 اختبار Android + 184 اختبار وحدة غطّتاه آليًا. المتبقّي هو **اختبار ميداني** بعميل حقيقي 1–2 (بند Sprint 6 غير المُنجَز).
 

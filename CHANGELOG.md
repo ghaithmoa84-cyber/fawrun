@@ -5,6 +5,31 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-09-30 — D5: receipt upload (R2) deferred until after MVP
+
+**القرار (مستخدم، 2026-09-30):** تأجيل **ميزة رفع الإيصالات (Cloudflare R2)** بالكامل إلى ما بعد MVP. ساري.
+
+**الملفات المعدّلة (6 — توثيق فقط، صفر كود):**
+- `PROJECT_STATUS.md` — **§12 سجل قرارات جديد** (جدول D1–D5 + تفصيل D5) · §5 بند 7: ⏔ «يحتاج تحقّق» → ⏔ «مؤجَّل بقرار» · §11 يسجّل «سجل القرارات» كمالك fact جديدة
+- `NEXT_TASKS.md` — B1 من **⛔ حاجز** إلى **⏔ مؤجَّل**؛ لم تعد توقف أي مهمة في MVP
+- `HANDOFF.md` — صفّ R2 + بند «الخطوة التالية»
+- `PROJECT_BRIEF.md` — §20: `BUG-015` نُقل من «Blocked (environmental)» إلى قسم «Deferred by product decision»
+- `CHANGELOG.md` — هذا الإدخال
+
+**D3 أصبح ملغىً ومستبدلاً بـ D5:** لم تعد الحالة ⏔ «غير محسومة» — صارت قرار تأجيل. لم تُدّعَ قيمة لـ R2 ولا وهم.
+
+**ثلاثة آثار موثّقة (تحقّقتُ منها في الكود قبل الكتابة):**
+1. **تسريب رسالة إعداد داخلية** — `apps/runner-pwa/src/components/ReceiptUploader.tsx:44` يدمج نص الـ backend الخام في رسالة عربية، فيرى المندوب أسماء `R2_ACCOUNT_ID`… بالإنجليزية عند تعطيل الميزة.
+2. **Android يعرض الإيصالات للعميل قراءةً فقط** — `OrderModels.kt:89,98` · `OrderRepositoryImpl.kt:142-143` → القوائم فارغة دائماً.
+3. **بند Sprint 3 «Presigned URL» مُعلَّم `[x]` تقنياً** لكنه غير مُفعَّل تشغيلياً — وثِّق هذا التمييز صراحةً حتى لا يُقرأ كتوفّر تشغيلي.
+
+**لم يُحذف الكود:** كود الإيصالات سليم ومُتحقَّق منه؛ إزالته كلفة إعادة عمل بلا فائدة. التأجيل موثَّق لا مُنفَّذ.
+
+**موعد المراجعة:** `docs/android/ROADMAP.md` Sprint 9، أو أي عمل على `SettlementItem` يعتمد على الإيصالات.
+
+**الأوامر والنتائج:**
+- صفر كود — لا `pnpm` ولا `gradlew`. تحقّق روابط + روابط §12 فقط.
+
 ### 2026-09-30 — Root docs sync + Sprint DoD reconciliation (documentation-only)
 
 **الملفات المعدّلة (P1 — توثيق الجذر):**
