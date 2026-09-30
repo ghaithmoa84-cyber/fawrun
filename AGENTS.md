@@ -49,13 +49,13 @@ FORERUN is a grocery delivery platform built as a Modular Monolith in a Monorepo
 1. code-architect runs /pre-sprint (runs pre-sprint-checklist)
 2. feature-dev implements endpoints
 3. test-engineer runs full local checklist
-4. دفع مباشر إلى master
+4. فرع لكل سبرنت ثم `git merge --no-ff` إلى `master`
 
 ### Git Rules
 - Semantic commits: feat:, fix:, refactor:, etc.
 - Branch per Sprint: feature/sprint-N-<description>
-- دفع مباشر إلى master
-- Android branch strategy: تراكمي، لا دمج حتى إشارة المستخدم
+- فرع لكل سبرنت ثم `git merge --no-ff` إلى `master` (لا fast-forward — يبقي سجل الدمج مرئيًا)
+- Android branch strategy: نفس القاعدة بلا استثناء — **الأندرويد مدمج في `master` منذ `e5bfbc1`** (السبرنتات 1–8B في `3fc4119`، و8C في `e5bfbc1`)
 - التوثيق في docs/android/ قبل أي sprint جديد
 
 ### Security Rules

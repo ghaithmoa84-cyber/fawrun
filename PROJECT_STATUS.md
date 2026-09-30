@@ -1,8 +1,9 @@
 # FORERUN — Project Status & Diagnostic Playbook
 
-> **آخر تحديث:** 2026-09-23
+> **آخر تحديث:** 2026-09-30
 > **الغرض:** هذا الملف هو المرجع الوحيد لحالة المشروع، القرارات المعمارية، الأخطاء المعروفة، وحلولها.
 > **مهم:** أي وكيل أو مطوّر يبدأ العمل يجب أن يقرأ هذا الملف كاملًا قبل أي تعديل.
+> **نطاق المرجعية:** هذا الملف يملك حقائق **الإنتاج والبنية التحتية** فقط. لتوثيق Android انظر خريطة التوثيق في [§11](#11-خريطة-التوثيق--أي-ملف-يملك-أي-حققيقة).
 
 ---
 
@@ -16,12 +17,14 @@
 | Admin Panel | Next.js 14.2 | Vercel |
 | Runner PWA | Vite + vite-plugin-pwa | Vercel |
 | Customer Web | Vite | Vercel |
+| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** |
 
 ### روابط الإنتاج
 - **API**: `https://fawrun-api-production.up.railway.app/api/v1`
 - **Admin**: `https://fawrun-admin.vercel.app`
 - **Runner**: `https://fawrun-runner-pwa-steel.vercel.app`
 - **Customer**: `https://fawrun-customer-web-three.vercel.app`
+- **Android**: APK غير موقّع — **لم يُنشر بعد** (Sprint 8F). لا يوجد رابط إنتاج.
 - **GitHub**: `github.com/ghaithmoa84-cyber/forerun` (master)
 
 ### 1.1 حالة الإنتاج وقاعدة البيانات — 2026-09-23
@@ -198,7 +201,9 @@ curl -I -X OPTIONS https://fawrun-api-production.up.railway.app/api/v1/auth/logi
 
 ---
 
-## 5. البنود المكتملة والمختبرة على الإنتاج
+## 5. سجل إغلاق البنود (المكتملة + المتبقية)
+
+> البنود #6 و#7 **غير** مكتملتَين رغم أنهما كانتا مُدرجتَين سابقًا كـ«مكتملة». كل صف يحمل سطر دليل `file:line` أو ⏔ يحتاج تحقّق. لا تُغلق بندًا دون دليل.
 
 | # | البند | الحالة | النتيجة |
 |---|---|---|---|
@@ -207,8 +212,8 @@ curl -I -X OPTIONS https://fawrun-api-production.up.railway.app/api/v1/auth/logi
 | 3 | `R2Service` → lazy (لا يرمي في constructor) | ✅ مكتملة ومختبرة على الإنتاج | اكتمل الإغلاق |
 | 4 | تدقيق جميع FKs في schema (User vs Admin) | ✅ مكتملة ومختبرة على الإنتاج | اكتمل الإغلاق |
 | 5 | `MODULE_TYPELESS_PACKAGE_JSON` warning | ✅ مكتملة ومختبرة على الإنتاج | اكتمل الإغلاق |
-| 6 | ترقية API Dockerfile إلى `node:22-slim` | ✅ مكتملة ومختبرة على الإنتاج | اكتمل الإغلاق |
-| 7 | استبدال قيم R2 الوهمية بقيم حقيقية | ✅ مكتملة ومختبرة على الإنتاج | اكتمل الإغلاق |
+| 6 | ترقية API Dockerfile إلى Node 22 (الهدف `22-slim`) | ❌ **غير مُنجَز** | `Dockerfile:1` ما زال `FROM node:20-slim` بينما `.nvmrc:1` = `22.23.1`. الفجوة موثّقة في `docs/07-environment-audit.md`. لا يوجد `railway.toml` في المستودع، فيكتشف Railway `Dockerfile` الجذري تلقائيًا — أي أن `Dockerfile` هو مصدر الحقيقة للبناء، ولهذا كانت عبارة «تمت الترقية» السابقة خاطئة. |
+| 7 | استبدال قيم R2 الوهمية بقيم حقيقية | ⏔ **يحتاج تحقّق** | `PROJECT_STATUS.md` §3.1 يعرض `R2_* = <dummy-for-now>`. **لم يُتحقَّق من Railway Variables بعد** — Railway هي المرجع الوحيد ولا تُدّعى هنا قيمة ولا وهم. |
 | 8 | Vercel Agent Skill plugin | ✅ مكتملة ومختبرة على الإنتاج | اكتمل الإغلاق |
 
 ---
@@ -265,9 +270,19 @@ fawrun/
 │   ├── runner-pwa/             ← Vite + PWA
 │   │   ├── vercel.json
 │   │   └── vite.config.ts
-│   └── customer-web/           ← Vite
-│       ├── vercel.json
-│       └── vite.config.ts
+│   ├── customer-web/           ← Vite
+│   │   ├── vercel.json
+│   │   └── vite.config.ts
+│   └── android/                ← Kotlin + Jetpack Compose (8 سبرنتات منجزة)
+│       ├── app/src/main/java/  ← MVVM + Hilt + Retrofit + WebSocket
+│       └── app/src/test/       ← 223 @Test
+├── docs/
+│   ├── sprints/                ← معايير إنجاز سبرنتات الـ backend (Sprint 1–6)
+│   └── android/                ← توثيق Android (انظر §11)
+│       ├── MASTER-SPEC.md      ← المواصفة
+│       ├── PROGRESS.md         ← السجل التفصيلي
+│       ├── CURRENT_STATE.md    ← لحظة الحاضر
+│       └── ROADMAP.md          ← 8A–8C منجزة · 8D–10 مخططة
 └── packages/
     ├── shared-types/
     └── shared-constants/
@@ -290,6 +305,11 @@ fawrun/
 | 2026-09-23 | إغلاق البنود #1–#8 بعد اكتمالها واختبارها على الإنتاج |
 | 2026-09-23 | إصلاح `ACCOUNT_SUSPENDED_MESSAGE`، منع دخول المعلّق، وإضافة `unsuspend` |
 | 2026-09-23 | تعريب أخطاء Zod، توحيد `SyrianPhoneSchema`، وإضافة `scripts/diff-schema.js` |
+| 2026-09-30 | `3fc4119` — `merge(android)`: سبرنتات 1–8B — اكتمال تطبيق Android للعميل |
+| 2026-09-30 | `480b812` — `docs(android)`: تقرير تنظيف الفروع |
+| 2026-09-30 | `6e25aed` — `refactor(android)`: سبرنت 8C — بنية Account نظيفة + فك ارتباط NavGraph |
+| 2026-09-30 | `e5bfbc1` — `merge(android)`: سبرنت 8C — **آخر دمج للأندرويد في `master`** (8 سبرنتات · 223 `@Test` · APK مبني لـ 3 ABI · غير موقّع) |
+| 2026-09-30 | `9e6c212` — `docs(android)`: تحديث التوثيق الشامل (`PROGRESS.md` · `ROADMAP.md` · `CURRENT_STATE.md` · `MASTER-SPEC.md` §21) |
 
 ---
 
@@ -301,6 +321,30 @@ fawrun/
 4. **استخدم أوامر التشخيص السريقة** (بند 4) بدلًا من الاستنتاجات.
 5. **بعد كل حل، حدّث بند 4 وبند 9.**
 6. **احفظ screenshots لـ Railway Variables + Vercel Settings** في `docs/screenshots/`.
+
+---
+
+## 11. خريطة التوثيق — أي ملف يملك أي حقيقة
+
+> هذا القسم **يُلغي** ادّعاء «المصدر الوحيد للحقيقة» المكرر في `PROJECT_STATUS.md` و`HANDOFF.md` و`AGENTS.md`. لا يوجد ملف واحد يملك كل شيء؛ لكل نطاق مالك واحد.
+
+| الحقيقة | الملف المالك | لا يُقرأ منه |
+|---|---|---|
+| الإنتاج، البنية التحتية، النشر، تشخيص الأخطاء | **[PROJECT_STATUS.md](PROJECT_STATUS.md)** (هذا الملف) | — |
+| قواعد التعامل، المعايير، تدفق العمل، الأوامر | **[AGENTS.md](AGENTS.md)** | — |
+| قائمة المهام القادمة فقط | **[NEXT_TASKS.md](NEXT_TASKS.md)** | — |
+| معايير إنجاز سبرنتات الـ backend (DoD) | **[docs/sprints/](docs/sprints/)** | لا تُستخدم كحالة حالية |
+| **Android — المواصفة** | **[docs/android/MASTER-SPEC.md](docs/android/MASTER-SPEC.md)** | — |
+| **Android — السجل التفصيلي** | **[docs/android/PROGRESS.md](docs/android/PROGRESS.md)** | — |
+| **Android — لحظة الحاضر** | **[docs/android/CURRENT_STATE.md](docs/android/CURRENT_STATE.md)** | — |
+| **Android — المستقبل (8D–10)** | **[docs/android/ROADMAP.md](docs/android/ROADMAP.md)** | — |
+| تاريخ التغييرات | **[CHANGELOG.md](CHANGELOG.md)** | — |
+| خط المعطيات النشط | **[docs/0X-*.md](docs/)** (تشخيص) | لا تعارض مع هذا الملف؛ هذا يلخّص |
+
+### قاعدة منع التصادم في الترقيم
+- سبرنتات الـ **backend** تُرقَّم `Sprint 1..6` في [docs/sprints/](docs/sprints/).
+- سبرنتات **Android** تُرقَّم `8A..10` بشكل مستقل في [docs/android/ROADMAP.md](docs/android/ROADMAP.md).
+- **لا تخلط بين الترقيمين.** «Sprint 8» في هذا المستودع يعني Android دائمًا.
 
 ---
 

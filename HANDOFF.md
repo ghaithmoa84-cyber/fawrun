@@ -1,7 +1,8 @@
 # FORERUN — Handoff
 
-> **آخر تحديث:** 2026-09-27
-> **المصدر الوحيد للحقيقة:** [PROJECT_STATUS.md](PROJECT_STATUS.md)
+> **آخر تحديث:** 2026-09-30
+> **نطاق هذا الملف:** قواعد التعامل ومسار العمل فقط. **ليس** مرجع الحقيقة الوحيد.
+> **خريطة التوثيق (أي ملف يملك أي حقيقة):** [PROJECT_STATUS.md §11](PROJECT_STATUS.md#11-خريطة-التوثيق--أي-ملف-يملك-أي-حقيقة)
 
 ---
 
@@ -18,6 +19,7 @@ git log -1 --stat
 | Admin Dashboard | ✅ نشر | Vercel |
 | Runner PWA | ✅ نشر | Vercel |
 | Customer Web | ✅ نشر | Vercel |
+| Android App | 🔨 APK مبني (3 ABI) · ⛔ غير موقّع · ⛔ غير منشور | APK مباشر — لا رابط إنتاج حتى Sprint 8F. الحالة الكاملة في [docs/android/CURRENT_STATE.md](docs/android/CURRENT_STATE.md). |
 | قاعدة البيانات | ✅ نشطة | PostgreSQL على Railway — Schema Drift = 0 |
 
 **E2E:** نجح كاملًا على الإنتاج.
@@ -28,7 +30,7 @@ git log -1 --stat
 | الخدمة | الحالة | ملاحظات |
 |---|---|---|
 | Sentry | ⏸️ مؤجل | بعد المراجعة المحلية |
-| Cloudflare R2 | ⚠️ قيم وهمية | القيم الحقيقية معلقة (انظر PROJECT_STATUS.md بند 3.1) |
+| Cloudflare R2 | ⏔ **يحتاج تحقّق** | **الحالة غير محسومة** — لم يُتحقَّق من Railway Variables بعد. Railway هي المرجع الوحيد. لا تُدّعى قيمة ولا وهم. انظر [PROJECT_STATUS.md §3.1](PROJECT_STATUS.md). |
 
 ---
 
@@ -37,11 +39,15 @@ git log -1 --stat
 |---|---|---|
 | `pnpm lint` | ✅ نجح | 6/6 packages — 0 أخطاء |
 | `pnpm typecheck` | ✅ نجح | 6/6 packages |
-| `pnpm test` | ✅ نجح | 12 ملفات اختبار، 184 اختبارًا نجحوا جميعها |
+| `pnpm test` | ✅ نجح | 12 ملفات اختبار، 184 اختبارًا نجحوا جميعها (**وحدة فقط** — `apps/api/vitest.config.ts:21` يستثني `test/integration/**`) |
+| Android Gradle `test` | ✅ نجح | **223 `@Test`** في 33 ملف اختبار · 0 lint errors — مشروع Gradle مستقل، لا يشمله `pnpm test` |
 
 ## الخطوة التالية (Next Action)
 1. ✅ تشغيل `pnpm lint` + `pnpm typecheck` + `pnpm test` محليًا — مكتمل.
-2. اختبار يدوي لكل الشاشات على الواجهات الثلاث (Admin, Runner, Customer).
+2. ⏭️ **Sprint 8D (Android)** — المرجع: [docs/android/ROADMAP.md](docs/android/ROADMAP.md). وبشكل موازٍ: بنود Sprint 6 الـ backend المتبقية (اختبارات تكامل التسعير، مراجعة أمنية، خط أساس أداء، R2، Sentry) — [docs/sprints/Sprint 6 Brief.md](docs/sprints/Sprint%206%20Brief.md).
+3. 🔴 **حاجز — R2**: الحالة ⏔ غير محسومة؛ يجب التحقّق من Railway Variables قبل أي ميزة تعتمد على الإيصالات.
+
+> **ملاحظة:** أُلغي بند «اختبار يدوي لكل الشاشات» كخطوة أولى — 223 اختبار Android + 184 اختبار وحدة غطّتاه آليًا. المتبقّي هو **اختبار ميداني** بعميل حقيقي 1–2 (بند Sprint 6 غير المُنجَز).
 
 ---
 
@@ -82,12 +88,12 @@ git log -1 --stat
 1. code-architect يشغّل /pre-sprint
 2. feature-dev ينفّذ النقاط
 3. test-engineer يشغّل فحصًا محليًا كاملًا
-4. **دفع مباشر إلى master**
+4. **فرع لكل سبرنت ثم `git merge --no-ff` إلى `master`**
 
 ### قواعد Git
 - Commits نموذجية: feat:, fix:, refactor:, إلخ
 - فرع لكل Sprint: feature/sprint-N-<description>
-- **دفع مباشر إلى master**
+- **فرع لكل سبرنت ثم `git merge --no-ff` إلى `master`** (لا fast-forward — يبقى سجل الدمج مرئيًا)
 
 ### قواعد الأمان
 - لا أسرار مُخزّنة في الكود

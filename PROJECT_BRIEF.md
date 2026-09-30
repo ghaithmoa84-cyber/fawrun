@@ -11,7 +11,7 @@ MVP scope: buying items from one or more stores + delivery. No catalog, no onlin
 - Style: Modular Monolith inside a Monorepo (not microservices - easier now, can split later).
 - Backend and Frontend are fully separated.
 - Communication: REST API (/api/v1) + real-time WebSocket (Socket.IO).
-  Note: A customer-web app exists alongside the planned android app.
+  Note: The Android app is complete and merged (8 sprints, 223 @Test) - see docs/android/PROGRESS.md
 - Server is always the source of truth - never compute fees or change states on the frontend.
 
 ### Monorepo layout
@@ -431,6 +431,18 @@ Sprint 6 - QA + Launch (1 week)
 - Final deployment on Railway + Vercel
 - Field testing with 1-2 real customers
 
+### Android track - separate numbering (does NOT use `Sprint N`)
+
+Android sprints are numbered **8A..10** independently of the backend `Sprint 1..6` above.
+**Do not mix the two numberings** - "Sprint 8" in this repository always means Android.
+
+| Android Sprint | Status | Scope |
+|---|---|---|
+| 8A - 8C | ✅ COMPLETED (merged to `master` at `e5bfbc1`) | Full customer app: 15 screens, MVVM + Hilt, Retrofit + JWT refresh, WebSocket + reconnection, MapLibre/OSM (always-online v1 - Room/offline-sync was **voided by decision**, see `docs/android/PROGRESS.md`). 223 @Test. |
+| 8D - 10 | 📋 PLANNED | Architecture hardening, QA, signing + release. See `docs/android/ROADMAP.md`. |
+
+Android QA and release items are delegated to `docs/android/ROADMAP.md` Sprint 10 - they are not duplicated in the backend Sprint 6 DoD.
+
 ## 15. Coding Rules (Spec Section 17)
 
 1. Server is source of truth - never compute fees or change states on the frontend only.
@@ -462,7 +474,7 @@ Sprint 6 - QA + Launch (1 week)
 Git rules:
 - Semantic commits: feat:, fix:, refactor:, etc.
 - Branch per Sprint: feature/sprint-N-
-- No direct push to main
+- Branch per sprint, then `git merge --no-ff` to master (no fast-forward - keeps the merge history visible)
 - Use /pr command to ensure full workflow
 - Wait for CodeRabbit review before merge
 
