@@ -23,7 +23,7 @@ This directory contains the operational guidelines for the specialized agents in
 ## 3. Test Engineer (`test-engineer`)
 - **Role**: Quality gatekeeper, testing, security, and verification.
 - **Responsibilities**:
-  - Enforce local verification before push: `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test`.
+  - Enforce local verification before push: `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test`.
   - Verify security standards (Guards, RS256 JWT, bcrypt, CORS, Helmet).
   - Verify edge cases: explicit returns/throws, Logger on catch, `updateMany` for status transitions.
 

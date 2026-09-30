@@ -71,7 +71,7 @@ fawrun/
 **خطوات التنفيذ التفصيلية:**
 
 1. إنشاء `packages/shared-constants/package.json`:
-   - `name`: `"@fawrun/shared-constants"`
+   - `name`: `"@forerun/shared-constants"`
    - `version`: `"0.0.1"`
    - `main`: `"./dist/index.js"`
    - `types`: `"./dist/index.d.ts"`
@@ -159,7 +159,7 @@ export const CONFIG = {
 4. إنشاء `src/index.ts` يُعيد تصدير كل الملفات أعلاه.
 
 **المخرج المتوقع:**
-- حزمة `@fawrun/shared-constants` كاملة مع ملفات: `order-status.ts`, `pricing.ts`, `config.ts`, `index.ts`
+- حزمة `@forerun/shared-constants` كاملة مع ملفات: `order-status.ts`, `pricing.ts`, `config.ts`, `index.ts`
 - `pnpm build` يعمل بدون أخطاء في الحزمة
 
 **الاعتماديات:** المهمة 1.1
@@ -174,7 +174,7 @@ export const CONFIG = {
 **خطوات التنفيذ التفصيلية:**
 
 1. إنشاء `packages/shared-types/package.json`:
-   - `name`: `"@fawrun/shared-types"`
+   - `name`: `"@forerun/shared-types"`
    - `version`: `"0.0.1"`
    - `dependencies`: `zod`
    - `main`, `types`, `scripts` مشابهة لـ shared-constants
@@ -212,7 +212,7 @@ export const CONFIG = {
 4. إنشاء `src/index.ts` يُعيد تصدير كل الملفات.
 
 **المخرج المتوقع:**
-- حزمة `@fawrun/shared-types` كاملة مع جميع الملفات المذكورة
+- حزمة `@forerun/shared-types` كاملة مع جميع الملفات المذكورة
 - جميع Zod schemas صالحة ومتوافقة مع الـ Types
 - `pnpm build` يعمل بدون أخطاء
 
@@ -347,7 +347,7 @@ export const CONFIG = {
    - `auth.service.ts`
    - `dto/register.dto.ts`
 
-2. في `dto/register.dto.ts`: استخدام Zod schema من `@fawrun/shared-types` للتحقق من البيانات الواردة:
+2. في `dto/register.dto.ts`: استخدام Zod schema من `@forerun/shared-types` للتحقق من البيانات الواردة:
    ```
    {
      "name": "string",
@@ -796,8 +796,8 @@ export const CONFIG = {
 ## معايير الإنجاز (Definition of Done) — Sprint 1
 
 - [x] جميع الحزم تبني بنجاح عبر `pnpm build` من الجذر (Turborepo pipeline يعمل)،都可以 تشغيل `pnpm install` بنجاح
-- [x] حزمته `@fawrun/shared-constants` تبني بنجاح وتحتوي على ثوابت التسعير وحالات الطلب
-- [x] حزمته `@fawrun/shared-types` تبني بنجاح وتحتوي على DTOs وZod Schemas
+- [x] حزمته `@forerun/shared-constants` تبني بنجاح وتحتوي على ثوابت التسعير وحالات الطلب
+- [x] حزمته `@forerun/shared-types` تبني بنجاح وتحتوي على DTOs وZod Schemas
 - [x] Prisma Schema كامل (جميع الـ models والـ enums والعلاقاتالفهارس) ومطابق للقسم 5
 - [x] أول Migration ناجحة وقاعدة البيانات تُنشأ بدون أخطاء
 - [x] `POST /api/v1/auth/register` يُنشئ حساباً بحالة `PENDING_VERIFICATION`

@@ -1,0 +1,244 @@
+package com.forerun.customer.ui.order.detail
+
+import androidx.lifecycle.SavedStateHandle
+import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import com.forerun.customer.core.websocket.WebSocketEvent
+import com.forerun.customer.domain.model.CustomerOrderDetail
+import com.forerun.customer.domain.usecase.order.CancelOrderUseCase
+import com.forerun.customer.domain.usecase.order.GetOrderDetailUseCase
+import com.forerun.customer.domain.usecase.order.ObserveOrderEventsUseCase
+import dagger.hilt.android.lifecycle.HiltViewModel
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
+import javax.inject.Inject
+
+data class OrderDetailUiState(
+    val isLoading: Boolean = true,
+    val isRefreshing: Boolean = false,
+    val isCancelling: Boolean = false,
+    val order: CustomerOrderDetail? = null,
+    val errorMessage: String? = null,
+    val cancelSuccess: Boolean = false,
+    val cancelError: String? = null,
+    val showCancelDialog: Boolean = false,
+    val feeUpdatedNotice: Boolean = false
+) {
+    val canCancel: Boolean
+        get() {
+            val status = order?.status ?: return false
+            return status in setOf(
+                "PENDING_REVIEW",
+                "UNDER_REVIEW",
+                "AWAITING_RUNNER",
+                "AWAITING_PREFERRED_RUNNER",
+                "ASSIGNED"
+            )
+        }
+
+    val canContactRunner: Boolean
+        get() {
+            val status = order?.status ?: return false
+            val hasRunner = order.runner != null
+            return hasRunner && status in setOf(
+                "ASSIGNED",
+                "IN_PROGRESS",
+                "OUT_FOR_DELIVERY",
+                "DELIVERED"
+            )
+        }
+
+    val canRate: Boolean
+        get() {
+            val o = order ?: return false
+            if (o.status != "DELIVERED") return false
+            // Check 24 hours window if deliveredAt is known
+            val deliveredDate = o.deliveredAt ?: return true
+            return try {
+                val epoch = java.time.Instant.parse(deliveredDate).toEpochMilli()
+                val now = System.currentTimeMillis()
+                (now - epoch) <= 24 * 60 * 60 * 1000
+            } catch (_: Exception) {
+                true
+            }
+        }
+}
+
+sealed interface OrderDetailIntent {
+    data object Load : OrderDetailIntent
+    data object Refresh : OrderDetailIntent
+    data class ShowCancelDialog(val show: Boolean) : OrderDetailIntent
+    data object ConfirmCancel : OrderDetailIntent
+    data object ClearError : OrderDetailIntent
+    data object ClearCancelSuccess : OrderDetailIntent
+    data object ClearFeeNotice : OrderDetailIntent
+}
+
+@HiltViewModel
+class OrderDetailViewModel @Inject constructor(
+    private val savedStateHandle: SavedStateHandle,
+    private val getOrderDetailUseCase: GetOrderDetailUseCase,
+    private val cancelOrderUseCase: CancelOrderUseCase,
+    private val observeOrderEventsUseCase: ObserveOrderEventsUseCase
+) : ViewModel() {
+
+    val orderId: String = savedStateHandle.get<String>("orderId").orEmpty()
+
+    private val _uiState = MutableStateFlow(OrderDetailUiState())
+    val uiState: StateFlow<OrderDetailUiState> = _uiState.asStateFlow()
+
+    init {
+        if (orderId.isNotBlank()) {
+            loadDetail(showLoading = true)
+            observeWebSocketEvents()
+        } else {
+            _uiState.update { it.copy(isLoading = false, errorMessage = "معرف الطلب غير صحيح") }
+        }
+    }
+
+    fun onIntent(intent: OrderDetailIntent) {
+        when (intent) {
+            OrderDetailIntent.Load -> loadDetail(showLoading = true)
+            OrderDetailIntent.Refresh -> loadDetail(showLoading = false, isRefresh = true)
+            is OrderDetailIntent.ShowCancelDialog -> {
+                _uiState.update { it.copy(showCancelDialog = intent.show) }
+            }
+            OrderDetailIntent.ConfirmCancel -> cancelOrder()
+            OrderDetailIntent.ClearError -> {
+                _uiState.update { it.copy(errorMessage = null, cancelError = null) }
+            }
+            OrderDetailIntent.ClearCancelSuccess -> {
+                _uiState.update { it.copy(cancelSuccess = false) }
+            }
+            OrderDetailIntent.ClearFeeNotice -> {
+                _uiState.update { it.copy(feeUpdatedNotice = false) }
+            }
+        }
+    }
+
+    fun loadDetail(showLoading: Boolean = true, isRefresh: Boolean = false) {
+        viewModelScope.launch {
+            if (showLoading) {
+                _uiState.update { it.copy(isLoading = true, errorMessage = null) }
+            } else if (isRefresh) {
+                _uiState.update { it.copy(isRefreshing = true, errorMessage = null) }
+            }
+
+            val result = getOrderDetailUseCase(orderId)
+            result.onSuccess { orderDetail ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        order = orderDetail,
+                        errorMessage = null
+                    )
+                }
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(
+                        isLoading = false,
+                        isRefreshing = false,
+                        errorMessage = err.message
+                    )
+                }
+            }
+        }
+    }
+
+    private fun cancelOrder() {
+        viewModelScope.launch {
+            _uiState.update { it.copy(isCancelling = true, cancelError = null) }
+            val result = cancelOrderUseCase(orderId)
+            result.onSuccess {
+                _uiState.update {
+                    it.copy(
+                        isCancelling = false,
+                        cancelSuccess = true,
+                        showCancelDialog = false
+                    )
+                }
+                loadDetail(showLoading = false)
+            }.onFailure { err ->
+                _uiState.update {
+                    it.copy(
+                        isCancelling = false,
+                        cancelError = err.message,
+                        showCancelDialog = false
+                    )
+                }
+            }
+        }
+    }
+
+    private fun observeWebSocketEvents() {
+        viewModelScope.launch {
+            observeOrderEventsUseCase(orderId).collect { event ->
+                handleWebSocketEvent(event)
+            }
+        }
+    }
+
+    fun handleWebSocketEvent(event: WebSocketEvent) {
+        when (event) {
+            is WebSocketEvent.StatusChanged -> {
+                _uiState.update { current ->
+                    current.copy(
+                        order = current.order?.copy(status = event.newStatus)
+                    )
+                }
+                loadDetail(showLoading = false)
+            }
+            is WebSocketEvent.RunnerAssigned -> {
+                loadDetail(showLoading = false)
+            }
+            is WebSocketEvent.FeeUpdated -> {
+                _uiState.update { current ->
+                    current.copy(
+                        order = current.order?.copy(totalFee = event.newFee),
+                        feeUpdatedNotice = true
+                    )
+                }
+                loadDetail(showLoading = false)
+            }
+            is WebSocketEvent.StorePurchased,
+            is WebSocketEvent.StoreSkipped -> {
+                loadDetail(showLoading = false)
+            }
+            is WebSocketEvent.OutForDelivery -> {
+                _uiState.update { current ->
+                    current.copy(
+                        order = current.order?.copy(status = "OUT_FOR_DELIVERY")
+                    )
+                }
+                loadDetail(showLoading = false)
+            }
+            is WebSocketEvent.Delivered -> {
+                _uiState.update { current ->
+                    current.copy(
+                        order = current.order?.copy(
+                            status = "DELIVERED",
+                            deliveredAt = event.deliveredAt ?: current.order.deliveredAt
+                        )
+                    )
+                }
+                loadDetail(showLoading = false)
+            }
+            is WebSocketEvent.Cancelled -> {
+                _uiState.update { current ->
+                    current.copy(
+                        order = current.order?.copy(
+                            status = "CANCELLED",
+                            cancelReason = event.reason ?: current.order.cancelReason
+                        )
+                    )
+                }
+                loadDetail(showLoading = false)
+            }
+            else -> Unit
+        }
+    }
+}

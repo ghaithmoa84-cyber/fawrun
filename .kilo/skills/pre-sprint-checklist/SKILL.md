@@ -35,7 +35,7 @@ Before each Sprint, Kilo verifies that the foundation is ready for development. 
 
 ### 5. Code Quality Gates
 - [ ] Full verification command succeeds:
-  `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter fawrun-api test`
+  `pnpm build && pnpm typecheck && pnpm lint && pnpm --filter forerun-api test`
 - [ ] No `findUnique` without null handling
 - [ ] No `catch { void 0 }` — every catch logs via Logger
 - [ ] Every status change uses `updateMany` with `where: { status: currentStatus }`

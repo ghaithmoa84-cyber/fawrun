@@ -1,7 +1,7 @@
 # FORERUN Coding Standards & Workflow
 
 > **ملاحظة:** الحالة الحالية للمشروع وآخر جلسة مراجعة موثّقة في
-> [docs/review/HANDOFF-TO-NEXT-SESSION.md](docs/review/HANDOFF-TO-NEXT-SESSION.md).
+> [PROJECT_STATUS.md](PROJECT_STATUS.md).
 > راجعها قبل أي عمل. هذا الملف هو المرجع للمعايير والأدوات والأوامر.
 
 ## Project Overview
@@ -55,6 +55,8 @@ FORERUN is a grocery delivery platform built as a Modular Monolith in a Monorepo
 - Semantic commits: feat:, fix:, refactor:, etc.
 - Branch per Sprint: feature/sprint-N-<description>
 - دفع مباشر إلى master
+- Android branch strategy: تراكمي، لا دمج حتى إشارة المستخدم
+- التوثيق في docs/android/ قبل أي sprint جديد
 
 ### Security Rules
 - No hardcoded secrets

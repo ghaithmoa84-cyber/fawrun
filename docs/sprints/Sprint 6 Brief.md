@@ -113,7 +113,7 @@
    **القفل عند التسليم:**
    - بعد DELIVERED: الرسم لا يتغير حتى لو تغيرت بيانات أخرى
 
-3. **تحقق من دالة `calculateFee()` في `@fawrun/shared-constants`:**
+3. **تحقق من دالة `calculateFee()` في `@forerun/shared-constants`:**
    - Unit tests مباشرة على الدالة مع مختلف المدخلات
    - التأكد من أن `Math.floor` للـ runnerShare و `Math.ceil` للـ platformShare يعملان بشكل صحيح (لا يوجد فقدان في الأرقام)
 

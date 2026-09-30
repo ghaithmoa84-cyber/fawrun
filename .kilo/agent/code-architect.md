@@ -49,7 +49,7 @@ Designs and validates architecture before any development begins. Invoked at the
 - When architecture uncertainty blocks feature-dev
 
 ## Output
-- Updated CURRENT_STATE.md with Sprint plan
+- Updated PROJECT_STATUS.md with Sprint plan
 - Prisma schema changes (if needed)
 - Shared types in packages/shared-types/
 - Module skeletons ready for feature-dev

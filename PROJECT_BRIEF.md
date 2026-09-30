@@ -15,7 +15,7 @@ MVP scope: buying items from one or more stores + delivery. No catalog, no onlin
 - Server is always the source of truth - never compute fees or change states on the frontend.
 
 ### Monorepo layout
-fawrun/
+forerun/
 apps/api/src/modules/ - auth, users, customers, runners, orders, order-items, order-stores, pricing, settlements, ledger, ratings, receipts, notifications, audit
 apps/api/src/websocket/ - Socket.IO gateways
 apps/api/src/state-machine/ - order / orderStore / runner machines
@@ -521,7 +521,7 @@ This file is a condensed English summary of the FORERUN project, intended for an
 
 For the full detail, refer to:
 - FORERUN - MVP Technical Specification.txt (the authoritative spec, mostly Arabic)
-- CURRENT_STATE.md (current sprint status)
+- PROJECT_STATUS.md (current project and sprint status)
 - AGENTS.md (coding standards and workflow)
 - .kilo/agent/*.md, .kilo/command/*.md, .kilo/skills/*/SKILL.md (agent/command/skill definitions)
 

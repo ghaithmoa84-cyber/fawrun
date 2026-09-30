@@ -370,7 +370,7 @@ const result = await prisma.$transaction(async (tx) => {
    - يستخدم State Machine: `UNDER_REVIEW` → `AWAITING_RUNNER` (أو `AWAITING_PREFERRED_RUNNER`)
    - المنطق:
      a. تحديث `isPeripheral` في الطلب
-     b. إعادة حساب الرسم عبر `calculateFee()` من `@fawrun/shared-constants`:
+     b. إعادة حساب الرسم عبر `calculateFee()` من `@forerun/shared-constants`:
         - `isPeripheral`: القيمة المُرسلة من Admin
         - `purchasedStoreCount`: 0 (لم يُشترى شيء بعد — الرسم تقديري)
      c. تحديد الحالة التالية:
@@ -445,7 +445,7 @@ const result = await prisma.$transaction(async (tx) => {
 ### 2.8 بناء Pricing Engine
 
 **الوصف:**
-تنفيذ محرك التسعير الكامل وفق القسم 8 من الوثيقة. المحرك يستخدم دالة `calculateFee()` من `@fawrun/shared-constants`.
+تنفيذ محرك التسعير الكامل وفق القسم 8 من الوثيقة. المحرك يستخدم دالة `calculateFee()` من `@forerun/shared-constants`.
 
 **خطوات التنفيذ التفصيلية:**
 
@@ -455,7 +455,7 @@ const result = await prisma.$transaction(async (tx) => {
 
 2. في `pricing.service.ts`:
    - دالة `recalculateFee(orderId: string)`: تجلب الطلب مع OrderStores بحالة `PURCHASED`، تحسب الرسم، تُحدّث الطلب
-   - تستخدم `calculateFee()` من `@fawrun/shared-constants`
+   - تستخدم `calculateFee()` من `@forerun/shared-constants`
 
 3. **متى يُعاد حساب الرسم** (القسم 8):
    - عند إنشاء الطلب — تقدير أولي: `baseFee: 60`, `peripheralFee: 0`, `totalFee: 60`
@@ -479,7 +479,7 @@ const result = await prisma.$transaction(async (tx) => {
 - WebSocket event يُرسل عند تغيير الرسم
 - AuditLog يُسجّل كل تغيير
 
-**الاعتماديات:** المهام 2.3, 2.6 + حزمة `@fawrun/shared-constants`
+**الاعتماديات:** المهام 2.3, 2.6 + حزمة `@forerun/shared-constants`
 
 ---
 
