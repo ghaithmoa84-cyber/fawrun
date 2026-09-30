@@ -226,6 +226,15 @@ class AccountViewModelTest {
     }
 
     @Test
+    fun initialState_beforeLoadCompletes_isLoading() {
+        val fresh = AccountUiState()
+
+        assertTrue(fresh.isLoading)
+        assertNull(fresh.profile)
+        assertNull(fresh.errorMessage)
+    }
+
+    @Test
     fun loadAccountData_afterFailure_recoversOnRetry() {
         fakeAccountRepository.shouldFailGetProfile = true
         val errorVm = AccountViewModel(accountRepository = fakeAccountRepository)

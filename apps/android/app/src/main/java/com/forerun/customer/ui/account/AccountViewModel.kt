@@ -17,7 +17,7 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 data class AccountUiState(
-    val isLoading: Boolean = false,
+    val isLoading: Boolean = true,
     val profile: CustomerProfileDto? = null,
     val address: CustomerAddress? = null,
     val isSavingProfile: Boolean = false,

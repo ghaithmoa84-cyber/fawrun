@@ -72,8 +72,6 @@ fun SuspendedScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Spacer(modifier = Modifier.height(Dimens.Space16))
-
         Box(
             modifier = Modifier
                 .size(100.dp)

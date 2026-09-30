@@ -75,7 +75,6 @@ fun PendingVerificationScreen(
         verticalArrangement = Arrangement.Center
     ) {
         // Status Icon Circle
-        Spacer(modifier = Modifier.height(Dimens.Space16))
         Box(
             modifier = Modifier
                 .size(100.dp)

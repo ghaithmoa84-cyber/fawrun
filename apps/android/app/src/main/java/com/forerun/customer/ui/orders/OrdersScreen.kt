@@ -88,8 +88,12 @@ fun OrdersScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
 
+    // Surface load errors as a snackbar only when the list still has rows to show.
+    // When the list is empty the full-screen OrdersErrorState owns the error, and
+    // clearing it here would flip the screen to the misleading OrdersEmptyState.
     LaunchedEffect(uiState.errorMessage) {
-        uiState.errorMessage?.let { error ->
+        val error = uiState.errorMessage
+        if (error != null && uiState.displayedOrders.isNotEmpty()) {
             snackbarHostState.showSnackbar(error)
             viewModel.onIntent(OrdersListIntent.ClearError)
         }
