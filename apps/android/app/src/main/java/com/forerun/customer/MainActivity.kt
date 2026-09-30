@@ -28,6 +28,15 @@ import com.forerun.customer.ui.theme.ForerunTheme
 import dagger.hilt.android.AndroidEntryPoint
 import javax.inject.Inject
 
+private val AUTHENTICATED_ROUTES = setOf(
+    Routes.HOME,
+    Routes.ORDERS,
+    Routes.ACCOUNT,
+    Routes.SUPPORT,
+    Routes.PENDING_VERIFICATION,
+    Routes.SUSPENDED
+)
+
 @AndroidEntryPoint
 class MainActivity : ComponentActivity() {
 
@@ -69,12 +78,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // Handle deep linking from notification payload while app is already past splash
+                // Handle deep linking from notification payload while app is already past splash.
+                // Only navigate when already inside the authenticated area: otherwise a
+                // logged-out user tapping a notification lands on an order detail that
+                // can only fail with 401.
                 LaunchedEffect(navController) {
                     deepLinkHolder.pendingOrderId.collect { orderId ->
                         if (!orderId.isNullOrBlank()) {
                             val currentRoute = navController.currentDestination?.route
-                            if (currentRoute != null && currentRoute != Routes.SPLASH) {
+                            if (currentRoute in AUTHENTICATED_ROUTES) {
                                 val consumed = deepLinkHolder.consumePendingOrderId()
                                 if (!consumed.isNullOrBlank()) {
                                     navController.navigate(Routes.orderDetail(consumed)) {

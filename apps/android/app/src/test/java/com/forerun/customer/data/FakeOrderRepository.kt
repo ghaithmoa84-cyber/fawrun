@@ -65,11 +65,16 @@ class FakeOrderRepository : OrderRepository {
         )
     )
 
+    var getCustomerOrdersCallCount: Int = 0
+
     override suspend fun getCustomerOrders(
         page: Int,
         limit: Int,
         status: String?
-    ): Result<com.forerun.customer.domain.model.OrdersPage> = getCustomerOrdersResult
+    ): Result<com.forerun.customer.domain.model.OrdersPage> {
+        getCustomerOrdersCallCount++
+        return getCustomerOrdersResult
+    }
 
     var getOrderDetailResult: Result<com.forerun.customer.domain.model.CustomerOrderDetail> = Result.success(
         com.forerun.customer.domain.model.CustomerOrderDetail(

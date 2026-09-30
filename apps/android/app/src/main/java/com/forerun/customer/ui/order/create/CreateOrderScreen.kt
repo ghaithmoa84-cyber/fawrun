@@ -50,7 +50,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -100,11 +103,18 @@ fun CreateOrderScreen(
         viewModel.onIntent(CreateOrderIntent.LoadInitialData)
     }
 
-    // Refresh the delivery address when returning from the address/map screen
+    // Refresh the delivery address when returning from the address/map screen.
+    // The first ON_RESUME is skipped: LoadInitialData above already fetches it,
+    // and letting both run would fire two concurrent address requests.
+    var hasResumedOnce by rememberSaveable { mutableStateOf(false) }
     DisposableEffect(lifecycleOwner, viewModel) {
         val observer = LifecycleEventObserver { _, event ->
             if (event == Lifecycle.Event.ON_RESUME) {
-                viewModel.refreshAddress()
+                if (hasResumedOnce) {
+                    viewModel.refreshAddress()
+                } else {
+                    hasResumedOnce = true
+                }
             }
         }
         lifecycleOwner.lifecycle.addObserver(observer)

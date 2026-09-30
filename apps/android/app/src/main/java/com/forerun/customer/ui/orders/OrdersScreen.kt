@@ -39,6 +39,7 @@ import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
@@ -88,23 +89,28 @@ fun OrdersScreen(
     val snackbarHostState = remember { SnackbarHostState() }
     val listState = rememberLazyListState()
 
-    // Surface load errors as a snackbar only when the list still has rows to show.
-    // When the list is empty the full-screen OrdersErrorState owns the error, and
-    // clearing it here would flip the screen to the misleading OrdersEmptyState.
+    // Surface load errors as a snackbar only when orders are already on screen.
+    // Keyed on allOrders, not displayedOrders: with a filter that matches
+    // nothing, displayedOrders is empty even though the list is fully loaded.
     LaunchedEffect(uiState.errorMessage) {
         val error = uiState.errorMessage
-        if (error != null && uiState.displayedOrders.isNotEmpty()) {
+        if (error != null && uiState.allOrders.isNotEmpty()) {
             snackbarHostState.showSnackbar(error)
             viewModel.onIntent(OrdersListIntent.ClearError)
         }
     }
 
-    // Pagination trigger when scrolling near the end
+    // Pagination trigger when scrolling near the end.
+    // Stops on loadMoreError so a failing endpoint cannot be hammered in a loop.
     val shouldLoadMore by remember {
         derivedStateOf {
             val totalItems = listState.layoutInfo.totalItemsCount
             val lastVisibleIndex = listState.layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
-            totalItems > 0 && lastVisibleIndex >= totalItems - 2 && uiState.hasMore && !uiState.isLoadingMore
+            totalItems > 0 &&
+                lastVisibleIndex >= totalItems - 2 &&
+                uiState.hasMore &&
+                !uiState.isLoadingMore &&
+                uiState.loadMoreError == null
         }
     }
 
@@ -147,7 +153,7 @@ fun OrdersScreen(
                         }
                     }
 
-                    uiState.errorMessage != null && uiState.displayedOrders.isEmpty() -> {
+                    uiState.errorMessage != null && uiState.allOrders.isEmpty() -> {
                         OrdersErrorState(
                             onRetryClick = { viewModel.onIntent(OrdersListIntent.LoadInitial) }
                         )
@@ -195,6 +201,16 @@ fun OrdersScreen(
                                             strokeWidth = 2.dp
                                         )
                                     }
+                                }
+                            }
+
+                            if (uiState.loadMoreError != null) {
+                                item {
+                                    LoadMoreRetryRow(
+                                        onRetryClick = {
+                                            viewModel.onIntent(OrdersListIntent.RetryLoadMore)
+                                        }
+                                    )
                                 }
                             }
                         }
@@ -479,6 +495,43 @@ private fun OrderCard(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun LoadMoreRetryRow(onRetryClick: () -> Unit) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(Dimens.Space16),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        Text(
+            text = stringResource(R.string.orders_load_more_failed),
+            fontSize = 13.sp,
+            color = ForerunTextMuted
+        )
+        Spacer(modifier = Modifier.width(Dimens.Space12))
+        OutlinedButton(
+            onClick = onRetryClick,
+            shape = RoundedCornerShape(Dimens.RadiusPill),
+            border = androidx.compose.foundation.BorderStroke(1.dp, ForerunGreen)
+        ) {
+            Icon(
+                imageVector = Icons.Default.Refresh,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp),
+                tint = ForerunGreen
+            )
+            Spacer(modifier = Modifier.width(Dimens.Space4))
+            Text(
+                text = stringResource(R.string.home_retry),
+                fontSize = 13.sp,
+                fontWeight = FontWeight.Bold,
+                color = ForerunGreen
+            )
         }
     }
 }

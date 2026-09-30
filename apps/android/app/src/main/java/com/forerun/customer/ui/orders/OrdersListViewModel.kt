@@ -23,6 +23,7 @@ sealed interface OrdersListIntent {
     data object LoadInitial : OrdersListIntent
     data object Refresh : OrdersListIntent
     data object LoadMore : OrdersListIntent
+    data object RetryLoadMore : OrdersListIntent
     data class SetFilter(val filter: OrderFilter) : OrdersListIntent
     data object ClearError : OrdersListIntent
 }
@@ -36,7 +37,11 @@ data class OrdersListUiState(
     val page: Int = 1,
     val totalPages: Int = 1,
     val hasMore: Boolean = false,
-    val errorMessage: String? = null
+    val errorMessage: String? = null,
+    // Pagination failures are tracked separately from the initial-load error:
+    // they must not blank the list, and they must not re-trigger the automatic
+    // scroll listener (which would hammer a failing endpoint in a tight loop).
+    val loadMoreError: String? = null
 ) {
     val displayedOrders: List<CustomerOrder>
         get() = when (currentFilter) {
@@ -71,6 +76,7 @@ class OrdersListViewModel @Inject constructor(
             is OrdersListIntent.LoadInitial -> loadOrders(page = 1, isRefresh = false)
             is OrdersListIntent.Refresh -> refresh()
             is OrdersListIntent.LoadMore -> loadMore()
+            is OrdersListIntent.RetryLoadMore -> retryLoadMore()
             is OrdersListIntent.SetFilter -> setFilter(intent.filter)
             is OrdersListIntent.ClearError -> _uiState.update { it.copy(errorMessage = null) }
         }
@@ -107,18 +113,33 @@ class OrdersListViewModel @Inject constructor(
                             page = ordersPage.page,
                             totalPages = ordersPage.totalPages,
                             hasMore = ordersPage.page < ordersPage.totalPages,
-                            errorMessage = null
+                            errorMessage = null,
+                            loadMoreError = null
                         )
                     }
                 },
                 onFailure = { error ->
-                    _uiState.update {
-                        it.copy(
-                            isLoading = false,
-                            isRefreshing = false,
-                            isLoadingMore = false,
-                            errorMessage = error.message ?: "حدث خطأ أثناء تحميل الطلبات"
-                        )
+                    val message = error.message ?: "حدث خطأ أثناء تحميل الطلبات"
+                    if (page == 1) {
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                isLoadingMore = false,
+                                errorMessage = message
+                            )
+                        }
+                    } else {
+                        // Keep the already-loaded rows on screen; surface a
+                        // retry affordance at the bottom instead.
+                        _uiState.update {
+                            it.copy(
+                                isLoading = false,
+                                isRefreshing = false,
+                                isLoadingMore = false,
+                                loadMoreError = message
+                            )
+                        }
                     }
                 }
             )
@@ -132,10 +153,21 @@ class OrdersListViewModel @Inject constructor(
     private fun loadMore() {
         val state = _uiState.value
         if (state.isLoadingMore || !state.hasMore) return
+        // Guard against the automatic scroll listener re-firing forever when
+        // the endpoint keeps failing: the first failure parks pagination until
+        // the user explicitly retries.
+        if (state.loadMoreError != null) return
+        loadOrders(page = state.page + 1, isRefresh = false)
+    }
+
+    private fun retryLoadMore() {
+        val state = _uiState.value
+        if (state.isLoadingMore || !state.hasMore) return
+        _uiState.update { it.copy(loadMoreError = null) }
         loadOrders(page = state.page + 1, isRefresh = false)
     }
 
     private fun setFilter(filter: OrderFilter) {
-        _uiState.update { it.copy(currentFilter = filter) }
+        _uiState.update { it.copy(currentFilter = filter, loadMoreError = null) }
     }
 }

@@ -48,6 +48,7 @@ class AccountViewModelTest {
         assertNotNull(state.address)
         assertEquals("القنجرة - جانب البلدية", state.address?.description)
         assertNull(state.errorMessage)
+        assertNull(state.loadErrorMessage)
     }
 
     @Test
@@ -60,7 +61,7 @@ class AccountViewModelTest {
         val state = errorVm.uiState.value
         assertFalse(state.isLoading)
         assertNull(state.profile)
-        assertEquals("فشل الاتصال بالخادم", state.errorMessage)
+        assertEquals("فشل الاتصال بالخادم", state.loadErrorMessage)
     }
 
     @Test
@@ -240,7 +241,7 @@ class AccountViewModelTest {
         val errorVm = AccountViewModel(accountRepository = fakeAccountRepository)
 
         assertNull(errorVm.uiState.value.profile)
-        assertEquals("فشل الاتصال بالخادم", errorVm.uiState.value.errorMessage)
+        assertEquals("فشل الاتصال بالخادم", errorVm.uiState.value.loadErrorMessage)
 
         fakeAccountRepository.shouldFailGetProfile = false
         errorVm.loadAccountData()
@@ -249,7 +250,7 @@ class AccountViewModelTest {
         assertFalse(state.isLoading)
         assertNotNull(state.profile)
         assertEquals("محمد علي", state.profile?.name)
-        assertNull(state.errorMessage)
+        assertNull(state.loadErrorMessage)
     }
 
     private class FakeAccountRepository : AccountRepository {

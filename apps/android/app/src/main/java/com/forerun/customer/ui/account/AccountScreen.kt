@@ -10,6 +10,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -44,6 +45,7 @@ import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -128,7 +130,7 @@ fun AccountScreen(
         return
     }
 
-    val loadError = uiState.errorMessage
+    val loadError = uiState.loadErrorMessage
     if (loadError != null && uiState.profile == null) {
         Box(
             modifier = modifier
@@ -281,7 +283,7 @@ fun AccountScreen(
         }
 
         // Banners (Success & Error Messages)
-        if (uiState.errorMessage != null) {
+        if (uiState.errorMessage != null || uiState.loadErrorMessage != null) {
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 shape = RoundedCornerShape(Dimens.RadiusSmall),
@@ -299,11 +301,27 @@ fun AccountScreen(
                     )
                     Spacer(modifier = Modifier.width(Dimens.Space8))
                     Text(
-                        text = uiState.errorMessage ?: "",
+                        text = uiState.loadErrorMessage ?: uiState.errorMessage ?: "",
                         color = ForerunDanger,
                         fontSize = 13.sp,
                         modifier = Modifier.weight(1f)
                     )
+                    // Only the load failure is recoverable here; validation and
+                    // save errors need the user to edit their input first.
+                    if (uiState.loadErrorMessage != null) {
+                        Spacer(modifier = Modifier.width(Dimens.Space8))
+                        TextButton(
+                            onClick = { viewModel.loadAccountData() },
+                            contentPadding = PaddingValues(horizontal = Dimens.Space8, vertical = 0.dp)
+                        ) {
+                            Text(
+                                text = stringResource(R.string.home_retry),
+                                color = ForerunDanger,
+                                fontSize = 13.sp,
+                                fontWeight = FontWeight.Bold
+                            )
+                        }
+                    }
                 }
             }
         }

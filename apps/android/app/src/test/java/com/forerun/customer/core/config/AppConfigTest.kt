@@ -47,4 +47,41 @@ class AppConfigTest {
 
         assertTrue(url.startsWith("https://wa.me/"))
     }
+
+    @Test
+    fun buildRunnerWhatsAppUrl_internalSpaces_areStripped() {
+        val url = AppConfig.buildRunnerWhatsAppUrl("+963 912 345 678")
+
+        assertEquals("https://wa.me/963912345678", url)
+    }
+
+    @Test
+    fun buildRunnerWhatsAppUrl_internalDashes_areStripped() {
+        val url = AppConfig.buildRunnerWhatsAppUrl("0981-571-936")
+
+        assertEquals("https://wa.me/963981571936", url)
+    }
+
+    @Test
+    fun buildRunnerWhatsAppUrl_parenthesizedFormat_isStripped() {
+        val url = AppConfig.buildRunnerWhatsAppUrl("(+963) 912-345-678")
+
+        assertEquals("https://wa.me/963912345678", url)
+    }
+
+    @Test
+    fun buildRunnerWhatsAppUrl_doubleZeroInternationalPrefix_isNormalized() {
+        val url = AppConfig.buildRunnerWhatsAppUrl("00963912345678")
+
+        assertEquals("https://wa.me/963912345678", url)
+    }
+
+    @Test
+    fun buildRunnerWhatsAppUrl_resultContainsOnlyDigitsAfterHost() {
+        val url = AppConfig.buildRunnerWhatsAppUrl("+963 (912) 345-678")
+
+        val path = url.removePrefix("https://wa.me/")
+        assertTrue(path.all { it.isDigit() })
+    }
 }
+

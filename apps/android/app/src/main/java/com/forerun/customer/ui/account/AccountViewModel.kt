@@ -24,6 +24,10 @@ data class AccountUiState(
     val isChangingPassword: Boolean = false,
     val isLoggingOut: Boolean = false,
     val errorMessage: String? = null,
+    // Failures of the initial profile/address fetch. Kept apart from
+    // errorMessage (which also carries validation and save errors) so the screen
+    // can offer a retry for the recoverable case only.
+    val loadErrorMessage: String? = null,
     val profileSuccessMessage: String? = null,
     val passwordSuccessMessage: String? = null
 )
@@ -45,7 +49,7 @@ class AccountViewModel @Inject constructor(
 
     fun loadAccountData() {
         viewModelScope.launch {
-            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null)
+            _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, loadErrorMessage = null)
 
             val profileResult = accountRepository.getProfile()
             val addressResult = accountRepository.getAddress()
@@ -71,7 +75,8 @@ class AccountViewModel @Inject constructor(
                 isLoading = false,
                 profile = profile,
                 address = address,
-                errorMessage = error
+                errorMessage = null,
+                loadErrorMessage = error
             )
         }
     }
@@ -175,6 +180,7 @@ class AccountViewModel @Inject constructor(
     fun clearMessages() {
         _uiState.value = _uiState.value.copy(
             errorMessage = null,
+            loadErrorMessage = null,
             profileSuccessMessage = null,
             passwordSuccessMessage = null
         )

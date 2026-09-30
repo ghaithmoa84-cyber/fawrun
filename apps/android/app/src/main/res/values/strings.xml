@@ -213,6 +213,7 @@
     <string name="orders_status_cancelled">ملغي</string>
     <string name="orders_load_more">جاري تحميل المزيد…</string>
     <string name="orders_error_loading">تعذر جلب قائمة الطلبات، يرجى المحاولة ثانية</string>
+    <string name="orders_load_more_failed">تعذر تحميل المزيد من الطلبات</string>
     <string name="orders_card_date_label">تاريخ الطلب:</string>
     <string name="orders_card_track_action">عرض التفاصيل</string>
 

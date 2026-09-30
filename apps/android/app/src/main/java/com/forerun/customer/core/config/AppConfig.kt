@@ -18,15 +18,16 @@ object AppConfig {
 
     /**
      * Builds a wa.me deep link for a runner phone number (BUG-ANDROID-005).
-     * Strips a leading '+', an existing '963' country code, and a leading '0'
-     * so that local ('0912...'), national ('912...') and international
-     * ('+963912...' / '963912...') inputs all resolve to the same wa.me id.
+     * Strips every non-digit character first, so formatted inputs such as
+     * "+963 981 571 936" or "0981-571-936" resolve to the same wa.me id as the
+     * clean "0981571936". wa.me rejects anything but contiguous digits.
      */
     fun buildRunnerWhatsAppUrl(phone: String): String {
-        val cleaned = phone.trim()
-            .removePrefix("+")
+        val digits = phone.filter { it.isDigit() }
+        val national = digits
+            .removePrefix("00")
             .removePrefix(DEFAULT_COUNTRY_CODE)
             .removePrefix("0")
-        return "https://wa.me/$DEFAULT_COUNTRY_CODE$cleaned"
+        return "https://wa.me/$DEFAULT_COUNTRY_CODE$national"
     }
 }

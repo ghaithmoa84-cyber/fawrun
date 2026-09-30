@@ -268,18 +268,172 @@ class OrdersListViewModelTest {
     }
 
     @Test
-    fun loadFailure_withExistingOrders_keepsListVisible() = runTest(testDispatcher) {
+    fun loadMore_failure_setsLoadMoreErrorAndKeepsList() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_p1",
+                        orderNumber = "FW-000015",
+                        status = "PENDING_REVIEW",
+                        totalFee = 80,
+                        itemCount = 3,
+                        createdAt = "2026-09-28T12:00:00.000Z"
+                    )
+                ),
+                total = 2,
+                page = 1,
+                limit = 1,
+                totalPages = 2
+            )
+        )
+
         val vm = OrdersListViewModel(getOrdersUseCase)
         advanceUntilIdle()
-        assertTrue(vm.uiState.value.displayedOrders.isNotEmpty())
+
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+        vm.onIntent(OrdersListIntent.LoadMore)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertEquals("Network Timeout", state.loadMoreError)
+        assertNull(state.errorMessage)
+        assertEquals(1, state.allOrders.size)
+        assertTrue(state.hasMore)
+    }
+
+    @Test
+    fun loadMore_doesNotAutoRetryAfterFailure_noRetryStorm() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_p1",
+                        orderNumber = "FW-000015",
+                        status = "PENDING_REVIEW",
+                        totalFee = 80,
+                        itemCount = 3,
+                        createdAt = "2026-09-28T12:00:00.000Z"
+                    )
+                ),
+                total = 2,
+                page = 1,
+                limit = 1,
+                totalPages = 2
+            )
+        )
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+        val callsBeforeFailure = fakeRepository.getCustomerOrdersCallCount
+
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+        vm.onIntent(OrdersListIntent.LoadMore)
+        advanceUntilIdle()
+        val callsAfterFirstFailure = fakeRepository.getCustomerOrdersCallCount
+
+        // The scroll listener would keep firing LoadMore; each must be a no-op.
+        repeat(5) { vm.onIntent(OrdersListIntent.LoadMore) }
+        advanceUntilIdle()
+
+        assertEquals(
+            callsAfterFirstFailure,
+            fakeRepository.getCustomerOrdersCallCount
+        )
+        assertEquals(1, callsAfterFirstFailure - callsBeforeFailure)
+        assertNotNull(vm.uiState.value.loadMoreError)
+    }
+
+    @Test
+    fun retryLoadMore_afterFailure_recoversAndClearsError() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_p1",
+                        orderNumber = "FW-000015",
+                        status = "PENDING_REVIEW",
+                        totalFee = 80,
+                        itemCount = 3,
+                        createdAt = "2026-09-28T12:00:00.000Z"
+                    )
+                ),
+                total = 2,
+                page = 1,
+                limit = 1,
+                totalPages = 2
+            )
+        )
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
+        vm.onIntent(OrdersListIntent.LoadMore)
+        advanceUntilIdle()
+        assertNotNull(vm.uiState.value.loadMoreError)
+
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_p2",
+                        orderNumber = "FW-000014",
+                        status = "DELIVERED",
+                        totalFee = 100,
+                        itemCount = 2,
+                        createdAt = "2026-09-27T10:00:00.000Z"
+                    )
+                ),
+                total = 2,
+                page = 2,
+                limit = 1,
+                totalPages = 2
+            )
+        )
+        vm.onIntent(OrdersListIntent.RetryLoadMore)
+        advanceUntilIdle()
+
+        val state = vm.uiState.value
+        assertNull(state.loadMoreError)
+        assertEquals(2, state.allOrders.size)
+    }
+
+    @Test
+    fun initialLoad_failure_withFilterMatchingNothing_keepsLoadedOrders() = runTest(testDispatcher) {
+        fakeRepository.getCustomerOrdersResult = Result.success(
+            OrdersPage(
+                orders = listOf(
+                    CustomerOrder(
+                        id = "order_d1",
+                        orderNumber = "FW-000014",
+                        status = "DELIVERED",
+                        totalFee = 100,
+                        itemCount = 2,
+                        createdAt = "2026-09-27T10:00:00.000Z"
+                    )
+                ),
+                total = 1,
+                page = 1,
+                limit = 20,
+                totalPages = 1
+            )
+        )
+
+        val vm = OrdersListViewModel(getOrdersUseCase)
+        advanceUntilIdle()
+
+        vm.onIntent(OrdersListIntent.SetFilter(OrderFilter.ACTIVE))
+        assertTrue(vm.uiState.value.displayedOrders.isEmpty())
+        assertFalse(vm.uiState.value.allOrders.isEmpty())
 
         fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
         vm.onIntent(OrdersListIntent.Refresh)
         advanceUntilIdle()
 
         val state = vm.uiState.value
-        // OrdersErrorState must NOT trigger because the list is not empty
-        assertNotNull(state.errorMessage)
-        assertTrue(state.displayedOrders.isNotEmpty())
+        // OrdersErrorState keys on allOrders.isEmpty(); orders are still loaded.
+        assertFalse(state.allOrders.isEmpty())
+        assertEquals(1, state.allOrders.size)
     }
 }
