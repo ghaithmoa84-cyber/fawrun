@@ -1,74 +1,124 @@
-# FORERUN Android — Current State
+# Current State — 30 September 2026
 
-> **تاريخ التحديث:** بعد اكتمال Sprint 5 (FCM + MapLibre)  
-> **حالة التطبيق:** جميع شاشات نطاق v1 ومكونات الربط والشبكة مكتملة ومختبرة بنسبة 100%.
-
----
-
-## 1. الفرع والـ Commit الأخير
-- **الفرع الحالي:** `feature/android-sprint-5-fcm-maplibre`
-- **آخر Commit:** `abf02d8` (`feat(android): add FCM push notifications + maplibre polish`)
-- **حالة الاختبارات:** 135 / 135 اختبار وحدة ناجح (100% Passing)
-- **أحجام حزم الـ Debug APK (حسب الـ ABI):**
-  - `app-arm64-v8a-debug.apk`: 29.12 MB (29,123,417 bytes)
-  - `app-armeabi-v7a-debug.apk`: 26.16 MB (26,163,367 bytes)
-  - `app-x86_64-debug.apk`: 29.41 MB (29,410,712 bytes)
+> **حالة التطبيق:** تطبيق العميل (Customer App) مكتمل وظيفياً ومنجز إلى `master`. كل مسارات v1، و223 اختبار وحدة، و0 أخطاء lint. المتبقي ديون معمارية ونصوص فقط.
 
 ---
 
-## 2. قائمة الفروع النشطة (4 فروع تراكمية)
-1. `feature/android-sprint-2-home-order` (Home, Address Setup, Create Order, Confirmation, Orders List)
-2. `feature/android-sprint-3-order-detail` (Order Detail, Rating, Socket.IO `/orders`)
-3. `feature/android-sprint-4-account-support` (Account Screen, Support Screen, WebSocket Hardening)
-4. `feature/android-sprint-5-fcm-maplibre` (FCM Push Notifications, Device Token Management, MapLibre Geocode Cache)
+## Last Commit
 
-> **ملاحظة:** الفروع مبنية بشكل تراكمي، ولم تُدمج بعد في `master` لحين إشارة المستخدم ومراجعة الدمج النهائي.
-
----
-
-## 3. الـ Stack الفعلي المستخدم (libs.versions.toml)
-- **اللغة ومنصة التطوير:** Kotlin `2.0.21`، Android Gradle Plugin `8.7.3`، KSP `2.0.21-1.0.28`
-- **واجهات المستخدم:** Jetpack Compose BOM `2024.12.01`، Material 3، Navigation Compose `2.8.5`
-- **حقن التبعيات (DI):** Hilt `2.53.1`، Hilt Navigation Compose `1.2.0`
-- **الشبكة وتحويل البيانات:** Retrofit `2.11.0`، OkHttp `4.12.0`، Moshi `1.15.1` (KSP Codegen)
-- **الاتصال المباشر (Real-Time):** Socket.IO Client `2.1.1` (عبر WebSocket transport على مساحة `/orders`)
-- **الخرائط والموقع:** MapLibre Android SDK `11.5.2`، Google Play Services Location `21.3.0`، OpenStreetMap raster tiles
-- **الإشعارات السحابية:** Firebase BOM `33.7.0`، Firebase Messaging، Google Services Plugin `4.4.2`
-- **التخزين والأمان:** EncryptedSharedPreferences (`androidx.security:security-crypto:1.1.0-alpha06`)، DataStore Preferences `1.1.1`
-- **أطر الاختبار:** JUnit `4.13.2`، Kotlinx Coroutines Test `1.9.0`، Turbine `1.1.0`، MockWebServer `4.12.0`
+| | |
+|---|---|
+| **Branch** | `master` |
+| **HEAD** | `e5bfbc1` |
+| **Message** | `merge(android): sprint 8c - account clean architecture` |
+| **Content merge** | `6e25aed` — `refactor(android): sprint 8c - account clean architecture + navgraph decoupling` |
+| **Sprint 8B chain** | `3fc4119` (sprints 1-8b) → `ab9a119` (architecture review) → `480b812` (branch cleanup) |
 
 ---
 
-## 4. عدد الشاشات المنجزة vs المتبقية
-- **المنجزة:** 17 شاشة ومسار (100% من نطاق v1 المحدد في Google Stitch و MASTER-SPEC):
-  1. `SplashScreen` — فحص التوكن وحالة الحساب والتوجيه التلقائي
-  2. `OnboardingScreen` — 3 شرائح تعريفية بتجربة المستخدم
-  3. `LoginScreen` — تسجيل الدخول عبر رقم الواتساب وكلمة المرور
-  4. `RegisterScreen` — إنشاء حساب عميل جديد مع التحقق
-  5. `PendingVerificationScreen` — إشعار الحساب قيد المراجعة الإدارية
-  6. `SuspendedAccountScreen` — إشعار تجميد الحساب وقنوات التواصل
-  7. `HomeScreen` — الواجهة الرئيسية مع ملخص الإحصائيات وبانر الطلب النشط
-  8. `AddressSetupScreen` — اختيار العنوان عبر خريطة MapLibre مع Reverse Geocoding
-  9. `CreateOrderScreen` — بناء الطلب الديناميكي، تحديد المتاجر، واختيار الكابتن المفضل
-  10. `OrderConfirmationScreen` — تأكيد إنشاء الطلب وعرض الرسوم التقديرية الرسمية
-  11. `OrdersListScreen` — استعراض الطلبات مع فلترة وتبويب وتحديث بالسحب (Pull-to-Refresh)
-  12. `OrderDetailScreen` — تفاصيل الطلب، الخط الزمني التفاعلي، وحالة شراء المواد
-  13. `RatingBottomSheet / Screen` — تقييم الطلب والكابتن بعد التسليم
-  14. `AccountScreen` — إدارة الملف الشخصي، العناوين، وسجل الطلبات وتسجيل الخروج
-  15. `SupportScreen` — التواصل مع الإدارة والدعم عبر واتساب أو اتصال هاتفي
-- **المتبقية:** 0 شاشات (اكتملت كافة شاشات الـ MVP الأساسية).
+## Last APK
+
+**Path:** `apps/android/app/build/outputs/apk/release/`
+
+| Variant | Size |
+|---------|------|
+| `app-arm64-v8a-release.apk` | **15.07 MB** |
+| `app-armeabi-v7a-release.apk` | **12.25 MB** |
+| `app-x86_64-release.apk` | **15.35 MB** |
+
+Debug build (for reference, not distributable): arm64-v8a 36.13 MB · armeabi-v7a 33.31 MB · x86_64 36.40 MB
+
+Both variants build clean: R8 + ProGuard rules and LintVital pass. The release build is **not yet signed with a production keystore** — `keystore.properties` must be supplied by the owner (see Gap 5 below).
 
 ---
 
-## 5. الفجوات المعروفة (Known Gaps)
-1. **FCM (Firebase):** ملف `google-services.json` المستخدم حالياً وهمي (مستثنى في `.gitignore`) — يتطلب ربط مشروع Firebase حقيقي لاستقبال إشعارات فعلية من الخادم على الأجهزة الحقيقية.
-2. **استراتيجية الفروع:** توجد 4 فروع نشطة تراكمية غير مدموجة في `master` لحين انتهاء دورة التطوير وموافقة المستخدم على الدمج.
-3. **غياب اختبارات E2E المؤتمتة:** لا يوجد تشغيل آلي لاختبارات E2E على الـ CI/CD، والاعتماد حالياً على 135 اختبار وحدة مؤتمت واختبارات يدوية على المحاكي.
-4. **زر اختبار انتهاء الجلسة:** زر اختبار انتهاء الجلسة في `AccountScreen` محمي بشرط `BuildConfig.DEBUG` لضمان عدم توفره في نسخ الإنتاج.
+## Feature Status
+
+| Feature | الحالة | ملاحظات |
+|---------|--------|---------|
+| **Splash** | ✅ | Session check + `GET /customer/me` live status refresh; deep link consumed only when `VERIFIED` (DEEP-CRITICAL-02/04 fixed) |
+| **Onboarding** (3 slides) | ✅ | DataStore-persisted; injected `OnboardingPrefs` directly in the VM (A11 → Sprint 8D) |
+| **Login** | ✅ | Syrian phone validation, forced token refresh on 401, socket connects on success |
+| **Register** | ✅ | Client-side validation; still carries a placeholder address string (MEDIUM-04) |
+| **Pending Verification** | ✅ | Scrollable (CRITICAL-02 fixed); server status refresh unblocks approved users |
+| **Suspended** | ✅ | Scrollable (CRITICAL-02 fixed) |
+| **Home** | ✅ | Bottom nav, active-order card, stats; address refreshes on Activity resume; does not observe socket events (DEEP-MEDIUM-02) |
+| **Address Setup** | ✅ | MapLibre + OSM, Nominatim reverse geocode w/ LRU cache, double-submit guard; Nominatim builds its own OkHttp client (A19 → 8D); default coords are Latakia not Damascus (DEEP-MEDIUM-04) |
+| **Create Order** | ✅ | Dynamic items, store/runner selection, double-submit guard, server-calculated fees; confirm UI duplicated as dialog + screen (DEEP-MEDIUM-06) |
+| **Order Confirmation** | ✅ | Argument-driven, no ViewModel |
+| **Orders List** | ✅ | Pagination, filter chips, pull-to-refresh, explicit error+retry state (CRITICAL-04 fixed); filtering is client-side and breaks under pagination (DEEP-MEDIUM-03) |
+| **Order Detail** | ✅ | Live timeline, runner contact actions, cancellation; ~90 lines of inline mapping (A21 → 8D) |
+| **Rating** | ✅ | 24h window enforced and button hidden after expiry (CRITICAL-01 fixed) |
+| **Account** | ✅ | Loading + retry states (CRITICAL-03 fixed); **fully refactored in 8C** to UseCases + `CustomerProfile` domain model + `AccountMapper`; zero DTOs in `UiState` |
+| **Support** | ✅ | WhatsApp + dialer + working hours; FAQ text hardcoded |
+| **Deep Links** | ⚠️ | `forerun://orders/{id}` works. `https://forerun.app/orders/{id}` has **no manifest intent-filter** (DEEP-MEDIUM-07) |
+| **WebSocket** | ⚠️ | 7 of 8 events handled; `account:verified` is parsed and emitted with **no consumer** (D23) |
+| **FCM Push** | ⛔ | Code complete, but `google-services.json` is a test file — no server push reaches real devices |
+| **Onboarding → App** | ✅ | 15 screens + flows, 100% of the v1 scope |
+| **Offline** | — | Out of scope for v1 (always-online); `checkSession` degrades gracefully to cached state |
 
 ---
 
-## 6. الخطوة التالية (Next Step)
-- **UI Polish Pass (يدوي من المستخدم):**
-  - تدقيق بصري يدوي شامل للواجهات والألوان والتباعدات ونصوص المحاذاة اليمينية (RTL).
-  - بعد اكتمال المراجعة اليدوية يتم الانتقال إلى **Sprint 6: Testing + QA + Final Polish**.
+## Known Issues
+
+| # | Issue | Severity | Target |
+|---|-------|----------|--------|
+| 1 | **A17** — `TokenRefreshManager` still lives in `data/remote/token/`, imported by `core.network.interceptor` and the DI graph. 3 dependency cycles remain, silently broken by `Provider` | Medium (deferred from 8C) | Sprint 8D |
+| 2 | **Deep link guard at login is intentionally ignored** — `SplashViewModel` consumes a pending order id **only** when the server-reported state is `VERIFIED` (DEEP-CRITICAL-04 fix). Consequence: a notification opened while logged out is dropped rather than queued for post-login. Accepted trade-off, not a regression | By design | Revisit in 8E/9 if reported |
+| 3 | **`OrdersEmptyState` shown under a filter with no results** — the explicit error state no longer masks the empty state (fixed in 8B), but a filter that legitimately returns nothing still renders the generic empty screen with no filter-specific copy | Cosmetic | Sprint 9 |
+| 4 | **81 نص hardcoded** — 73 table rows across ~14 files, incl. 19 duplicated order-status labels, 4× `"إخفاء"/"إظهار"`, 10 FAQ strings | Medium | Sprint 9 |
+| 5 | **No production keystore** — `keystore.properties` and the real key are not provisioned; `assembleRelease` is unsigned for distribution | Blocker for release | Sprint 8F |
+| 6 | **No real Firebase project** — `google-services.json` is gitignored/test-only | Blocker for push | Sprint 8F |
+| 7 | **No automated E2E** — `scripts/e2e-test.ps1` is manual, no CI | Medium | Sprint 10 |
+| 8 | **DEEP-MEDIUM-02/03/06/07** open | Medium | 8E / 8F / 9 |
+| 9 | **Gradle debt** — unused `libs.material` (~1 MB APK), `isReturnDefaultValues` masking missing mocks, `security-crypto` on `1.1.0-alpha06` | Low | Sprint 8D |
+
+---
+
+## Test Coverage
+
+| Gate | Result |
+|------|--------|
+| **Unit tests** | **223 `@Test` — 223 passing, 0 failures** (33 test files) |
+| **Lint** | **0 errors** |
+| **`assembleDebug`** | BUILD SUCCESSFUL (3 ABI splits) |
+| **`assembleRelease`** | BUILD SUCCESSFUL (R8 + LintVital clean, 3 ABI splits) |
+
+**Composition:** 6 Repository/Mapper tests · 17 UseCase tests · 14 ViewModel tests · networking (MockWebServer, interceptors, `ApiCallAdapter`) · Socket event parsing · DataStore/Encrypted storage · navigation & session-expiry.
+
+**Not covered:** instrumentation / `androidTest` source set does not exist; no Compose UI tests; no CI pipeline. `unitTests.isReturnDefaultValues = true` (B5) is a known blind spot pending Sprint 8D.
+
+---
+
+## Branches
+
+**Active:** `master` — Android work is fully merged; **no open Android feature branch**.
+
+**Retained local branches (8 backend + 1 scratch):**
+
+| Branch | Unmerged commits | Notes |
+|--------|------------------|-------|
+| `feature/admin-mobile-responsive` | 2 | Admin dashboard mobile responsiveness |
+| `feature/review-session-fixes` | 1 | Backend session fixes + shared types S1-S5 |
+| `feature/sprint-2-clean-review` | 5 | Backend sprint 2 review changes |
+| `feature/sprint-2-order-core` | 13 | Order core |
+| `feature/sprint-3-runner-endpoints` | 7 | Runner endpoints + integration tests |
+| `feature/sprint-4-financial-ratings` | 2 | Settlements and ratings |
+| `fix/node-version-dockerfile` | 1 | Node 22-slim |
+| `tmp-master` | 1 | Scratch README commit |
+
+None of these are Android. Full detail in [`BRANCH-CLEANUP.md`](./BRANCH-CLEANUP.md).
+
+**Deleted:** 12 Android branches after verified merge (`git branch -d` only), then `feature/android-sprint-8c-account-clean` after `e5bfbc1`.
+
+---
+
+## Next Step
+
+**Sprint 8D — Medium Architecture.** 13 bounded items from `ARCHITECTURE-REVIEW.md` §5 (5-13) plus Gradle hygiene; no user-visible behavior change. Order matters: items 1-3 (move `TokenRefreshManager` → `core/auth`, convert `RefreshInterceptor` to an `okhttp3.Authenticator`, drop the `Provider` shims) touch the same auth layer and should land as one commit series.
+
+Then 8E (WebSocket port) → 9 (UI polish), with 8F (Firebase + signing) started in parallel as soon as the Firebase project and keystore are available. Full plan in [`ROADMAP.md`](./ROADMAP.md).
+
+---
+
+**End of CURRENT_STATE.md**

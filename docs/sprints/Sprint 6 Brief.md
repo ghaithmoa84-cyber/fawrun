@@ -398,14 +398,37 @@
 ## معايير الإنجاز (Definition of Done) — Sprint 6
 
 - [ ] Integration Tests للـ Order State Machine تمر — تغطي: دورة حياة كاملة، إلغاء من العميل (قبل/بعد IN_PROGRESS)، إلغاء من Admin، Idempotency، انتقالات ممنوعة
+      → **جزئي — تغطية ناقصة.** الموجود 3 ملفات تكامل (`test/integration/`: `auth` · `create-order` · `deliver-order`).
+      ✅ المُغطّى: إنشاء الطلب + الصلاحيات (3 سيناريوهات `create-order.integration.spec.ts:54,105,132`) · التسليم + 3 LedgerEntry (`deliver-order.integration.spec.ts:112`) · **Idempotency ✅** (`:171` 409 على التسليم المكرّر) · ملكية المندوب (`:191` 404).
+      ⛔ **الناقص**: إلغاء العميل (قبل/بعد `IN_PROGRESS`) · إلغاء Admin · الانتقالات الممنوعة. ولا تُحسب أصلًا: `apps/api/vitest.config.ts:21` يستثني `test/integration/**` فلا تدخل `pnpm test`.
 - [ ] Integration Tests للـ Pricing Engine تمر — تغطي: حساب أساسي، peripheral، متاجر متعددة، SKIPPED لا تُحسب، قفل عند التسليم
+      → ⛔ **لا يوجد أي ملف تكامل للتسعير.** `test/integration/` يحوي `auth` · `create-order` · `deliver-order` فقط، ولا واحد منها يختبر `PricingService`. كما أن «قفل عند التسليم» غير قابل للتحقيق أصلًا: **لا يوجد قفل رسم** (لا حقل `feeLocked` في `schema.prisma` ولا منطق في `pricing.service.ts`) — انظر `Sprint 3 Brief` بند «عند التسليم».
 - [ ] مراجعة أمنية مكتملة تغطي: Helmet, Rate Limiting, Zod validation, SQL Injection protection, bcrypt passwords, RS256 JWT, Presigned URLs, HTTPS, env variables, CORS, connection pooling, ownership checks, soft delete
+      → ⛔ **لا توجد وثيقة مراجعة أمنية موقّعة** في المستودع. ⏔ (التوثيق داخل نطاق هذه الخطة فقط؛ التوصية تُسجَّل ولا تُنفَّذ)
 - [ ] قياسات أداء موثقة في `docs/performance-baseline.md`
+      → ⛔ **الملف غير موجود** — يُشار إليه في هذا المستند ولم يُنشأ. بحث `docs/*performance*` = صفر نتيجة.
 - [ ] Backend منشور على Railway مع PostgreSQL مع `connection_limit=10`
-- [ ] Admin Dashboard منشور على Vercel ويتصل بالـ API
-- [ ] Runner PWA منشور على Vercel ويعمل كـ PWA
+      → **جزئي.** ✅ **النشر على Railway مؤكَّد**: `PROJECT_STATUS.md` §1.1 (Railway + 6 migrations + Schema Drift = 0) ورابط الإنتاج `fawrun-api-production.up.railway.app`.
+      ⛔ **`connection_limit=10` غير مُثبَت للإنتاج**: القيمة موجودة **في `.env` المحلي فقط** (`apps/api/.env:2`) ولا وجود لها في `schema.prisma` ولا توثيق في `PROJECT_STATUS.md` §3.1 (الـ `DATABASE_URL` الإنتاجي مُوثَّق كـ `<PostgreSQL internal URL>` بلا وسائط). يلزم ضبطها على Railway أو توثيقها.
+- [x] Admin Dashboard منشور على Vercel ويتصل بالـ API
+      → `PROJECT_STATUS.md` §1: `https://fawrun-admin.vercel.app` ✅ منشور · §3.4 Root Directory `apps/admin-web` + Build Command `pnpm --filter admin-web... build` · §3.5 `NEXT_PUBLIC_API_URL` يشير إلى الإنتاج
+- [x] Runner PWA منشور على Vercel ويعمل كـ PWA
+      → `PROJECT_STATUS.md` §1: `https://fawrun-runner-pwa-steel.vercel.app` ✅ منشور · §3.4 Root Directory `apps/runner-pwa` + Output `dist` · `vercel.json` مع SPA rewrite موثَّق في §4 بند 9 · PWA مبني فعليًا: `apps/runner-pwa/vite.config.ts:13-16` `VitePWA({ registerType: 'autoUpdate', manifest })` + أيقونات 192/512 · `PROJECT_STATUS.md` §1.2 «E2E نجح كاملًا على الإنتاج»
 - [ ] Cloudflare R2 bucket `fawrun-receipts` مُعدّ ويعمل
+      → ⏔ **يحتاج تحقّق (D3) — لا قيمة ولا وهم.** `PROJECT_STATUS.md` §3.1 يعرض `R2_* = <dummy-for-now>`. **لم يُتحقَّق من Railway Variables بعد**، واسم الـ bucket `fawrun-receipts` نفسه غير مُثبَت في أي مكان. Railway هي المرجع الوحيد. الميزة **مُعطَّلة فعليًا** لأن `R2Service` يرمي عند نقص الإعداد (`PROJECT_STATUS.md` §4 بند 4).
 - [ ] Sentry مُعدّ ويرصد الأخطاء من Backend وFrontends
-- [ ] حساب Admin أولي موجود ويعمل
+      → **جزئي — الكود موصول لكن بلا DSN.** ✅ التبعيات مثبّتة `@sentry/nestjs ^10.74.0` و`@sentry/node ^9.0.0` (`apps/api/package.json:43-44`) · التهيئة شرطية `main.ts:32-34` (`if (process.env.SENTRY_DSN) { Sentry.init(...) }`).
+      ⛔ `SENTRY_DSN` غير مضبوط (`PROJECT_STATUS.md` §3.1 `<optional>`) ← لا يُرصد أي حدث فعليًا · ⛔ ولا أثر لـ Sentry في الواجهات الثلاث.
+- [x] حساب Admin أولي موجود ويعمل
+      → ✅ موثَّق في `PROJECT_STATUS.md` §6: Admin أولي مُنشأ، `User.id` و`Admin.id` مسجّلان، وكلمة المرور الافتراضية **مُغيَّرة** (لا بيانات اعتماد في المستودع).
+      ℹ️ ويوجد أيضًا bootstrap قابل لإعادة الإنتاج: `apps/api/scripts/seed-admin.cjs` — يقرأ `ADMIN_PASSWORD` من البيئة (`:7-9`) ويجزّئ bcrypt cost 12 (`:13`) ويرفض القيمة الفارغة (`:8-9`).
 - [ ] اختبار ميداني ناجح: طلب حقيقي من عميل → مندوب → تسليم → تقييم → تسوية
-- [ ] جميع الأخطاء الحرجة المكتشفة في الاختبار الميداني مُصلحة
+      → ⛔ **لا يوجد سجل اختبار ميداني** في المستودع. التغطية الحالية آلية بالكامل (184 اختبار وحدة + 13 موقع تكامل + 223 Android). هذه هي الفجوة الحقيقية — وليست «اختبار يدوي لكل الشاشات» المُبطَّل سابقًا.
+- [ ] جميع الأخطاء الحرجة المكتشفة في الاختبار الميداني مُصلة
+      → ⛔ **مشتق من البند السابق** — لا يوجد اختبار ميداني، فلا قائمة أخطاء حرجية مغلقة. (توجد إصلاحات سابقة في السجل، لكنها لا تُلغي هذا البند.)
+
+---
+
+**Sprint 6 — لم يكتمل (2026-09-30).** لم يُضبط ختم «Complete». 3 بنود فقط منجزة (نشر Vercel × 2 + حساب Admin أولي)، وأثقل ما ينقص: **اختبار ميداني** · **مراجعة أمنية موثّقة** · **خط أساس أداء** · **تكامل التسعير**. وبند R2 ⏔ غير محسوم (D3).
+
+> **🔀 تفويض (D1) — هذه السبرنت للـ backend فقط.** بنود QA والإطلاق الخاصة بتطبيق **Android** مُفوَّضة رسميًا إلى `docs/android/ROADMAP.md` § Sprint 10 — **لا ازدواجية هنا ولا هناك**. وشحنة التوقيع والنشر هي Sprint 8F (انظر `NEXT_TASKS.md` A3).

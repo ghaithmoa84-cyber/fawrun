@@ -5,6 +5,55 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-09-30 — Root docs sync + Sprint DoD reconciliation (documentation-only)
+
+**الملفات المعدّلة (P1 — توثيق الجذر):**
+- `PROJECT_STATUS.md` — التاريخ → 2026-09-30 · صفّ Android في §1 (`Kotlin 2.0.21 · Compose · Hilt` · «APK مباشر — غير منشور») · **تصحيح §5 بند 6**: `Dockerfile:1` ما زال `node:20-slim` بينما `.nvmrc:1` = 22.23.1 → ❌ غير مُنجَز (كان مُسجَّل «✅ مكتملة») · **تصحيح §5 بند 7**: R2 → ⏔ يحتاج تحقّق (كان «✅ مكتملة») · §8 شجرة المجلدات أُضيفت إليها `apps/android/` و`docs/android/` · §9 خمسة أسطر أحداث للـ commits الخمسة · **§11 جديد «خريطة التوثيق»** يلغي ادّعاء «المصدر الوحيد للحقيقة» المكرر في ثلاثة ملفات
+- `HANDOFF.md` — التاريخ → 2026-09-30 · `:4` استُبدل بإشارة نطاق إلى §11 · صفّ Android في جدول الإنتاج · R2 ⏔ + Sentry ⏸️ · صفّ Android في جدول الفحص المحلي (223 `@Test`) · «الخطوة التالية» = Sprint 8D + بنود Sprint 6 الـ backend · **سياسة الدفع في الموضعين `:85` و`:90`**
+- `NEXT_TASKS.md` — التاريخ → 2026-09-30 · **المرساة المكسورة `[Q3.2](#04-module-status)` حُذفت** · R2 ← ⛔ حاجز ⏔ غير محسوم · **مسار Android جديد** (8D · Firebase+Keystore ⛔ يحتاج المستخدم · 8F) · بنود Sprint 6 الـ backend الموروثة · استبدال «اختبار يدوي لكل الشاشات» بـ «اختبار ميداني»
+- `AGENTS.md` — `:52` و`:57` سياسة الدفع (D2) · `:58` قاعدة «لا دمج حتى إشارة المستخدم» **محذوفة** → «الأندرويد مدمج في `master` منذ `e5bfbc1`»
+- `PROJECT_BRIEF.md` — `:14` «planned android app» → منجز ومدمج · `:465` سياسة الدفع · **مسار Android جدولاً مستقلاً** (§14) مع قاعدة منع تصادم الترقيم
+
+**الملفات المعدّلة (P2 — معايير الإنجاز):**
+كل بند حالته `[x]` أو `[ ]` صار يحمل سطر دليل `file:line` أو سطر سبب صريح. **لا مربّع واحد بُدّل بلا قراءة الكود.**
+
+| الملف | النتيجة بعد التدقيق |
+|---|---|
+| `docs/sprints/Sprint 3 Brief.md` | **9 ✅ / 4 ⬜** — مختومة «مكتمل جزئيًا» |
+| `docs/sprints/Sprint 4 Brief.md` | **11 ✅ / 3 ⬜** — مختومة «مكتمل جزئيًا» |
+| `docs/sprints/Sprint 5 Brief.md` | Admin **4 ✅ / 2 ⬜** · Runner **6 ✅ / 0 ⬜** · Android **8 صفوف تحويل** |
+| `docs/sprints/Sprint 6 Brief.md` | **3 ✅ / 9 ⬜** — لم يكتمل |
+| `docs/sprints/Sprint 2 Brief.md` | البنود الـ15 مُعلَّمة سلفًا ← **ختم `Sprint 2 Complete — 2026-09-30`** أُضيف (كان ناقصًا) |
+| `docs/sprints/Sprint 1 Brief.md` | **سطر تنبيه الترقيم فقط** (لا تدقيق DoD — بنوده مُعلَّمة من قبل) |
+| `docs/android/MASTER-SPEC.md` §22 | «No direct push to master» → فرع لكل سبرنت + `git merge --no-ff` (مواءمة مع الجذر) |
+| `docs/android/ROADMAP.md` | سطر تنبيه ترقيم معاكس يمنع تصادم `8A..10` مع `Sprint 1..6` |
+
+**القرارات المحسومة المطبّقة:**
+- **D1** Sprint 6 = للـ backend فقط؛ بنود QA/الإطلاق الخاصة بـ Android مُفوَّضة إلى `docs/android/ROADMAP.md` Sprint 10 (سطر تفويض في briefs)
+- **D2** فرع لكل سبرنت ثم `git merge --no-ff` إلى `master` — في `AGENTS.md` (موضعان) + `HANDOFF.md` (موضعان) + `PROJECT_BRIEF.md` + `MASTER-SPEC.md` §22
+- **D3** R2 = «⏔ يحتاج تحقّق» — لا قيمة ولا وهم مُعلَن؛ Railway المرجع الوحيد
+- **D4** §5 بند 6 كان خاطئًا: `Dockerfile:1` = `node:20-slim` هو مصدر الحقيقة (لا يوجد `railway.toml` في المستودع، فيكتشف Railway الـ Dockerfile تلقائيًا)
+
+**مفارقات متحقَّق منها في الكود (خارج النطاق — سُجِّلت ولم تُصلَح):**
+- **لا يوجد قفل رسم نهائي** — لا حقل `feeLocked` في `schema.prisma` ولا منطق في `pricing.service.ts`. يُبطل بند Sprint 3 «الرسم النهائي يُقفل» وبند Sprint 6 «قفل عند التسليم».
+- **`order:needs_attention` غير مُنفَّذ** — لا emit site، فقط TODO في `admin-order-command.service.ts:792-798`. يُبطل «جميع أحداث القسم 10» في Sprint 3.
+- **نمط Outbox (المهمة 3.6) غير موجود** — كل الإرسال fire-and-forget؛ لا `OutboxEntry` ولا إعادة محاولة.
+- **`RECEIPT_UPLOADED` AuditLog غير موجود** — لا يظهر في أي `*.ts` رغم مطالبة `Sprint 3 Brief.md:199`. (يوجد `RECEIPT_DELETED` فقط.)
+- **لا `SettlementStateMachine`** — `markSettled` يعدّل `status` مباشرةً (`settlements.service.ts:215-222`) خلافًا لـ `AGENTS.md` §2.
+- **عدّ الإيصالات قابل للتحايل** — الحد 5 يُفرض في `generatePresignedUrl` (`receipts.service.ts:76-83`) لا في `createReceipt` (`:93-107`).
+- **`connection_limit=10` محلي فقط** — في `apps/api/.env:2`، غير موثّق للإنتاج في `PROJECT_STATUS.md` §3.1.
+- **خلاف في عدد شاشات Android** — `docs/android/PROGRESS.md:55` يقول «17 شاشة» والمتحقَّق منه **15** (15 وجهة `ForerunNavGraph.kt:32-50` + 15 ملف `*Screen.kt`).
+- **`admin-web` بلا `react-leaflet`** — يستخدم Leaflet خامًا (`OrderMap.tsx:40`) بينما `runner-pwa` و`customer-web` يستخدمان `react-leaflet`.
+- **تصحيح `184` في `docs/06-testing-status.md:8`** (مسمّى «العدد الإجمالي»): المتحقَّق منه **15 ملف spec** (12 وحدة + 3 تكامل) و**126 موقع `it()`**. `apps/api/vitest.config.ts:21` يستثني `test/integration/**`، فـ **184 هو عدّ الوحدة فقط** بعد توسيع `it.each`، و**13 موقع `it()` تكامل** لا تدخل العدّ أصلًا.
+- **`apps/api/src/src/`** شجرة وحدة ميتة **متبَّعة في git** (10 ملفات `.gitkeep`).
+
+**الأوامر والنتائج:**
+- **صفر كود**: لا `gradlew` ولا `pnpm lint/typecheck/test` — لا مصدر تغيّر. التحقّق statique فقط.
+- `git diff --stat` → **14 ملف Markdown**، صفر `apps/` وصفر `packages/` (تحقّق آلي: صفر ملف `.ts/.tsx/.kt/.js/.prisma/.json/.toml/.gradle`).
+- بحث التعارضات → **صفر** في كل المواضع: «دفع مباشر إلى master» · «No direct push» · «لا دمج حتى إشارة المستخدم» · «planned android» · `node:22-slim` · «المصدر الوحيد للحقيقة». و`merge --no-ff` **موجود في 6 مواضع** موزّعة على 4 ملفات.
+- الروابط النسبية: **34 رابطًا، صفر مكسور** (بعد فك ترميز `%20`).
+- المربّعات غير المعلَّمة في `docs/sprints/3-6`: **18**، وكل واحد تحقّق من وجود سطر سبب بجواره (تحقّق آلي).
+
 ### 2026-09-27 18:10 — Repository cleanup & documentation alignment
 
 **الملفات والدوال المعدّلة:**

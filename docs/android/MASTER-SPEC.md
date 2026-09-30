@@ -816,6 +816,8 @@ Terminal: `DELIVERED`, `CANCELLED`
 
 ## 21. Sprint Roadmap
 
+### Delivered (merged into `master`)
+
 | Sprint | Duration | Deliverable |
 |--------|----------|-------------|
 | 1.1 | ✅ Complete | Project skeleton, Compose, APK builds |
@@ -826,10 +828,33 @@ Terminal: `DELIVERED`, `CANCELLED`
 | 3 | ✅ Complete | Orders List + Order Detail + Rating |
 | 4 | ✅ Complete | Account + Support + WebSocket integration |
 | 5 | ✅ Complete | FCM + MapLibre + polish |
-| UI Polish Pass | — | مخصص لمراجعة يدوية من المستخدم |
-| 6 | 1 week | Testing + QA + Final Polish |
+| 6 | ✅ Complete | UI Redesign (Google Stitch) + global RTL enforcement |
+| 7 | ✅ Complete | Production Readiness: signing pipeline, R8/ProGuard, pre-production audit, release checklist |
 
-**Total estimate for one focused agent:** ~10-12 weeks.
+**Refactoring track** (driven by `CODE-REVIEW.md` and `ARCHITECTURE-REVIEW.md`):
+
+| Sprint | Status | Deliverable |
+|--------|--------|-------------|
+| 8A | ✅ Complete | 6 critical architecture fixes: socket-after-login, server-refreshed session status, forced 401 refresh, cold-start deep link vs. splash, double-submit guards, socket leak on logout. Tests 152 → 172 |
+| 8B | ✅ Complete | 5 UI blockers (rating window, unscrollable auth screens, account loading/retry, orders error state, WhatsApp URL) + removal of debug scaffolding and the inverted `core → ui` edge. Tests 172 → 196 |
+| 8C | ✅ Complete | Account clean architecture: domain `CustomerProfile`, `AccountMapper`, 3 UseCases, `SessionExpiryNotifier` (NavGraph decoupled from `data`), A2/A4/A5/A9/A16/A20 closed. Tests 196 → 223 |
+
+**Sprints 1-8C are merged into `master`** (`3fc4119` for 1-8B, `e5bfbc1` for 8C). The cumulative-branch strategy is retired; each remaining sprint gets its own branch merged into `master`.
+
+### Planned
+
+| Sprint | Duration | Deliverable |
+|--------|----------|-------------|
+| 8D | 2-3 hours | Medium architecture: `TokenRefreshManager` → `core/auth` (A17), `RefreshInterceptor` → `okhttp3.Authenticator` (removes cycles 1-2), Nominatim DI fix (A18/A19), `OrderDetailMapper` (A21), onboarding/geocode UseCases, Gradle hygiene (B3/B5/B6) |
+| 8E | 2 hours | WebSocket port: `OrderEventsGateway` in `domain`, clean `ObserveOrderEventsUseCase`, real `AccountVerified` handler (D23), socket events for Home + Orders |
+| 8F | 2-3 hours + user setup | Real FCM (no placeholder) and app distribution. **Blocked on the user:** Firebase project, `google-services.json`, tester registration, production keystore |
+| 9 | 3-4 hours | UI Polish: 81 hardcoded strings → `strings.xml`, unified order-status labels, `rememberSaveable`, remaining MEDIUM/SURFACE items |
+| 10 | 4-6 hours | QA + Launch: integration tests, automated E2E, security review, performance baseline, first signed release 1.0.0 |
+
+**Total remaining engineering:** ~13-18 hours of focused work across 5 sessions.
+**Total elapsed for sprints 1-8C:** ~10-12 weeks.
+
+Full detail in `docs/android/ROADMAP.md`.
 
 ---
 
@@ -848,7 +873,7 @@ All three must pass. No exceptions.
 **Rules:**
 - Branch per Sprint
 - Semantic commits: `feat(android):`, `fix(android):`, `chore(android):`
-- No direct push to master
+- Android: branch per sprint + `git merge --no-ff` into `master` (same policy as root `AGENTS.md` — no fast-forward, keeps the merge history visible)
 - Wait for review before merge
 
 ---
