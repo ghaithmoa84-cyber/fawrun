@@ -31,17 +31,6 @@ object NetworkModule {
 
     @Provides
     @Singleton
-    fun provideTokenRefreshManager(
-        tokenStorage: com.forerun.customer.core.storage.TokenStorage,
-        authApiProvider: javax.inject.Provider<com.forerun.customer.data.remote.api.AuthApi>
-    ): com.forerun.customer.data.remote.token.TokenRefreshManager {
-        return com.forerun.customer.data.remote.token.TokenRefreshManager(tokenStorage, authApiProvider)
-    }
-
-
-
-    @Provides
-    @Singleton
     fun provideLoggingInterceptor(): HttpLoggingInterceptor {
         return HttpLoggingInterceptor().apply {
             level = if (BuildConfig.DEBUG) {

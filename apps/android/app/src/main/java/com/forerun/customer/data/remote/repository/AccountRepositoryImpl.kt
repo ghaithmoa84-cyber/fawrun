@@ -3,60 +3,38 @@ package com.forerun.customer.data.remote.repository
 import com.forerun.customer.core.network.ApiResponse
 import com.forerun.customer.data.remote.api.CustomerApi
 import com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest
-import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest
-import com.forerun.customer.domain.model.CustomerAddress
+import com.forerun.customer.data.remote.mapper.AccountMapper.toDomain
+import com.forerun.customer.domain.model.CustomerProfile
 import com.forerun.customer.domain.repository.AccountRepository
-import com.forerun.customer.domain.repository.AddressRepository
-import com.forerun.customer.domain.repository.AddressResult
-import com.forerun.customer.domain.repository.AuthRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class AccountRepositoryImpl @Inject constructor(
-    private val customerApi: CustomerApi,
-    private val addressRepository: AddressRepository,
-    private val authRepository: AuthRepository
+    private val customerApi: CustomerApi
 ) : AccountRepository {
 
-    override suspend fun getProfile(): Result<CustomerProfileDto> {
+    override suspend fun getProfile(): Result<CustomerProfile> {
         return when (val response = customerApi.me()) {
-            is ApiResponse.Success -> Result.success(response.data)
+            is ApiResponse.Success -> Result.success(response.data.toDomain())
             is ApiResponse.Error -> Result.failure(Exception(response.message))
         }
     }
 
-    override suspend fun updateProfile(request: UpdateProfileRequest): Result<CustomerProfileDto> {
+    override suspend fun updateProfile(name: String, altPhone: String?): Result<CustomerProfile> {
+        val request = UpdateProfileRequest(name = name, altPhone = altPhone)
         return when (val response = customerApi.updateProfile(request)) {
-            is ApiResponse.Success -> Result.success(response.data)
+            is ApiResponse.Success -> Result.success(response.data.toDomain())
             is ApiResponse.Error -> Result.failure(Exception(response.message))
         }
     }
 
-    override suspend fun changePassword(request: ChangePasswordRequest): Result<CustomerProfileDto> {
+    override suspend fun changePassword(password: String): Result<Unit> {
+        val request = ChangePasswordRequest(password = password)
         return when (val response = customerApi.changePassword(request)) {
-            is ApiResponse.Success -> Result.success(response.data)
-            is ApiResponse.Error -> Result.failure(Exception(response.message))
-        }
-    }
-
-    override suspend fun getAddress(): AddressResult {
-        return addressRepository.getAddress()
-    }
-
-    override suspend fun updateAddress(
-        lat: Double,
-        lng: Double,
-        description: String
-    ): Result<CustomerAddress> {
-        return addressRepository.updateAddress(lat, lng, description)
-    }
-
-    override suspend fun logout(): Result<Unit> {
-        return when (authRepository.logout()) {
             is ApiResponse.Success -> Result.success(Unit)
-            is ApiResponse.Error -> Result.success(Unit) // Even if server fails, local is cleared
+            is ApiResponse.Error -> Result.failure(Exception(response.message))
         }
     }
 }

@@ -10,7 +10,7 @@ import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.currentBackStackEntryAsState
-import com.forerun.customer.data.remote.token.TokenRefreshManager
+import com.forerun.customer.core.auth.SessionExpiryNotifier
 import com.forerun.customer.ui.account.AccountScreen
 import com.forerun.customer.ui.auth.login.LoginScreen
 import com.forerun.customer.ui.auth.register.RegisterScreen
@@ -56,11 +56,11 @@ fun ForerunNavGraph(
     navController: NavHostController,
     modifier: Modifier = Modifier,
     startDestination: String = Routes.SPLASH,
-    tokenRefreshManager: TokenRefreshManager? = null
+    sessionExpiryNotifier: SessionExpiryNotifier? = null
 ) {
-    if (tokenRefreshManager != null) {
-        LaunchedEffect(tokenRefreshManager) {
-            tokenRefreshManager.sessionExpiredEvent.collect {
+    if (sessionExpiryNotifier != null) {
+        LaunchedEffect(sessionExpiryNotifier) {
+            sessionExpiryNotifier.sessionExpiredEvent.collect {
                 if (navController.currentDestination?.route != Routes.LOGIN) {
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }

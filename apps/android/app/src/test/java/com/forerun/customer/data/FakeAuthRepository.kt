@@ -20,6 +20,7 @@ class FakeAuthRepository : AuthRepository {
     var logoutResult: ApiResponse<Unit> = ApiResponse.Success(Unit)
     var sessionStateResult: SessionState = SessionState.Unauthenticated
     var currentUserResult: User? = null
+    var logoutCallCount = 0
 
     override suspend fun login(whatsapp: String, password: String): ApiResponse<User> {
         return loginResult
@@ -38,6 +39,7 @@ class FakeAuthRepository : AuthRepository {
     }
 
     override suspend fun logout(): ApiResponse<Unit> {
+        logoutCallCount++
         return logoutResult
     }
 

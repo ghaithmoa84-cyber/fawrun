@@ -1,15 +1,5 @@
 package com.forerun.customer.domain.model
 
-data class CustomerProfile(
-    val id: String,
-    val name: String,
-    val whatsapp: String,
-    val altPhone: String? = null,
-    val status: String,
-    val completedOrders: Int,
-    val totalFeesPaid: Int
-)
-
 data class ActiveOrder(
     val id: String,
     val orderNumber: String,
