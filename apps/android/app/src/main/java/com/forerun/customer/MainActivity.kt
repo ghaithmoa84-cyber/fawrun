@@ -19,9 +19,9 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.core.content.ContextCompat
 import androidx.navigation.compose.rememberNavController
+import com.forerun.customer.core.auth.SessionExpiryNotifier
 import com.forerun.customer.core.notification.DeepLinkHolder
 import com.forerun.customer.core.notification.NotificationPayloadParser
-import com.forerun.customer.data.remote.token.TokenRefreshManager
 import com.forerun.customer.ui.navigation.ForerunNavGraph
 import com.forerun.customer.ui.navigation.Routes
 import com.forerun.customer.ui.theme.ForerunTheme
@@ -41,7 +41,7 @@ private val AUTHENTICATED_ROUTES = setOf(
 class MainActivity : ComponentActivity() {
 
     @Inject
-    lateinit var tokenRefreshManager: TokenRefreshManager
+    lateinit var sessionExpiryNotifier: SessionExpiryNotifier
 
     @Inject
     lateinit var deepLinkHolder: DeepLinkHolder
@@ -104,7 +104,7 @@ class MainActivity : ComponentActivity() {
                 ) {
                     ForerunNavGraph(
                         navController = navController,
-                        tokenRefreshManager = tokenRefreshManager
+                        sessionExpiryNotifier = sessionExpiryNotifier
                     )
                 }
             }

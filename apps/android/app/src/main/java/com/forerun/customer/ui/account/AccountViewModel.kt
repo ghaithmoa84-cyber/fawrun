@@ -2,10 +2,14 @@ package com.forerun.customer.ui.account
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.domain.model.CustomerAddress
-import com.forerun.customer.domain.repository.AccountRepository
+import com.forerun.customer.domain.model.CustomerProfile
 import com.forerun.customer.domain.repository.AddressResult
+import com.forerun.customer.domain.usecase.GetCustomerAddressUseCase
+import com.forerun.customer.domain.usecase.LogoutUseCase
+import com.forerun.customer.domain.usecase.account.ChangeAccountPasswordUseCase
+import com.forerun.customer.domain.usecase.account.GetAccountProfileUseCase
+import com.forerun.customer.domain.usecase.account.UpdateAccountProfileUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -18,7 +22,7 @@ import javax.inject.Inject
 
 data class AccountUiState(
     val isLoading: Boolean = true,
-    val profile: CustomerProfileDto? = null,
+    val profile: CustomerProfile? = null,
     val address: CustomerAddress? = null,
     val isSavingProfile: Boolean = false,
     val isChangingPassword: Boolean = false,
@@ -34,7 +38,11 @@ data class AccountUiState(
 
 @HiltViewModel
 class AccountViewModel @Inject constructor(
-    private val accountRepository: AccountRepository
+    private val getAccountProfile: GetAccountProfileUseCase,
+    private val updateAccountProfile: UpdateAccountProfileUseCase,
+    private val changeAccountPassword: ChangeAccountPasswordUseCase,
+    private val getCustomerAddress: GetCustomerAddressUseCase,
+    private val logoutUseCase: LogoutUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AccountUiState())
@@ -51,10 +59,10 @@ class AccountViewModel @Inject constructor(
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoading = true, errorMessage = null, loadErrorMessage = null)
 
-            val profileResult = accountRepository.getProfile()
-            val addressResult = accountRepository.getAddress()
+            val profileResult = getAccountProfile()
+            val addressResult = getCustomerAddress()
 
-            var profile: CustomerProfileDto? = null
+            var profile: CustomerProfile? = null
             var error: String? = null
 
             profileResult.fold(
@@ -81,10 +89,6 @@ class AccountViewModel @Inject constructor(
         }
     }
 
-    fun saveProfile(name: String, altPhone: String?) {
-        updateProfile(name, altPhone)
-    }
-
     fun updateProfile(name: String, altPhone: String?) {
         val trimmedName = name.trim()
         if (trimmedName.length < 2) {
@@ -104,11 +108,7 @@ class AccountViewModel @Inject constructor(
                 errorMessage = null,
                 profileSuccessMessage = null
             )
-            val request = com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest(
-                name = trimmedName,
-                altPhone = trimmedAltPhone
-            )
-            val result = accountRepository.updateProfile(request)
+            val result = updateAccountProfile(name = trimmedName, altPhone = trimmedAltPhone)
             result.fold(
                 onSuccess = { updatedProfile ->
                     _uiState.value = _uiState.value.copy(
@@ -147,10 +147,7 @@ class AccountViewModel @Inject constructor(
                 errorMessage = null,
                 passwordSuccessMessage = null
             )
-            val request = com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest(
-                password = newPassword
-            )
-            val result = accountRepository.changePassword(request)
+            val result = changeAccountPassword(password = newPassword)
             result.fold(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
@@ -171,7 +168,7 @@ class AccountViewModel @Inject constructor(
     fun logout() {
         viewModelScope.launch {
             _uiState.value = _uiState.value.copy(isLoggingOut = true)
-            accountRepository.logout()
+            logoutUseCase()
             _uiState.value = _uiState.value.copy(isLoggingOut = false)
             _navigateToLogin.emit(Unit)
         }

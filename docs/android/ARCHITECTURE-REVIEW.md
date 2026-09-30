@@ -402,4 +402,30 @@ Every UseCase wraps exactly one repository. No multi-repository UseCase. No UseC
 
 ---
 
+## 6. Sprint 8C — Account clean architecture + NavGraph decoupling
+
+Branch `feature/android-sprint-8c-account-clean`. Closes the Account feature end to end:
+
+| Item | Resolution |
+|---|---|
+| **A2** `AccountRepository` imports DTOs | ✅ Contract is now `Result<CustomerProfile>`; no `data.remote` import remains in `domain/` |
+| **A4** `ui/navigation` imports `data.remote.token` | ✅ `ForerunNavGraph` takes `core.auth.SessionExpiryNotifier`; `ui/navigation` has zero `data.*` imports |
+| **A5** `AccountUiState.profile` is a DTO | ✅ `CustomerProfile` (domain model) |
+| **A9** `AccountViewModel` injects a repository | ✅ Injects `GetAccountProfileUseCase`, `UpdateAccountProfileUseCase`, `ChangeAccountPasswordUseCase`, `GetCustomerAddressUseCase`, `LogoutUseCase` |
+| **A16** `provideTokenRefreshManager` | ✅ Deleted; `TokenRefreshManager`'s `@Inject constructor` is the only binding |
+| **A20** `AccountRepositoryImpl` wraps two repositories | ✅ Constructor is `CustomerApi` only |
+| **Cycle 3** aggregation in `AccountRepositoryImpl` | ✅ Delegation methods (`getAddress`, `updateAddress`, `logout`) removed |
+| **D8** `AccountViewModel.saveProfile()` | ✅ Deleted |
+| **D12/D13/D14** dead interface methods | ✅ `getAddress`, `updateAddress`, `logout`, and both DTO-building defaults removed |
+| **A21 (Account part)** mapper files | ✅ `data/remote/mapper/AccountMapper.kt` is the first mapper in the project |
+
+**Deferred:**
+
+- **A17** (`TokenRefreshManager` in `data/`) — still open. Moving it to `core/auth/` relocates the violation rather than fixing it, because it imports `data.remote.api.AuthApi` and `data.remote.dto.auth.RefreshRequest`. The real fix is item 12 of §5: convert `RefreshInterceptor` to an `okhttp3.Authenticator`. `DefaultSessionExpiryNotifier` stays in `data/remote/token/` for that reason.
+- **Follow-up** — `CustomerProfile.status` is still `String`, not `UserStatus`. It is consumed by no screen; migrating it requires `UserStatus.fromString()` in the mapper and touches `HomeRepositoryImpl` + `HomeViewModelTest`.
+
+**Note on line references:** the line numbers cited in §1–§4 were captured before 8B and 8C. Entry IDs are authoritative; the coordinates are stale for A2, A4, A5, A9, A16, A20, D8, and D12–D14.
+
+---
+
 *Scope note: this review examined architecture, engineering structure, file interconnections, and call graph only. UI/UX, string resources, and business-logic correctness were excluded by instruction and are covered in `CODE-REVIEW.md`. No source file was modified and no Gradle task was executed.*

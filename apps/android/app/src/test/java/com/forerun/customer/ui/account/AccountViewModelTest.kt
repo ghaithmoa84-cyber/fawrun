@@ -1,14 +1,17 @@
 package com.forerun.customer.ui.account
 
 import app.cash.turbine.test
-import com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest
-import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
-import com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest
+import com.forerun.customer.data.FakeAccountRepository
+import com.forerun.customer.data.FakeAddressRepository
+import com.forerun.customer.data.FakeAuthRepository
 import com.forerun.customer.domain.model.CustomerAddress
-import com.forerun.customer.domain.repository.AccountRepository
 import com.forerun.customer.domain.repository.AddressResult
+import com.forerun.customer.domain.usecase.GetCustomerAddressUseCase
+import com.forerun.customer.domain.usecase.LogoutUseCase
+import com.forerun.customer.domain.usecase.account.ChangeAccountPasswordUseCase
+import com.forerun.customer.domain.usecase.account.GetAccountProfileUseCase
+import com.forerun.customer.domain.usecase.account.UpdateAccountProfileUseCase
 import com.forerun.customer.util.MainDispatcherRule
-import com.squareup.moshi.Moshi
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -27,15 +30,29 @@ class AccountViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private lateinit var fakeAccountRepository: FakeAccountRepository
+    private lateinit var fakeAddressRepository: FakeAddressRepository
+    private lateinit var fakeAuthRepository: FakeAuthRepository
     private lateinit var viewModel: AccountViewModel
 
     @Before
     fun setUp() {
         fakeAccountRepository = FakeAccountRepository()
-        viewModel = AccountViewModel(
-            accountRepository = fakeAccountRepository
-        )
+        fakeAddressRepository = FakeAddressRepository().apply {
+            getAddressResult = AddressResult.Success(
+                CustomerAddress(lat = 35.52, lng = 35.80, description = "القنجرة - جانب البلدية")
+            )
+        }
+        fakeAuthRepository = FakeAuthRepository()
+        viewModel = createViewModel()
     }
+
+    private fun createViewModel() = AccountViewModel(
+        getAccountProfile = GetAccountProfileUseCase(fakeAccountRepository),
+        updateAccountProfile = UpdateAccountProfileUseCase(fakeAccountRepository),
+        changeAccountPassword = ChangeAccountPasswordUseCase(fakeAccountRepository),
+        getCustomerAddress = GetCustomerAddressUseCase(fakeAddressRepository),
+        logoutUseCase = LogoutUseCase(fakeAuthRepository)
+    )
 
     @Test
     fun init_loadsAccountData_success_populatesProfileAndAddress() {
@@ -53,10 +70,8 @@ class AccountViewModelTest {
 
     @Test
     fun init_loadsAccountData_failure_setsErrorMessage() {
-        fakeAccountRepository.shouldFailGetProfile = true
-        val errorVm = AccountViewModel(
-            accountRepository = fakeAccountRepository
-        )
+        fakeAccountRepository.getProfileError = "فشل الاتصال بالخادم"
+        val errorVm = createViewModel()
 
         val state = errorVm.uiState.value
         assertFalse(state.isLoading)
@@ -78,56 +93,22 @@ class AccountViewModelTest {
     }
 
     @Test
-    fun saveProfile_validData_sendsOnlyNameAndAltPhone_withoutPassword() {
-        viewModel.saveProfile(name = "أحمد خالد", altPhone = "0987654321")
+    fun updateProfile_nullAltPhone_sendsNullAltPhone() {
+        viewModel.updateProfile(name = "أحمد خالد", altPhone = null)
 
         val state = viewModel.uiState.value
         assertFalse(state.isSavingProfile)
-        val request = fakeAccountRepository.lastProfileRequest
-        assertNotNull(request)
-        assertEquals("أحمد خالد", request?.name)
-        assertEquals("0987654321", request?.altPhone)
-
-        val moshi = Moshi.Builder().build()
-        val json = moshi.adapter(UpdateProfileRequest::class.java).toJson(request)
-        assertFalse(json.contains("password"))
-        assertTrue(json.contains("\"name\":\"أحمد خالد\""))
-        assertTrue(json.contains("\"altPhone\":\"0987654321\""))
+        assertEquals("أحمد خالد", fakeAccountRepository.lastUpdatedName)
+        assertNull(fakeAccountRepository.lastUpdatedAltPhone)
+        assertNull(state.profile?.altPhone)
+        assertEquals("تم حفظ معلومات الحساب بنجاح", state.profileSuccessMessage)
     }
 
     @Test
-    fun saveProfile_nullAltPhone_sendsNullAltPhone_withoutPassword() {
-        viewModel.saveProfile(name = "أحمد خالد", altPhone = null)
+    fun updateProfile_blankAltPhone_isNormalizedToNull() {
+        viewModel.updateProfile(name = "أحمد خالد", altPhone = "   ")
 
-        val state = viewModel.uiState.value
-        assertFalse(state.isSavingProfile)
-        val request = fakeAccountRepository.lastProfileRequest
-        assertNotNull(request)
-        assertEquals("أحمد خالد", request?.name)
-        assertNull(request?.altPhone)
-
-        val moshi = Moshi.Builder().build()
-        val json = moshi.adapter(UpdateProfileRequest::class.java).serializeNulls().toJson(request)
-        assertFalse(json.contains("password"))
-        assertTrue(json.contains("\"name\":\"أحمد خالد\""))
-        assertTrue(json.contains("\"altPhone\":null"))
-    }
-
-    @Test
-    fun changePassword_validPassword_sendsOnlyPassword_withoutNameOrAltPhone() {
-        viewModel.changePassword(newPassword = "newPassword123", confirmPassword = "newPassword123")
-
-        val state = viewModel.uiState.value
-        assertFalse(state.isChangingPassword)
-        val request = fakeAccountRepository.lastPasswordRequest
-        assertNotNull(request)
-        assertEquals("newPassword123", request?.password)
-
-        val moshi = Moshi.Builder().build()
-        val json = moshi.adapter(ChangePasswordRequest::class.java).toJson(request)
-        assertFalse(json.contains("name"))
-        assertFalse(json.contains("altPhone"))
-        assertTrue(json.contains("\"password\":\"newPassword123\""))
+        assertNull(fakeAccountRepository.lastUpdatedAltPhone)
     }
 
     @Test
@@ -136,6 +117,7 @@ class AccountViewModelTest {
 
         val state = viewModel.uiState.value
         assertNull(fakeAccountRepository.lastUpdatedName)
+        assertEquals(0, fakeAccountRepository.updateProfileCallCount)
         assertEquals("الاسم يجب أن يكون حرفين على الأقل", state.errorMessage)
         assertNull(state.profileSuccessMessage)
     }
@@ -146,13 +128,14 @@ class AccountViewModelTest {
 
         val state = viewModel.uiState.value
         assertNull(fakeAccountRepository.lastUpdatedName)
+        assertEquals(0, fakeAccountRepository.updateProfileCallCount)
         assertEquals("الرقم البديل يجب أن يبدأ بـ 09 ويتكون من 10 أرقام", state.errorMessage)
         assertNull(state.profileSuccessMessage)
     }
 
     @Test
     fun updateProfile_apiFailure_setsErrorMessage() {
-        fakeAccountRepository.shouldFailUpdateProfile = true
+        fakeAccountRepository.updateProfileError = "خطأ في تحديث الملف"
 
         viewModel.updateProfile(name = "أحمد خالد", altPhone = null)
 
@@ -194,8 +177,17 @@ class AccountViewModelTest {
     }
 
     @Test
+    fun changePassword_tooLongInBytes_setsErrorMessage() {
+        viewModel.changePassword(newPassword = "ا".repeat(80), confirmPassword = "ا".repeat(80))
+
+        val state = viewModel.uiState.value
+        assertNull(fakeAccountRepository.lastChangedPassword)
+        assertEquals("كلمة المرور لا يجب أن تتجاوز 72 بايت", state.errorMessage)
+    }
+
+    @Test
     fun changePassword_apiFailure_setsErrorMessage() {
-        fakeAccountRepository.shouldFailChangePassword = true
+        fakeAccountRepository.changePasswordError = "خطأ في تغيير كلمة المرور"
 
         viewModel.changePassword(newPassword = "validPassword88", confirmPassword = "validPassword88")
 
@@ -210,7 +202,8 @@ class AccountViewModelTest {
         viewModel.navigateToLogin.test {
             viewModel.logout()
 
-            assertTrue(fakeAccountRepository.logoutCalled)
+            assertEquals(1, fakeAuthRepository.logoutCallCount)
+            assertFalse(viewModel.uiState.value.isLoggingOut)
             awaitItem()
         }
     }
@@ -237,13 +230,13 @@ class AccountViewModelTest {
 
     @Test
     fun loadAccountData_afterFailure_recoversOnRetry() {
-        fakeAccountRepository.shouldFailGetProfile = true
-        val errorVm = AccountViewModel(accountRepository = fakeAccountRepository)
+        fakeAccountRepository.getProfileError = "فشل الاتصال بالخادم"
+        val errorVm = createViewModel()
 
         assertNull(errorVm.uiState.value.profile)
         assertEquals("فشل الاتصال بالخادم", errorVm.uiState.value.loadErrorMessage)
 
-        fakeAccountRepository.shouldFailGetProfile = false
+        fakeAccountRepository.getProfileError = null
         errorVm.loadAccountData()
 
         val state = errorVm.uiState.value
@@ -253,70 +246,14 @@ class AccountViewModelTest {
         assertNull(state.loadErrorMessage)
     }
 
-    private class FakeAccountRepository : AccountRepository {
-        var profile: CustomerProfileDto = CustomerProfileDto(
-            id = "cust_123",
-            name = "محمد علي",
-            whatsapp = "0912345678",
-            altPhone = "0987654321",
-            status = "VERIFIED",
-            completedOrders = 7,
-            totalFeesPaid = 35000,
-            createdAt = "2026-09-01T10:00:00Z"
-        )
-        var address: CustomerAddress? = CustomerAddress(lat = 35.52, lng = 35.80, description = "القنجرة - جانب البلدية")
-        var shouldFailGetProfile = false
-        var shouldFailUpdateProfile = false
-        var shouldFailChangePassword = false
-        var lastProfileRequest: UpdateProfileRequest? = null
-        var lastPasswordRequest: ChangePasswordRequest? = null
-        var lastUpdatedName: String? = null
-        var lastUpdatedAltPhone: String? = null
-        var lastChangedPassword: String? = null
-        var logoutCalled = false
+    @Test
+    fun loadAccountData_noAddress_keepsProfileAndNullAddress() {
+        fakeAddressRepository.getAddressResult = AddressResult.NotFound
 
-        override suspend fun getProfile(): Result<CustomerProfileDto> {
-            return if (shouldFailGetProfile) {
-                Result.failure(Exception("فشل الاتصال بالخادم"))
-            } else {
-                Result.success(profile)
-            }
-        }
+        val state = createViewModel().uiState.value
 
-        override suspend fun updateProfile(request: UpdateProfileRequest): Result<CustomerProfileDto> {
-            return if (shouldFailUpdateProfile) {
-                Result.failure(Exception("خطأ في تحديث الملف"))
-            } else {
-                lastProfileRequest = request
-                lastUpdatedName = request.name
-                lastUpdatedAltPhone = request.altPhone
-                profile = profile.copy(name = request.name, altPhone = request.altPhone)
-                Result.success(profile)
-            }
-        }
-
-        override suspend fun changePassword(request: ChangePasswordRequest): Result<CustomerProfileDto> {
-            return if (shouldFailChangePassword) {
-                Result.failure(Exception("خطأ في تغيير كلمة المرور"))
-            } else {
-                lastPasswordRequest = request
-                lastChangedPassword = request.password
-                Result.success(profile)
-            }
-        }
-
-        override suspend fun getAddress(): AddressResult {
-            return address?.let { AddressResult.Success(it) } ?: AddressResult.NotFound
-        }
-
-        override suspend fun updateAddress(lat: Double, lng: Double, description: String): Result<CustomerAddress> {
-            address = CustomerAddress(lat, lng, description)
-            return Result.success(address!!)
-        }
-
-        override suspend fun logout(): Result<Unit> {
-            logoutCalled = true
-            return Result.success(Unit)
-        }
+        assertNotNull(state.profile)
+        assertNull(state.address)
+        assertNull(state.loadErrorMessage)
     }
 }
