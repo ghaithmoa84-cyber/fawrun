@@ -157,6 +157,10 @@ open class SocketManager @Inject constructor(
         _events.emit(event)
     }
 
+    internal fun setConnectionStateForTesting(state: SocketConnectionState) {
+        _connectionState.value = state
+    }
+
     private fun setupListeners(socket: Socket) {
         socket.on(Socket.EVENT_CONNECT) {
             Log.d(TAG, "Socket connected to namespace $NAMESPACE")

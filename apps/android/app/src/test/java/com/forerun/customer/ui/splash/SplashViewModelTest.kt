@@ -6,6 +6,9 @@ import com.forerun.customer.domain.model.SessionState
 import com.forerun.customer.domain.model.User
 import com.forerun.customer.domain.model.UserStatus
 import com.forerun.customer.domain.usecase.CheckSessionUseCase
+import com.forerun.customer.data.FakeOrderEventsGateway
+import com.forerun.customer.domain.model.WebSocketEvent
+import com.forerun.customer.domain.usecase.ObserveOrderEventsUseCase
 import com.forerun.customer.util.MainDispatcherRule
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceTimeBy
@@ -161,6 +164,46 @@ class SplashViewModelTest {
             advanceTimeBy(600)
             val destination = awaitItem()
             assertEquals(SplashDestination.PendingVerification, destination)
+        }
+    }
+
+    @Test
+    fun `splash when AccountVerified event received rechecks session immediately and routes to home`() = runTest {
+        val fakeRepo = FakeAuthRepository().apply {
+            sessionStateResult = SessionState.Authenticated(
+                User("user_pending", "Pending User", "CUSTOMER", UserStatus.PENDING_VERIFICATION)
+            )
+        }
+        val useCase = CheckSessionUseCase(fakeRepo)
+        val defaultDeepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder()
+        val fakeGateway = FakeOrderEventsGateway()
+        val observeOrderEventsUseCase = ObserveOrderEventsUseCase(fakeGateway)
+
+        val viewModel = SplashViewModel(
+            checkSessionUseCase = useCase,
+            deepLinkHolder = defaultDeepLinkHolder,
+            observeOrderEventsUseCase = observeOrderEventsUseCase
+        )
+
+        viewModel.destination.test {
+            // Initial checkSession with 500ms delay
+            advanceTimeBy(600)
+            assertEquals(SplashDestination.PendingVerification, awaitItem())
+
+            // Simulate account verification by admin
+            fakeRepo.sessionStateResult = SessionState.Authenticated(
+                User("user_pending", "Pending User", "CUSTOMER", UserStatus.VERIFIED)
+            )
+
+            // Emit AccountVerified from fake gateway
+            fakeGateway.emitEvent(WebSocketEvent.AccountVerified)
+
+            // Re-check happens immediately without waiting for delay
+            advanceTimeBy(100)
+            val updatedDestination = awaitItem()
+            assertEquals(SplashDestination.Home, updatedDestination)
+
+            cancelAndIgnoreRemainingEvents()
         }
     }
 }
