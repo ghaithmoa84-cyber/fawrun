@@ -85,6 +85,24 @@ export class NotificationsService {
           body = `${orderPrefix}تم تحديث حالة طلبك.`;
           break;
       }
+    } else if (event === 'order:runner_assigned') {
+      title = 'تم تعيين مندوب 🛵';
+      const runnerName = (data.runnerName as string) || '';
+      const orderPrefix = orderNumber ? `طلب #${orderNumber}: ` : '';
+      body = runnerName
+        ? `${orderPrefix}المندوب ${runnerName} استلم طلبك وسيبدأ تنفيذه قريباً.`
+        : `${orderPrefix}تم تعيين مندوب لاستلام وتنفيذ طلبك.`;
+    } else if (event === 'order:fee_updated') {
+      title = 'تحديث رسوم التوصيل 💵';
+      const orderPrefix = orderNumber ? `طلب #${orderNumber}: ` : '';
+      body = `${orderPrefix}تم تحديث رسوم التوصيل لطلبك.`;
+    } else if (event === 'order:store_purchased') {
+      title = 'تم الشراء من المتجر 🛍️';
+      const storeName = (data.storeName as string) || '';
+      const orderPrefix = orderNumber ? `طلب #${orderNumber}: ` : '';
+      body = storeName
+        ? `${orderPrefix}تم شراء المواد من متجر ${storeName}.`
+        : `${orderPrefix}تم الشراء من أحد المتاجر المطلوبة.`;
     } else if (event === 'account:verified') {
       title = 'تم تفعيل حسابك 🎉';
       body = 'حسابك في FORERUN أصبح موثقاً وجاهزاً للطلب الآن!';

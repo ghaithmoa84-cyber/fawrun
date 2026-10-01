@@ -188,6 +188,9 @@ class AuthRepositoryImpl @Inject constructor(
 
             val user = getCurrentUser()
             return if (user != null) {
+                try {
+                    fcmTokenManager?.registerDeviceToken()
+                } catch (_: Exception) {}
                 SessionState.Authenticated(user)
             } else {
                 SessionState.Unauthenticated
@@ -201,6 +204,9 @@ class AuthRepositoryImpl @Inject constructor(
             if (refreshed) {
                 val user = getCurrentUser()
                 if (user != null) {
+                    try {
+                        fcmTokenManager?.registerDeviceToken()
+                    } catch (_: Exception) {}
                     return SessionState.Authenticated(user)
                 }
             }

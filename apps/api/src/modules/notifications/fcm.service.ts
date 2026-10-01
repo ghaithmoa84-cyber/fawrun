@@ -93,6 +93,7 @@ export class FcmService implements OnModuleInit {
       });
 
       if (!deviceTokens || deviceTokens.length === 0) {
+        this.logger.log(`[FCM] No device tokens registered for userId=${userId}. Push skipped.`);
         return;
       }
 
