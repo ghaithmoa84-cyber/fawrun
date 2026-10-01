@@ -1,7 +1,29 @@
 # FORERUN Coding Standards & Workflow
 
-> **ملاحظة:** الحالة الحالية للمشروع وآخر جلسة مراجعة موثّقة في
-> [PROJECT_STATUS.md](PROJECT_STATUS.md).
+## ابدأ من هنا (Start Here) — ترتيب القراءة لوكيل جديد
+
+اقرأ هذه الملفات **بهذا الترتيب**، ولا تبدأ عملاً قبل إنهائها:
+
+| # | الملف | لماذا | الحجم |
+|---|---|---|---|
+| 1 | **[AGENTS.md](AGENTS.md)** (هذا الملف) | المعايير وقواعد الأمان وأوامر المشروع | 97 سطر |
+| 2 | **[PROJECT_STATUS.md](PROJECT_STATUS.md)** | حقائق الإنتاج والبنية التحتية · **§5** البنود المتبقية · **§9** سجل الأحداث · **§11 خريطة التوثيق** (أي ملف يملك أي حقيقة) · **§12 سجل القرارات** (لماذا ومتى) | ~315 سطر |
+| 3 | **[NEXT_TASKS.md](NEXT_TASKS.md)** | ما يجب عمله بعد، بالترتيب والمالك | 31 سطر |
+| 4 | **[HANDOFF.md](HANDOFF.md)** | قواعد التعامل ومسار العمل | 86 سطر |
+
+**ثم عند الحاجة فقط — لا تقرأها مقدَّماً:**
+- [PROJECT_BRIEF.md](PROJECT_BRIEF.md) (471 سطر) — المواصفة ومسار السبرنتات. اقرأه إذا كنت تصمّم ميزة.
+- [docs/android/ROADMAP.md](docs/android/ROADMAP.md) — الخطوة القادمة لـ Android.
+- `docs/sprints/` (2,638 سطر) — **تاريخ لا حالة حالية.** لا تعامل معاييرها كمتطلّبات مفتوحة؛ راجع `PROJECT_STATUS.md §11` أولاً.
+
+**⚠️ ثلاث مغالطات شائعة في هذا المستودع — لا تقع فيها:**
+1. **`docs/sprints/` ليست قائمة مهام.** هي تاريخ منجَز. العمل الفعلي في [NEXT_TASKS.md](NEXT_TASKS.md).
+2. **«مرجع الحقيقة الوحيد» ليس ملفاً واحداً.** توزيع الحقائق في [§11](PROJECT_STATUS.md#11-خريطة-التوثيق--أي-ملف-يملك-أي-حقيقة) — لا تفترض أن `PROJECT_STATUS.md` يغطي كل شيء.
+3. **لا «ادفع مباشرة إلى master».** فرع لكل سبرنت ثم `git merge --no-ff` (قواعد Git أدناه).
+
+---
+
+> **ملاحظة:** الحالة الحالية موثّقة في [PROJECT_STATUS.md](PROJECT_STATUS.md).
 > راجعها قبل أي عمل. هذا الملف هو المرجع للمعايير والأدوات والأوامر.
 
 ## Project Overview
@@ -9,6 +31,7 @@ FORERUN is a grocery delivery platform built as a Modular Monolith in a Monorepo
 - Backend: NestJS + PostgreSQL + Prisma + Socket.IO
 - Admin Dashboard: Next.js 14 (App Router)
 - Runner PWA: React + Vite + PWA
+- Android: Kotlin 2.0.21 + Jetpack Compose + Hilt (مدمج في `master` منذ `e5bfbc1`)
 
 ## Coding Rules (Spec Section 17)
 
