@@ -31,7 +31,9 @@ class LoginViewModelTest {
     fun setup() {
         fakeAuthRepository = FakeAuthRepository()
         loginUseCase = LoginUseCase(fakeAuthRepository)
-        viewModel = LoginViewModel(loginUseCase)
+        val fakeStorage = com.forerun.customer.core.storage.FakeTokenStorage(token = "token")
+        val fakeSocket = object : com.forerun.customer.core.websocket.SocketManager(fakeStorage) {}
+        viewModel = LoginViewModel(loginUseCase, fakeSocket)
     }
 
     @Test

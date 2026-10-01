@@ -7,7 +7,7 @@ data class CustomerProfile(
     val name: String,
     val whatsapp: String,
     val altPhone: String? = null,
-    val status: String,
+    val status: UserStatus,
     val completedOrders: Int,
     val totalFeesPaid: Int,
     val createdAt: Instant? = null

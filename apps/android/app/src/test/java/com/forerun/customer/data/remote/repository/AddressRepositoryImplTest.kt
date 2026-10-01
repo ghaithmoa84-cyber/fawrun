@@ -29,9 +29,6 @@ class AddressRepositoryImplTest {
 
         override suspend fun updateAddress(body: UpdateCustomerAddressRequest): ApiResponse<CustomerAddressDto> =
             updateAddressResult
-
-        override suspend fun getAvailableRunners(): ApiResponse<List<com.forerun.customer.data.remote.dto.order.AvailableRunnerDto>> =
-            ApiResponse.Success(emptyList())
     }
 
     @Test

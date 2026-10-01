@@ -6,7 +6,6 @@ import com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest
 import com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest
-import com.forerun.customer.data.remote.dto.order.AvailableRunnerDto
 import retrofit2.http.Body
 import retrofit2.http.GET
 import retrofit2.http.PUT
@@ -26,7 +25,4 @@ interface CustomerApi {
 
     @PUT("customer/me/address")
     suspend fun updateAddress(@Body body: UpdateCustomerAddressRequest): ApiResponse<CustomerAddressDto>
-
-    @GET("customer/runners")
-    suspend fun getAvailableRunners(): ApiResponse<List<AvailableRunnerDto>>
 }

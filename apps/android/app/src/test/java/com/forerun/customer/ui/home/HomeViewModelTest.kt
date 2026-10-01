@@ -4,6 +4,7 @@ import com.forerun.customer.data.FakeAuthRepository
 import com.forerun.customer.data.FakeHomeRepository
 import com.forerun.customer.domain.model.ActiveOrder
 import com.forerun.customer.domain.model.CustomerProfile
+import com.forerun.customer.domain.model.UserStatus
 import com.forerun.customer.domain.model.HomeData
 import com.forerun.customer.domain.usecase.GetHomeDataUseCase
 import com.forerun.customer.domain.usecase.LogoutUseCase
@@ -46,7 +47,7 @@ class HomeViewModelTest {
                     name = "عمر",
                     whatsapp = "0988888888",
                     altPhone = null,
-                    status = "VERIFIED",
+                    status = UserStatus.VERIFIED,
                     completedOrders = 12,
                     totalFeesPaid = 60000
                 ),
@@ -84,7 +85,7 @@ class HomeViewModelTest {
                     name = "عمر",
                     whatsapp = "0988888888",
                     altPhone = null,
-                    status = "VERIFIED",
+                    status = UserStatus.VERIFIED,
                     completedOrders = 5,
                     totalFeesPaid = 20000
                 ),
@@ -124,7 +125,7 @@ class HomeViewModelTest {
             name = "عمر",
             whatsapp = "0988888888",
             altPhone = null,
-            status = "VERIFIED",
+            status = UserStatus.VERIFIED,
             completedOrders = 0,
             totalFeesPaid = 0
         )
@@ -170,7 +171,7 @@ class HomeViewModelTest {
                     name = "علي",
                     whatsapp = "0988888888",
                     altPhone = null,
-                    status = "VERIFIED",
+                    status = UserStatus.VERIFIED,
                     completedOrders = 3,
                     totalFeesPaid = 12000
                 ),
@@ -210,7 +211,7 @@ class HomeViewModelTest {
                     name = "مريم",
                     whatsapp = "0988888888",
                     altPhone = null,
-                    status = "VERIFIED",
+                    status = UserStatus.VERIFIED,
                     completedOrders = 8,
                     totalFeesPaid = 35000
                 ),

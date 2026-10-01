@@ -2,6 +2,7 @@ package com.forerun.customer.data.remote.mapper
 
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.domain.model.CustomerProfile
+import com.forerun.customer.domain.model.UserStatus
 import java.time.Instant
 import java.time.OffsetDateTime
 import java.time.format.DateTimeParseException
@@ -13,7 +14,7 @@ object AccountMapper {
         name = name,
         whatsapp = whatsapp,
         altPhone = altPhone,
-        status = status,
+        status = UserStatus.fromString(status),
         completedOrders = completedOrders,
         totalFeesPaid = totalFeesPaid,
         createdAt = parseCreatedAt(createdAt)

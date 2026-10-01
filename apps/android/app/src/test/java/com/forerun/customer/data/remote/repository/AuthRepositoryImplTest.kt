@@ -12,7 +12,7 @@ import com.forerun.customer.data.remote.dto.auth.RefreshResponse
 import com.forerun.customer.data.remote.dto.auth.RegisterRequest
 import com.forerun.customer.data.remote.dto.auth.RegisterResponse
 import com.forerun.customer.data.remote.dto.auth.UserDto
-import com.forerun.customer.data.remote.token.TokenRefreshManager
+import com.forerun.customer.core.auth.TokenRefreshManager
 import com.forerun.customer.domain.model.SessionState
 import com.forerun.customer.domain.model.UserStatus
 import kotlinx.coroutines.flow.Flow
@@ -102,6 +102,28 @@ class AuthRepositoryImplTest {
         }
     }
 
+    private class FakeCustomerApi : com.forerun.customer.data.remote.api.CustomerApi {
+        var meResponse: ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> =
+            ApiResponse.Success(
+                com.forerun.customer.data.remote.dto.customer.CustomerProfileDto(
+                    id = "user_1",
+                    name = "Verified User",
+                    whatsapp = "0912345678",
+                    altPhone = null,
+                    status = "VERIFIED",
+                    completedOrders = 0,
+                    totalFeesPaid = 0,
+                    createdAt = "2026-09-01T00:00:00Z"
+                )
+            )
+
+        override suspend fun me(): ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> = meResponse
+        override suspend fun updateProfile(body: com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest) = throw NotImplementedError()
+        override suspend fun changePassword(body: com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest) = throw NotImplementedError()
+        override suspend fun getAddress() = throw NotImplementedError()
+        override suspend fun updateAddress(body: com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest) = throw NotImplementedError()
+    }
+
     @Test
     fun login_success_saves_tokens_and_returns_user() = runTest {
         val fakeApi = FakeAuthApi()
@@ -111,6 +133,7 @@ class AuthRepositoryImplTest {
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = FakeCustomerApi(),
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
             tokenRefreshManager = refreshManager
@@ -135,6 +158,7 @@ class AuthRepositoryImplTest {
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = FakeCustomerApi(),
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
             tokenRefreshManager = refreshManager
@@ -160,6 +184,20 @@ class AuthRepositoryImplTest {
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = FakeCustomerApi().apply {
+                meResponse = ApiResponse.Success(
+                    com.forerun.customer.data.remote.dto.customer.CustomerProfileDto(
+                        id = "user_42",
+                        name = "Ahmad",
+                        whatsapp = "0912345678",
+                        altPhone = null,
+                        status = "VERIFIED",
+                        completedOrders = 0,
+                        totalFeesPaid = 0,
+                        createdAt = "2026-09-01T00:00:00Z"
+                    )
+                )
+            },
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
             tokenRefreshManager = refreshManager
@@ -186,29 +224,6 @@ class AuthRepositoryImplTest {
         }
     }
 
-    private class FakeCustomerApi : com.forerun.customer.data.remote.api.CustomerApi {
-        var meResponse: ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> =
-            ApiResponse.Success(
-                com.forerun.customer.data.remote.dto.customer.CustomerProfileDto(
-                    id = "user_1",
-                    name = "Verified User",
-                    whatsapp = "0912345678",
-                    altPhone = null,
-                    status = "VERIFIED",
-                    completedOrders = 0,
-                    totalFeesPaid = 0,
-                    createdAt = "2026-09-01T00:00:00Z"
-                )
-            )
-
-        override suspend fun me(): ApiResponse<com.forerun.customer.data.remote.dto.customer.CustomerProfileDto> = meResponse
-        override suspend fun updateProfile(body: com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest) = throw NotImplementedError()
-        override suspend fun changePassword(body: com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest) = throw NotImplementedError()
-        override suspend fun getAddress() = throw NotImplementedError()
-        override suspend fun updateAddress(body: com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest) = throw NotImplementedError()
-        override suspend fun getAvailableRunners() = throw NotImplementedError()
-    }
-
     @Test
     fun login_success_triggers_socket_connect() = runTest {
         val fakeApi = FakeAuthApi()
@@ -219,6 +234,7 @@ class AuthRepositoryImplTest {
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = FakeCustomerApi(),
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
             tokenRefreshManager = refreshManager,
@@ -243,6 +259,7 @@ class AuthRepositoryImplTest {
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = FakeCustomerApi(),
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
             tokenRefreshManager = refreshManager,
@@ -285,10 +302,10 @@ class AuthRepositoryImplTest {
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = fakeCustomerApi,
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
-            tokenRefreshManager = refreshManager,
-            customerApiProvider = Provider { fakeCustomerApi }
+            tokenRefreshManager = refreshManager
         )
 
         val session = repository.checkSession()
@@ -337,15 +354,14 @@ class AuthRepositoryImplTest {
             override suspend fun changePassword(body: com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest) = throw NotImplementedError()
             override suspend fun getAddress() = throw NotImplementedError()
             override suspend fun updateAddress(body: com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest) = throw NotImplementedError()
-            override suspend fun getAvailableRunners() = throw NotImplementedError()
         }
 
         val repository = AuthRepositoryImpl(
             authApi = fakeApi,
+            customerApi = fakeCustomerApi,
             tokenStorage = fakeStorage,
             onboardingPrefs = fakePrefs,
-            tokenRefreshManager = refreshManager,
-            customerApiProvider = Provider { fakeCustomerApi }
+            tokenRefreshManager = refreshManager
         )
 
         val session = repository.checkSession()

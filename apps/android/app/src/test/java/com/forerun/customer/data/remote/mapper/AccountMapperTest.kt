@@ -2,6 +2,7 @@ package com.forerun.customer.data.remote.mapper
 
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.data.remote.mapper.AccountMapper.toDomain
+import com.forerun.customer.domain.model.UserStatus
 import com.squareup.moshi.Moshi
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNotNull
@@ -30,7 +31,7 @@ class AccountMapperTest {
         assertEquals("محمد علي", profile.name)
         assertEquals("0912345678", profile.whatsapp)
         assertEquals("0987654321", profile.altPhone)
-        assertEquals("VERIFIED", profile.status)
+        assertEquals(UserStatus.VERIFIED, profile.status)
         assertEquals(7, profile.completedOrders)
         assertEquals(35000, profile.totalFeesPaid)
         assertEquals(Instant.parse("2026-09-01T10:00:00Z"), profile.createdAt)

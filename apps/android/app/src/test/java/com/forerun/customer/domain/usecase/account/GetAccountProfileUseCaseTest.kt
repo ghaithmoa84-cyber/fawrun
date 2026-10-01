@@ -2,6 +2,7 @@ package com.forerun.customer.domain.usecase.account
 
 import com.forerun.customer.data.FakeAccountRepository
 import com.forerun.customer.domain.model.CustomerProfile
+import com.forerun.customer.domain.model.UserStatus
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
@@ -20,7 +21,7 @@ class GetAccountProfileUseCaseTest {
             name = "عمر",
             whatsapp = "0988888888",
             altPhone = null,
-            status = "VERIFIED",
+            status = UserStatus.VERIFIED,
             completedOrders = 12,
             totalFeesPaid = 60000
         )

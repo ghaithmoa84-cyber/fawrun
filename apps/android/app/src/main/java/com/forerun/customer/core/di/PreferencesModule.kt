@@ -7,6 +7,7 @@ import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.preferencesDataStoreFile
 import com.forerun.customer.core.storage.DefaultOnboardingPrefs
 import com.forerun.customer.core.storage.OnboardingPrefs
+import dagger.Binds
 import dagger.Module
 import dagger.Provides
 import dagger.hilt.InstallIn
@@ -14,25 +15,31 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import dagger.hilt.components.SingletonComponent
 import javax.inject.Singleton
 
+/**
+ * Hilt module for preferences and DataStore bindings.
+ * Converted to abstract class with @Binds in Sprint 8D (DI-2).
+ */
 @Module
 @InstallIn(SingletonComponent::class)
-object PreferencesModule {
+abstract class PreferencesModule {
 
-    private const val PREFERENCES_NAME = "forerun_preferences"
-
-    @Provides
+    @Binds
     @Singleton
-    fun providePreferencesDataStore(
-        @ApplicationContext context: Context
-    ): DataStore<Preferences> {
-        return PreferenceDataStoreFactory.create(
-            produceFile = { context.preferencesDataStoreFile(PREFERENCES_NAME) }
-        )
-    }
-
-    @Provides
-    @Singleton
-    fun provideOnboardingPrefs(
+    abstract fun bindOnboardingPrefs(
         defaultOnboardingPrefs: DefaultOnboardingPrefs
-    ): OnboardingPrefs = defaultOnboardingPrefs
+    ): OnboardingPrefs
+
+    companion object {
+        private const val PREFERENCES_NAME = "forerun_preferences"
+
+        @Provides
+        @Singleton
+        fun providePreferencesDataStore(
+            @ApplicationContext context: Context
+        ): DataStore<Preferences> {
+            return PreferenceDataStoreFactory.create(
+                produceFile = { context.preferencesDataStoreFile(PREFERENCES_NAME) }
+            )
+        }
+    }
 }
