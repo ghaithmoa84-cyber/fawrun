@@ -5,6 +5,50 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-10-01 — Sprint 8F: Firebase FCM Push Notifications & DeviceToken Management (D8)
+
+**المُنجَز:** تفعيل منظومة إشعارات Push Notifications الحقيقية للعميل مع مشروع Firebase الحقيقي والـ Backend وقاعدة البيانات:
+- **ربط مشروع Firebase:** تم ربط مشروع `forerun-c819d` الحقيقي، ووضع `google-services.json` الحقيقي في `apps/android/app/` (مستثنى في `.gitignore`).
+- **تهيئة Firebase Admin SDK:** إضافة حزمة `firebase-admin` (v14 modular) في `apps/api`، ودعم قراءة الاعتماد من متغير البيئة `FIREBASE_SERVICE_ACCOUNT_JSON` على Railway، أو من ملف محلي للتطوير (مستثنى في `.gitignore`).
+- **جدول `DeviceToken` في قاعدة البيانات:**
+  - إضافة نموذج `DeviceToken` في `apps/api/prisma/schema.prisma` مع علاقة بالمستخدم وفهارس على `userId` و`token`.
+  - إنشاء الهجرة `20261001160600_add_device_token` ونشرها وتطبيقها بنجاح على قاعدة بيانات الإنتاج في Railway (`pnpm --filter forerun-api exec prisma migrate deploy`) مع استقرار Schema Drift = 0.
+- **نقاط النهاية والأنواع المشتركة:**
+  - إضافة `DeviceTokenSchema`، `DeviceTokenRequest`، `DeviceTokenResponse` في `packages/shared-types`.
+  - إضافة `POST /api/v1/customer/me/device-token` لتسجيل/تحديث التوكن (Upsert على مستوى المستخدم ونوع الجهاز).
+  - إضافة `DELETE /api/v1/customer/me/device-token` لإلغاء تسجيل التوكن عند تسجيل الخروج.
+- **خدمة `FcmService`:**
+  - بناء خدمة إرسال متعددة الأجهزة (`sendToUser`) تبني إشعارات مخصصة بنصوص عربية وحقول Deep Link (`forerun://orders/{id}`).
+  - استهداف قناة Android ذات الأولوية العالية `forerun_orders_channel`.
+  - التنظيف التلقائي للتوكنات غير الصالحة (`messaging/registration-token-not-registered`) من قاعدة البيانات فور استجابة Firebase.
+  - تغطية الخدمة باختبارات الوحدة في `fcm.service.spec.ts`.
+- **الربط مع تحديثات الطلبات:** تعديل `NotificationsService.emitToCustomer` لإرسال إشعار Socket.IO وإشعار FCM Push معاً، بنمط `best-effort` يحمي معاملات قاعدة البيانات.
+
+### 2026-10-01 — Telegram Bot Notifications for Admin (D7)
+
+**المُنجَز:** تفعيل إشعارات تيليغرام المباشرة للإدارة عبر البوت على بيئة الإنتاج Railway:
+- **خدمة `TelegramService`:** خدمة موثوقة لإرسال رسائل التنبيهات باستخدام Telegram Bot API، مع التعامل مع الأخطاء بنمط `best-effort` وتسجيلها بالـ Logger.
+- **إشعارات الطلبات الجديدة:** إشعار يحتوي رقم الطلب، اسم العميل، أسماء المتاجر، وإجمالي المبلغ بعد إنشاء الطلب بنجاح.
+- **إشعارات تسجيل العملاء الجدد:** إشعار باسم العميل الجديد ورقم هاتفه وتاريخ التسجيل بتوقيت دمشق.
+- **الاختبارات والتفعيل:** كتابة اختبارات الوحدة في `telegram.service.spec.ts`، وضبط `TELEGRAM_BOT_TOKEN` و`TELEGRAM_CHAT_ID` على Railway واختبار وصول الإشعار بنجاح.
+
+### 2026-10-01 — Sprint 8E: WebSocket Domain Port & Account Verification (Android)
+
+**المُنجَز:** نقل طبقة الـ WebSocket إلى الـ Domain Layer وإغلاق فجوة التحقق:
+- **`OrderEventsGateway`**: واجهة في `domain/` تعيد `Flow<WebSocketEvent>` وتفصل الـ Domain عن Socket.IO.
+- **`SocketOrderEventsGateway`**: تنفيذ البوابة في `data/` مع التفويض إلى `SocketManager`.
+- **إغلاق D23:** معالجة حدث `account:verified` في `SplashViewModel` لإعادة فحص الجلسة فورياً.
+- **استهلاك `connectionState`**: تمرير حالة الاتصال للمستهلكين.
+- **الاختبارات:** 261 اختبار وحدة ناجحة (+14 اختبار).
+
+### 2026-10-01 — Sprint 8D: Clean Architecture & DI Cleanup (Android)
+
+**المُنجَز:** معالجة الديون التقنية ومعمارية المصادقة وحزم الـ APK:
+- **إغلاق A17:** تحويل `TokenRefreshManager` إلى `Authenticator` و`TokenRepository` وفصل التبعيات الدائرية.
+- **تخفيض حجم APK:** إزالة `libs.material` غير المستخدمة لتوفير ~1 MB.
+- **Mappers كاملة:** فصل DTOs عن طبقات الـ Domain والـ UI.
+- **الاختبارات:** 247 اختبار وحدة ناجحة (+24 اختبار).
+
 ### 2026-10-01 — D6: Android release keystore verified; "unsigned" was wrong in 5 places
 
 **المكتشف:** التطبيق **موقَّع فعلاً** — التوثيق كان يقول «غير موقّع» في 5 مواضع ويحيل `production keystore` إلى المستخدم كعائق. **كلاهما خطأ مُصحَّح.**

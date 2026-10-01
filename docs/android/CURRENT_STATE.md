@@ -53,7 +53,7 @@ Both variants build clean: R8 + ProGuard rules and LintVital pass. The release b
 | **Support** | ✅ | WhatsApp + dialer + working hours; FAQ text hardcoded |
 | **Deep Links** | ⚠️ | `forerun://orders/{id}` works. `https://forerun.app/orders/{id}` has **no manifest intent-filter** (DEEP-MEDIUM-07) |
 | **WebSocket** | ✅ | All 8 events handled and mapped via clean domain `OrderEventsGateway`; `account:verified` forces immediate session re-check in `SplashViewModel` (D23 closed); `connectionState` mapped and consumed via Gateway |
-| **FCM Push** | ⛔ | Code complete, but `google-services.json` is a test file — no server push reaches real devices |
+| **FCM Push** | ✅ | Real Firebase project `forerun-c819d` active with real `google-services.json`. Backend `DeviceToken` table + endpoints (`POST/DELETE customer/me/device-token`) + `FcmService` deployed in Sprint 8F |
 | **Onboarding → App** | ✅ | 15 screens + flows, 100% of the v1 scope |
 | **Offline** | — | Out of scope for v1 (always-online); `checkSession` degrades gracefully to cached state |
 
@@ -68,7 +68,7 @@ Both variants build clean: R8 + ProGuard rules and LintVital pass. The release b
 | 3 | **`OrdersEmptyState` shown under a filter with no results** — the explicit error state no longer masks the empty state (fixed in 8B), but a filter that legitimately returns nothing still renders the generic empty screen with no filter-specific copy | Cosmetic | Sprint 9 |
 | 4 | **81 نص hardcoded** — 73 table rows across ~14 files, incl. 19 duplicated order-status labels, 4× `"إخفاء"/"إظهار"`, 10 FAQ strings | Medium | Sprint 9 |
 | 5 | ~~**No production keystore**~~ **RESOLVED 2026-10-01** — `keystore.properties` and the key are provisioned, signing is wired (`app/build.gradle.kts:57`), and the 3 release APKs verify under v2. **Never regenerate the key** — it is not reproducible and would orphan installed copies. Remaining risk is only that no off-machine backup exists | Backups only | Immediately |
-| 6 | **No real Firebase project** — `google-services.json` is gitignored/test-only | Blocker for push | Sprint 8F |
+| 6 | ~~**No real Firebase project**~~ **RESOLVED in Sprint 8F** — Real Firebase project `forerun-c819d` connected, real `google-services.json` installed, backend FCM and device-token endpoints live on Railway | Resolved | Sprint 8F |
 | 7 | **No automated E2E** — `scripts/e2e-test.ps1` is manual, no CI | Medium | Sprint 10 |
 | 8 | **DEEP-MEDIUM-02/03/06/07** open | Medium | 8E / 8F / 9 |
 | 9 | **Gradle debt** — unused `libs.material` (~1 MB APK), `isReturnDefaultValues` masking missing mocks, `security-crypto` on `1.1.0-alpha06` | Low | Sprint 8D |

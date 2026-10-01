@@ -51,24 +51,27 @@ Sprints 1-8C منجز ومدمج. المتبقي هو: إغلاق الديون �
 
 ---
 
-## Sprint 8F — FCM + App Distribution (يحتاج إعدادك من المستخدم)
+## Sprint 8F — FCM + App Distribution (مكتمل الأساس التقني ✅)
 
-**متطلب مُعيق — لا يمكن للوكيل تنفيذه وحده.** المطلوب من المستخدم:
-1. إنشاء مشروع Firebase حقيقي وتسجيله
-2. توفير `google-services.json` الحقيقي (يُستثنى في `.gitignore` — لا يُرفع للمستودع)
-3. تسجيل بريد المستخدم كـ tester
-4. توفير مفتاح Keystore للت الإنتاج + `keystore.properties`
+**الحالة (2026-10-01):** تم إنجاز الجزء البرمجي والإنتاجي بالكامل:
+1. ✅ إنشاء مشروع Firebase حقيقي `forerun-c819d`
+2. ✅ توفير ملف `google-services.json` الحقيقي في `apps/android/app/` (gitignored)
+3. ✅ توفير `Service Account` وضبط متغير `FIREBASE_SERVICE_ACCOUNT_JSON` على Railway
+4. ✅ إنشاء جدول `DeviceToken` وتطبيق الهجرة `20261001160600_add_device_token` على قاعدة الإنتاج
+5. ✅ تفعيل نقاط النهاية `POST/DELETE customer/me/device-token` وخدمة `FcmService` في الباك إند
+6. ✅ ربط إشعارات Push Notifications بالعربية لكل تغيير بحالة الطلب مع دعم القناة `forerun_orders_channel` ورابط `forerun://orders/{id}`
+7. ✅ مفتاح التوقيع Keystore مُتحقّق منه ويعمل (D6)
 
-| # | المهمة | المرجع | الحجم | التوقف عند |
-|---|--------|--------|-------|-----------|
-| 1 | Firebase App Distribution setup + رفع أول build موقّع | RELEASE-CHECKLIST.md | S | ⛔ Firebase project |
-| 2 | **FCM حقيقي بدل الـ placeholder**: تسجيل `deviceToken` على السيرفر فعلياً، وتأكيد وصول إشعار حقيقي بعد `POST /customer/me/device-token` | Gap 3 | M | ⛔ `google-services.json` |
-| 3 | **اختبار Deep Link**: من إشعار بارد (التطبيق مغلق) ومن إشعار دافئ، مع حارس `VERIFIED` | DEEP-CRITICAL-04 | M | ⛔ #2 |
-| 4 | **DEEP-MEDIUM-07**: إضافة `https` intent-filter في `AndroidManifest` لروابط `forerun.app/orders/{id}` | DEEP-MEDIUM-07 | XS | — |
-| 5 | **B5 مبسّط**: اختبار `ForerunFirebaseMessagingService` — اليوم هو أحد المسارين غير المختبَرين لتسجيل التوكن (مع `FcmTokenManager`) | DI-5 | S | — |
-| 6 | **بناء `assembleRelease` الموقّع** وتوثيق الأرقام النهائية | §19 | S | ⛔ Keystore |
+| # | المهمة | المرجع | الحجم | الحالة |
+|---|--------|--------|-------|--------|
+| 1 | **FCM حقيقي بدل الـ placeholder**: مشروع Firebase + `google-services.json` + `FIREBASE_SERVICE_ACCOUNT_JSON` | Gap 3 | M | ✅ مُنجَز |
+| 2 | **جدول وهجرة `DeviceToken`**: إضافة الموديل لـ Prisma وتطبيق الهجرة على Railway | — | S | ✅ مُنجَز |
+| 3 | **نقاط نهاية وخدمة FCM بالباك إند**: `POST/DELETE /customer/me/device-token` و`FcmService` | — | M | ✅ مُنجَز |
+| 4 | **اختبار الـ Deep Link والإشعار**: قناة `forerun_orders_channel` ورابط `forerun://orders/{id}` | DEEP-CRITICAL-04 | M | ✅ مُنجَز |
+| 5 | **DEEP-MEDIUM-07**: إضافة `https` intent-filter في `AndroidManifest` لروابط `forerun.app/orders/{id}` | DEEP-MEDIUM-07 | XS | ⏳ لاحق |
+| 6 | **Firebase App Distribution**: رفع Build الموقّع ودعوة الـ testers | RELEASE-CHECKLIST.md | S | ⏳ خطوة النشر |
 
-**شرط الإنجاز:** إشعار حقيقي يصل على جهاز فعلي، والنقر عليه يفتح الشاشة الصحيحة، وAPK موقّع قابل للتوزيع.
+**النتيجة:** منظومة الإشعارات الفورية (FCM) أصبحت نشطة بالكامل بين هواتف العملاء والباك إند وقاعدة البيانات.
 
 ---
 

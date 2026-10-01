@@ -1,7 +1,7 @@
 # FORERUN Android — Progress & Decisions Log
 
 > **Purpose:** Track what has been built, what decisions were made, and what comes next.
-> **Last updated:** 30 September 2026 (after Sprint 8C merged into `master`)
+> **Last updated:** 01 October 2026 (after Sprints 8D, 8E, and 8F completed)
 
 ---
 
@@ -22,12 +22,15 @@
 | **8A** Critical Architecture Fixes | ✅ Done | `081cad4` |
 | **8B** Quick Wins + UI Blockers | ✅ Done | `a880d1d` / `c752b28` / `5c78cd4` |
 | **8C** Account Clean Architecture | ✅ Done | `6e25aed` |
-| **8D-10** | ⏳ Planned | — see [`ROADMAP.md`](./ROADMAP.md) |
+| **8D** Clean Architecture + DI Cleanup | ✅ Done | `1055b5f` |
+| **8E** WebSocket Domain Port + AccountVerified | ✅ Done | `b6acfaf` |
+| **8F** FCM Real Integration & Push Notifications | ✅ Done | `090d261` |
+| **9-10** | ⏳ Planned | — see [`ROADMAP.md`](./ROADMAP.md) |
 
-**Active branch:** `master` (Android work is fully merged; no open Android feature branch)
+**Active branch:** `master` (Android and Backend work is fully merged)
 
-**Last commit on `master`:** `e5bfbc1` — `merge(android): sprint 8c - account clean architecture`
-**Total tests:** 223 `@Test` / 223 passing (100%)
+**Last Android commits on `master`:** `1055b5f` (8D), `b6acfaf` (8E), `090d261` (8F)
+**Total tests:** 261 `@Test` / 261 passing (100%)
 **Lint status:** 0 errors (clean)
 **Release APK sizes (ABI split, R8 minified):**
 - `app-arm64-v8a-release.apk`: 15.07 MB
@@ -117,6 +120,33 @@ New tests: `AccountMapperTest`, `AccountRepositoryImplTest`, and 3 UseCase tests
 
 **Result:** 223/223 tests, 0 lint errors.
 
+### Sprint 8D: Clean Architecture & DI Cleanup (A17, B3, B5, B6)
+
+`1055b5f` — معماري + تنظيف الديون الفنية والتبعيات:
+- **A17 مُغلق:** تحويل تجديد التوكن واسترجاعه إلى `Authenticator` و`TokenRepository` وفصل دورة التبعيات (Cycle elimination).
+- **حذف المكتبات الزائدة:** إزالة `libs.material` لتوفير ~1 MB من حجم الـ APK.
+- **DTO to Domain Mapping:** استكمال طبقات الـ mappers لضمان عدم تسريب DTOs إلى الـ Domain أو UI.
+- **Result:** 247/247 tests ناجحة (+24)، 0 lint errors، وAPKs release موقّعة v2 بنجاح.
+
+### Sprint 8E: WebSocket Domain Port & Account Verification (D23, A8)
+
+`b6acfaf` — عزل الـ WebSocket في Domain Layer وإغلاق فجوات الأحداث:
+- **`OrderEventsGateway`**: واجهة داخل `domain/` تعيد `Flow<WebSocketEvent>` بمعزل تام عن مكتبة Socket.IO.
+- **`SocketOrderEventsGateway`**: تنفيذ البوابة في `data/` مع تفويض سلس إلى `SocketManager`.
+- **`AccountVerified` Event Handler**: استهلاك حدث `account:verified` في `SplashViewModel` لإعادة فحص حالة الجلسة تلقائياً بدون الحاجة لإعادة فتح التطبيق (إغلاق D23).
+- **استهلاك `connectionState`**: تمرير حالة الاتصال للمستهلكين عبر البوابة.
+- **Result:** 261/261 tests ناجحة (+14)، 0 lint errors، و`assembleDebug` نظيف.
+
+### Sprint 8F: FCM Real Integration & Push Notifications
+
+`090d261` — إكمال منظومة الإشعارات الحقيقية مع Firebase:
+- **مشروع Firebase حقيقي:** ربط مشروع `forerun-c819d` بملف `google-services.json` حقيقي بالطرف العميل.
+- **Backend Firebase Admin:** تهيئة `firebase-admin` (v14 modular) وقراءة المفتاح من `FIREBASE_SERVICE_ACCOUNT_JSON` ببيئة Railway.
+- **جدول `DeviceToken`:** إنشاء نموذج Prisma وهجرة `20261001160600_add_device_token` وتطبيقها في الإنتاج (7 migrations، Schema Drift = 0).
+- **نقاط نهاية إدارة التوكن:** توفير `POST /api/v1/customer/me/device-token` و`DELETE /api/v1/customer/me/device-token`.
+- **خدمة `FcmService`:** إرسال إشعارات فورية بالعربية عند تغير حالات الطلب لقناة `forerun_orders_channel` مع حمولة Deep Link `forerun://orders/{id}` وتنظيف تلقائي للتوكنات المنتهية.
+- **Result:** 192 اختبار وحدة في الـ Backend + 261 اختبار في الـ Android ناجحة 100%.
+
 ### Branch Cleanup: 12 فرع محذوف
 
 `480b812` — 21 local branches → 9. All 12 deleted branches were verified fully merged (`git log master..<branch>` empty) and removed with the safe `git branch -d`; no force deletion, no remote pushes.
@@ -150,8 +180,10 @@ Sprint 8C was merged into `master` and deleted afterwards (`e5bfbc1`, branch tip
 | Sprint 8A | 172 | +20 | 15 new deep-architecture tests + supporting coverage |
 | Sprint 8B | 196 | +24 | UI blocker regressions + ViewModel state coverage |
 | Sprint 8C | 223 | +27 | Mapper, repository, 3 UseCases, rewritten AccountViewModel |
+| Sprint 8D | 247 | +24 | Authenticator, TokenRepository, Domain Mappers, DI cleanup |
+| Sprint 8E | 261 | +14 | OrderEventsGateway, SocketOrderEventsGateway, AccountVerified |
 
-All 223 pass. No test has ever been deleted to make a gate pass.
+All 261 pass (100%). No test has ever been deleted to make a gate pass.
 
 ---
 
@@ -173,6 +205,9 @@ All 223 pass. No test has ever been deleted to make a gate pass.
 | 2026-09-30 | Delete only fully-merged branches with `git branch -d` | Never risk losing unmerged work; `-D` was explicitly rejected |
 | 2026-09-30 | Keep `TokenRefreshManager` in `data/remote/token/` (A17 deferred) | Moving it would relocate the violation, not fix it — the real fix is the `Authenticator` conversion in Sprint 8D |
 | 2026-09-30 | Adopt the `core.*` ownership pattern for cross-layer singletons | `SessionExpiryNotifier` proves a `core` interface + `data` implementation keeps `ui` free of `data` imports |
+| 2026-10-01 | Android Keystore verified v2 (`D6`) | مفتاح الإنتاج موجود ويوقع بنجاح، لا يُعاد توليده نهائياً |
+| 2026-10-01 | Telegram bot notifications for admin (`D7`) | إشعار فوري للإدارة بالطلبات والتسجيلات الجديدة خارج معاملات الـ DB |
+| 2026-10-01 | Firebase FCM real push integration (`D8`) | تفعيل إشعارات Push حقيقية للعملاء، وتخزين التوكنات بجدول `DeviceToken` |
 
 ---
 
@@ -180,14 +215,14 @@ All 223 pass. No test has ever been deleted to make a gate pass.
 
 | # | Gap | Impact | Target |
 |---|-----|--------|--------|
-| 1 | **A17 — `TokenRefreshManager` still in `data/`** | `core.network.interceptor` imports `data.remote.token`; 3 cycles remain, silently broken by `Provider`. Deferred because the correct fix is the `Authenticator` conversion | Sprint 8D |
+| 1 | ~~**A17 — `TokenRefreshManager` still in `data/`**~~ **RESOLVED in Sprint 8D** | تم تحويل التجديد إلى `Authenticator` وفصل التبعيات الدائرية | Resolved |
 | 2 | **81 نص hardcoded** | 73 table rows spanning ~14 files, including 9+10 duplicated order-status labels, 4× `"إخفاء"/"إظهار"`, and 10 FAQ strings. Blocks translation and consistent terminology | Sprint 9 |
-| 3 | **FCM without a real Firebase project** | `google-services.json` is a test file (gitignored); no server push reaches real devices | Sprint 8F (needs user setup) |
-| 4 | **No automated E2E** | `scripts/e2e-test.ps1` exists but is manual; no CI. 223 unit tests cannot catch navigation or process-death regressions | Sprint 10 |
-| 5 | **DEEP-MEDIUM-02/03/06/07 still open** | Home and Orders do not observe socket events; order filtering is client-side and breaks under pagination; duplicate order-confirmation UI (dialog + screen); `https://forerun.app/orders/{id}` has no manifest intent-filter | Sprint 8E / 8F / 9 |
-| 6 | **D23 `WebSocketEvent.AccountVerified` unhandled** | The socket subscribes to `account:verified` with no consumer — a live feature gap, not a stub | Sprint 8E |
-| 7 | **B3/B5/B6 Gradle debt** | Unused `libs.material` (~1 MB APK weight), `isReturnDefaultValues` masks missing mocks, `security-crypto` pinned to `1.1.0-alpha06` | Sprint 8D |
-| 8 | ~~**Production keystore not provisioned**~~ **RESOLVED 2026-10-01** — key + `keystore.properties` exist on disk (gitignored), `assembleRelease` produces **v2-signed** APKs. Outstanding: no off-machine backup of the key. **Do not regenerate** | Sprint 8F |
+| 3 | ~~**FCM without a real Firebase project**~~ **RESOLVED in Sprint 8F** | Real project `forerun-c819d` connected, real `google-services.json` installed, backend endpoints and FCM push service live on Railway | Resolved |
+| 4 | **No automated E2E** | `scripts/e2e-test.ps1` exists but is manual; no CI. 261 unit tests cannot catch navigation or process-death regressions | Sprint 10 |
+| 5 | **DEEP-MEDIUM-02/03/06/07 still open** | Home and Orders do not observe socket events; order filtering is client-side and breaks under pagination; duplicate order-confirmation UI (dialog + screen); `https://forerun.app/orders/{id}` has no manifest intent-filter | Sprint 9 |
+| 6 | ~~**D23 `WebSocketEvent.AccountVerified` unhandled**~~ **RESOLVED in Sprint 8E** | استهلاك حدث `account:verified` فورياً في `SplashViewModel` لإعادة فحص الجلسة | Resolved |
+| 7 | ~~**B3/B5/B6 Gradle debt**~~ **RESOLVED in Sprint 8D** | إزالة `libs.material` وتنظيف التبعيات | Resolved |
+| 8 | ~~**Production keystore not provisioned**~~ **RESOLVED 2026-10-01 (D6)** — key + `keystore.properties` exist on disk (gitignored), `assembleRelease` produces **v2-signed** APKs. Outstanding: no off-machine backup of the key. **Do not regenerate** | Sprint 8F |
 
 ---
 

@@ -1,6 +1,6 @@
 # FORERUN — Handoff
 
-> **آخر تحديث:** 2026-09-30
+> **آخر تحديث:** 2026-10-01
 > **نطاق هذا الملف:** قواعد التعامل ومسار العمل فقط. **ليس** مرجع الحقيقة الوحيد.
 > **خريطة التوثيق (أي ملف يملك أي حقيقة):** [PROJECT_STATUS.md §11](PROJECT_STATUS.md#11-خريطة-التوثيق--أي-ملف-يملك-أي-حقيقة)
 
@@ -19,8 +19,8 @@ git log -1 --stat
 | Admin Dashboard | ✅ نشر | Vercel |
 | Runner PWA | ✅ نشر | Vercel |
 | Customer Web | ✅ نشر | Vercel |
-| Android App | ✅ APK موقَّع (v2 · 3 ABI) · ⛔ غير منشور | APK مباشر — لا رابط إنتاج حتى Sprint 8F. **مفتاح التوقيع موجود ويعمل — لا يُولَّد** ([§12 · D6](PROJECT_STATUS.md#12-سجل-القرارات)). |
-| قاعدة البيانات | ✅ نشطة | PostgreSQL على Railway — Schema Drift = 0 |
+| Android App | ✅ APK موقَّع (v2 · 3 ABI) · جاهز للنشر | APK مباشر — مفتاح التوقيع موجود ومربوط بـ Firebase project `forerun-c819d`. تم إكمال Sprint 8D/8E/8F. |
+| قاعدة البيانات | ✅ نشطة | PostgreSQL على Railway — 7 migrations مُطبَّقة — Schema Drift = 0 |
 
 **E2E:** نجح كاملًا على الإنتاج.
 
@@ -29,6 +29,8 @@ git log -1 --stat
 ## الأنظمة والخدمات الجانبية
 | الخدمة | الحالة | ملاحظات |
 |---|---|---|
+| Telegram Bot | ✅ نشط | إرسال إشعارات فورية للإدارة عبر البوت عند إنشاء طلب جديد أو تسجيل عميل جديد (Railway) |
+| Firebase FCM | ✅ نشط | إرسال Push Notifications لهواتف العملاء عند تحديثات الطلب (قناة `forerun_orders_channel` + رابط عميق) |
 | Sentry | ⏸️ مؤجل | بعد المراجعة المحلية |
 | Cloudflare R2 | ⏔ **مؤجَّل بقرار** | **ميزة رفع الإيصالات مُؤجَّلة لما بعد MVP** (قرار 2026-09-30). الكود موجود ويعمل لكنه غير مُفعَّل: `r2.service.ts:32` يرمي ما دام `R2_*` = `<dummy-for-now>`. التفاصيل والآثار في [PROJECT_STATUS.md §12 · D5](PROJECT_STATUS.md#12-سجل-القرارات). |
 
@@ -39,15 +41,15 @@ git log -1 --stat
 |---|---|---|
 | `pnpm lint` | ✅ نجح | 6/6 packages — 0 أخطاء |
 | `pnpm typecheck` | ✅ نجح | 6/6 packages |
-| `pnpm test` | ✅ نجح | 12 ملفات اختبار، 184 اختبارًا نجحوا جميعها (**وحدة فقط** — `apps/api/vitest.config.ts:21` يستثني `test/integration/**`) |
-| Android Gradle `test` | ✅ نجح | **223 `@Test`** في 33 ملف اختبار · 0 lint errors — مشروع Gradle مستقل، لا يشمله `pnpm test` |
+| `pnpm test` | ✅ نجح | 14 ملفات اختبار، 192 اختبارًا نجحوا جميعها (**وحدة فقط** — تشمل اختبارات `telegram.service.spec.ts` و`fcm.service.spec.ts`) |
+| Android Gradle `test` | ✅ نجح | **261 `@Test`** في 36 ملف اختبار · 0 lint errors — مشروع Gradle مستقل، لا يشمله `pnpm test` |
 
 ## الخطوة التالية (Next Action)
 1. ✅ تشغيل `pnpm lint` + `pnpm typecheck` + `pnpm test` محليًا — مكتمل.
-2. ⏭️ **Sprint 8D (Android)** — المرجع: [docs/android/ROADMAP.md](docs/android/ROADMAP.md). وبشكل موازٍ: بنود Sprint 6 الـ backend المتبقية (اختبارات تكامل التسعير، مراجعة أمنية، خط أساس أداء، R2، Sentry) — [docs/sprints/Sprint 6 Brief.md](docs/sprints/Sprint%206%20Brief.md).
+2. ⏭️ **Sprint 9 (Android UI Polish)** — المرجع: [docs/android/ROADMAP.md](docs/android/ROADMAP.md) (نقل 81 نصاً إلى `strings.xml`، توحيد ترجمة الحالات، معالجة الدوران وحقول الإدخال). وبشكل موازٍ: بنود Sprint 6 الـ backend المتبقية (اختبارات تكامل التسعير، مراجعة أمنية، خط أساس أداء، Sentry) — [docs/sprints/Sprint 6 Brief.md](docs/sprints/Sprint%206%20Brief.md).
 3. ⏔ **R2 والإيصالات مؤجَّلة لما بعد MVP** بقرار 2026-09-30 — ليست عائقاً. المرجع: [PROJECT_STATUS.md §12 · D5](PROJECT_STATUS.md#12-سجل-القرارات).
 
-> **ملاحظة:** أُلغي بند «اختبار يدوي لكل الشاشات» كخطوة أولى — 223 اختبار Android + 184 اختبار وحدة غطّتاه آليًا. المتبقّي هو **اختبار ميداني** بعميل حقيقي 1–2 (بند Sprint 6 غير المُنجَز).
+> **ملاحظة:** أُلغي بند «اختبار يدوي لكل الشاشات» كخطوة أولى — 261 اختبار Android + 192 اختبار وحدة غطّتاه آليًا. المتبقّي هو **اختبار ميداني** بعميل حقيقي 1–2 (بند Sprint 6 غير المُنجَز).
 
 ---
 

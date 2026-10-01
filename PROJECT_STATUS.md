@@ -17,14 +17,14 @@
 | Admin Panel | Next.js 14.2 | Vercel |
 | Runner PWA | Vite + vite-plugin-pwa | Vercel |
 | Customer Web | Vite | Vercel |
-| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** · ✅ **موقَّع** (Sprint 8D مُدمج) |
+| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** · ✅ **موقَّع** (Sprints 8D, 8E, 8F مُدمجة) |
 
 ### روابط الإنتاج
 - **API**: `https://fawrun-api-production.up.railway.app/api/v1`
 - **Admin**: `https://fawrun-admin.vercel.app`
 - **Runner**: `https://fawrun-runner-pwa-steel.vercel.app`
 - **Customer**: `https://fawrun-customer-web-three.vercel.app`
-- **Android**: **APK موقَّع** (3 ABI) — **غير منشور بعد** (Sprint 8F). لا يوجد رابط إنتاج. مفتاح التوقيع: `CN=FORERUN` · SHA-256 `725b4683…09879` — انظر [§12 · D6](#12-سجل-القرارات).
+- **Android**: **APK موقَّع** (3 ABI) — **جاهز للنشر بعد ربط Firebase** (Sprint 8F). لا يوجد رابط إنتاج. مفتاح التوقيع: `CN=FORERUN` · SHA-256 `725b4683…09879` — انظر [§12 · D6](#12-سجل-القرارات).
 - **GitHub**: `github.com/ghaithmoa84-cyber/forerun` (master)
 
 ### 1.1 حالة الإنتاج وقاعدة البيانات — 2026-10-01
@@ -77,6 +77,9 @@ R2_SECRET_ACCESS_KEY  = <dummy-for-now>
 R2_BUCKET_NAME        = <dummy-for-now>
 SENTRY_DSN            = <optional>
 TRUST_PROXY           = 1
+TELEGRAM_BOT_TOKEN    = <Telegram bot token>
+TELEGRAM_CHAT_ID      = <Telegram chat ID>
+FIREBASE_SERVICE_ACCOUNT_JSON = <Service account JSON string>
 ```
 
 **⚠️ تحذير:** `TRUST_PROXY` يجب أن تكون `1` أو رقمًا صحيحًا، **وليس `true`** (Express يفسّر `"true"` كـ IP ويفشل).
@@ -310,7 +313,10 @@ fawrun/
 | 2026-09-30 | `6e25aed` — `refactor(android)`: سبرنت 8C — بنية Account نظيفة + فك ارتباط NavGraph |
 | 2026-09-30 | `e5bfbc1` — `merge(android)`: سبرنت 8C — (8 سبرنتات · 223 `@Test` · 3 APKs release **موقَّعة** v2) |
 | 2026-09-30 | `9e6c212` — `docs(android)`: تحديث التوثيق الشامل (`PROGRESS.md` · `ROADMAP.md` · `CURRENT_STATE.md` · `MASTER-SPEC.md` §21) |
-| 2026-10-01 | `1055b5f` — `merge(android)`: سبرنت 8D — **آخر دمج للأندرويد في `master`** (9 سبرنتات · 247 `@Test` · 0 lint · 3 APKs release **موقَّعة**) |
+| 2026-10-01 | `1055b5f` — `merge(android)`: سبرنت 8D — **دمج الأندرويد في `master`** (9 سبرنتات · 247 `@Test` · 0 lint · 3 APKs release **موقَّعة**) |
+| 2026-10-01 | `b6acfaf` — `merge(android)`: سبرنت 8E — نقل طبقة WebSocket إلى Domain Layer وتفعيل `AccountVerified` |
+| 2026-10-01 | `6d7ef78` — إطلاق إشعارات Telegram في الـ backend (`TelegramService`) للطلبات الجديدة وتسجيل الحسابات بنجاح على Railway |
+| 2026-10-01 | `090d261` — إنجاز **Sprint 8F**: ربط مشروع Firebase الحقيقي (`forerun-c819d`)، إنشاء جدول `DeviceToken` وتطبيق الهجرة `20261001160600_add_device_token` في الإنتاج، وبرمجة `FcmService` لإرسال Push Notifications لهواتف العملاء عند تحديثات الطلبات |
 
 ---
 
@@ -382,6 +388,8 @@ fawrun/
 **متى يُراجَع:** عند بدء **`docs/android/ROADMAP.md` Sprint 9** أو أي عمل على `SettlementItem` يعتمد على الإيصالات كضمان. المطلوب عندها: (1) قراءة `R2_*` من Railway، (2) ربط `fawrun-receipts`، (3) `/rollback-plan` إن امتدّ الأمر لعمليات مالية.
 
 | **D6** | **مفتاح توقيع Android موجود ويعمل — لا يُولَّد** | ✅ **متحقَّق 2026-10-01** | **2026-10-01** | أدناه |
+| **D7** | **إشعارات Telegram للإدارة عبر البوت** | ✅ **مُطبَّق 2026-10-01** | **2026-10-01** | أدناه |
+| **D8** | **إشعارات هواتف العملاء عبر Firebase FCM (Sprint 8F)** | ✅ **مُطبَّق 2026-10-01** | **2026-10-01** | أدناه |
 
 ### D6 — مفتاح توقيع Android (تحقّق، لا قرار)
 
@@ -400,6 +408,17 @@ fawrun/
 الملفان (`forerun-release.jks` + `keystore.properties` الحاوي كلمة المرور) **غير موجودين في git عمداً**. فقدانهما = فقدان هوية التطبيق نهائياً. **يجب نسخهما احتياطياً إلى مكان آمن قبل أي تسليم المشروع** — وانقل كلمة المرور عبر قناة آمنة (مدير كلمات مرور / خزنة مشفّرة)، **ولا تُوضع في Git أو محادثة**.
 
 **تنبيه صيانة:** توجد نسختان متطابقتان من JKS (`apps/android/` و `apps/android/app/` — نفس SHA-256 `FAC8DBE7…3864`). البناء يفضّل نسخة `app/` (`build.gradle.kts:30,40`). هما متطابقتان اليوم، لكن تحديث إحداهما دون الأخرى يجعل البناء يوقّع بمفتاح مختلف — يُنصح بالإبقاء على **نسخة واحدة فقط**.
+
+### D7 — إشعارات Telegram للإدارة
+تم تفعيل إشعارات تيليغرام المباشرة عبر البوت للإدارة في حالتين أساسيتين:
+1. **طلب جديد:** بعد حفظ الطلب بنجاح في قاعدة البيانات، يُرسل إشعار يحتوي رقم الطلب، اسم العميل، أسماء المتاجر (مفردة أو متعددة)، وإجمالي المبلغ.
+2. **تسجيل مستخدم جديد:** بعد إنشاء الحساب بنجاح، يُرسل إشعار باسم المستخدم ورقم الواتساب وتاريخ التسجيل بتوقيت دمشق.
+- **قاعدة الأمان والتنفيذ:** الاستدعاء يتم دائماً خارج الـ database transactions، وأي خطأ شبكي يتم ابتلاعه وتسجيله في الـ Logger فقط بدون إيقاف تدفق العملية الأساسية (`best-effort`).
+
+### D8 — إشعارات العملاء عبر Firebase FCM (Sprint 8F)
+تم إكمال منظومة إشعارات Push Notifications لهواتف العملاء:
+1. **الطرف العميل (Android):** تم ربط مشروع Firebase الحقيقي `forerun-c819d` عبر ملف `google-services.json`، وترقية معالجة التوكنات وعرض الإشعارات في قناة `forerun_orders_channel` مع دعم الـ Deep Link `forerun://orders/{id}`.
+2. **الطرف الخادم (Backend):** إنشاء جدول `DeviceToken` وتطبيق الهجرة `20261001160600_add_device_token` في الإنتاج، وإضافة نقاط النهاية `POST/DELETE customer/me/device-token`، وربط خدمة `FcmService` بـ `NotificationsService.emitToCustomer` لإرسال إشعارات فورية بالعربية عند كل تغير لحالة الطلب.
 
 ---
 
