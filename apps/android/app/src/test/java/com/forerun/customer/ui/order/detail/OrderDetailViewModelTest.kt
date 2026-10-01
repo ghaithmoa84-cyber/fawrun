@@ -3,14 +3,15 @@ package com.forerun.customer.ui.order.detail
 import androidx.lifecycle.SavedStateHandle
 import com.forerun.customer.core.storage.FakeTokenStorage
 import com.forerun.customer.core.websocket.SocketManager
-import com.forerun.customer.core.websocket.WebSocketEvent
+import com.forerun.customer.data.gateway.SocketOrderEventsGateway
+import com.forerun.customer.domain.model.WebSocketEvent
 import com.forerun.customer.data.FakeOrderRepository
 import com.forerun.customer.domain.model.CustomerOrderDetail
 import com.forerun.customer.domain.model.DetailOrderItem
 import com.forerun.customer.domain.model.OrderRunnerDetail
 import com.forerun.customer.domain.usecase.order.CancelOrderUseCase
 import com.forerun.customer.domain.usecase.order.GetOrderDetailUseCase
-import com.forerun.customer.domain.usecase.order.ObserveOrderEventsUseCase
+import com.forerun.customer.domain.usecase.ObserveOrderEventsUseCase
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.StandardTestDispatcher
@@ -71,7 +72,7 @@ class OrderDetailViewModelTest {
         socketManager = SocketManager(FakeTokenStorage())
         getOrderDetailUseCase = GetOrderDetailUseCase(fakeRepository)
         cancelOrderUseCase = CancelOrderUseCase(fakeRepository)
-        observeOrderEventsUseCase = ObserveOrderEventsUseCase(socketManager)
+        observeOrderEventsUseCase = ObserveOrderEventsUseCase(SocketOrderEventsGateway(socketManager))
     }
 
     @After

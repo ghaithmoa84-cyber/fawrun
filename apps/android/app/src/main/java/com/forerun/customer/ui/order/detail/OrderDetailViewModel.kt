@@ -3,11 +3,11 @@ package com.forerun.customer.ui.order.detail
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import com.forerun.customer.core.websocket.WebSocketEvent
+import com.forerun.customer.domain.model.WebSocketEvent
 import com.forerun.customer.domain.model.CustomerOrderDetail
 import com.forerun.customer.domain.usecase.order.CancelOrderUseCase
 import com.forerun.customer.domain.usecase.order.GetOrderDetailUseCase
-import com.forerun.customer.domain.usecase.order.ObserveOrderEventsUseCase
+import com.forerun.customer.domain.usecase.ObserveOrderEventsUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -184,7 +184,7 @@ class OrderDetailViewModel @Inject constructor(
 
     fun handleWebSocketEvent(event: WebSocketEvent) {
         when (event) {
-            is WebSocketEvent.StatusChanged -> {
+            is WebSocketEvent.OrderStatusChanged -> {
                 _uiState.update { current ->
                     current.copy(
                         order = current.order?.copy(status = event.newStatus)
