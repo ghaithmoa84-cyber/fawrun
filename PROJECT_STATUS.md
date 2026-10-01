@@ -1,6 +1,6 @@
 # FORERUN — Project Status & Diagnostic Playbook
 
-> **آخر تحديث:** 2026-09-30
+> **آخر تحديث:** 2026-10-01
 > **الغرض:** هذا الملف هو المرجع الوحيد لحالة المشروع، القرارات المعمارية، الأخطاء المعروفة، وحلولها.
 > **مهم:** أي وكيل أو مطوّر يبدأ العمل يجب أن يقرأ هذا الملف كاملًا قبل أي تعديل.
 > **نطاق المرجعية:** هذا الملف يملك حقائق **الإنتاج والبنية التحتية** فقط. لتوثيق Android انظر خريطة التوثيق في [§11](#11-خريطة-التوثيق--أي-ملف-يملك-أي-حققيقة).
@@ -17,7 +17,7 @@
 | Admin Panel | Next.js 14.2 | Vercel |
 | Runner PWA | Vite + vite-plugin-pwa | Vercel |
 | Customer Web | Vite | Vercel |
-| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** · ✅ **موقَّع** |
+| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** · ✅ **موقَّع** (Sprint 8D مُدمج) |
 
 ### روابط الإنتاج
 - **API**: `https://fawrun-api-production.up.railway.app/api/v1`
@@ -273,9 +273,9 @@ fawrun/
 │   ├── customer-web/           ← Vite
 │   │   ├── vercel.json
 │   │   └── vite.config.ts
-│   └── android/                ← Kotlin + Jetpack Compose (8 سبرنتات منجزة)
+│   └── android/                ← Kotlin + Jetpack Compose (9 سبرنتات منجزة: 1–8D)
 │       ├── app/src/main/java/  ← MVVM + Hilt + Retrofit + WebSocket
-│       └── app/src/test/       ← 223 @Test
+│       └── app/src/test/       ← 247 @Test
 ├── docs/
 │   ├── sprints/                ← معايير إنجاز سبرنتات الـ backend (Sprint 1–6)
 │   └── android/                ← توثيق Android (انظر §11)
@@ -308,8 +308,9 @@ fawrun/
 | 2026-09-30 | `3fc4119` — `merge(android)`: سبرنتات 1–8B — اكتمال تطبيق Android للعميل |
 | 2026-09-30 | `480b812` — `docs(android)`: تقرير تنظيف الفروع |
 | 2026-09-30 | `6e25aed` — `refactor(android)`: سبرنت 8C — بنية Account نظيفة + فك ارتباط NavGraph |
-| 2026-09-30 | `e5bfbc1` — `merge(android)`: سبرنت 8C — **آخر دمج للأندرويد في `master`** (8 سبرنتات · 223 `@Test` · 3 APKs release **موقَّعة** v2) |
+| 2026-09-30 | `e5bfbc1` — `merge(android)`: سبرنت 8C — (8 سبرنتات · 223 `@Test` · 3 APKs release **موقَّعة** v2) |
 | 2026-09-30 | `9e6c212` — `docs(android)`: تحديث التوثيق الشامل (`PROGRESS.md` · `ROADMAP.md` · `CURRENT_STATE.md` · `MASTER-SPEC.md` §21) |
+| 2026-10-01 | `1055b5f` — `merge(android)`: سبرنت 8D — **آخر دمج للأندرويد في `master`** (9 سبرنتات · 247 `@Test` · 0 lint · 3 APKs release **موقَّعة**) |
 
 ---
 

@@ -1,6 +1,6 @@
 # FAWRUN — Next Tasks
 
-> **آخر تحديث:** 2026-09-30
+> **آخر تحديث:** 2026-10-01
 > **المرجع الكامل:** [HANDOFF.md](HANDOFF.md)، [PROJECT_STATUS.md](PROJECT_STATUS.md)
 > **خريطة التوثيق:** [PROJECT_STATUS.md §11](PROJECT_STATUS.md#11-خريطة-التوثيق--أي-ملف-يملك-أي-حقيقة)
 
@@ -20,7 +20,8 @@
 
 | # | المهمة | الأولوية | الحالة | المسؤول | ملاحظات |
 |---|---|---|---|---|---|
-| A1 | **Sprint 8D** — معماري | عالية | 📋 جاهزة | @code-architect | الخطة جاهزة للبدء. المرجع الوحيد: [docs/android/ROADMAP.md](docs/android/ROADMAP.md) → Sprint 8D. |
+| A0 | **Sprint 8D** — معماري | منجَز | ✅ **مُدمج في `1055b5f`** | @feature-dev | **247 `@Test` ناجح (+24)** · `lint` 0 · APKs موقّعة · تم تنظيف الـ DI وحذف 1MB والـ DTO mapping. |
+| A1 | **Sprint 8E** — WebSocket Port | عالية | 📋 جاهزة للبدء | @code-architect | فصل WebSocket عن `core` عبر `OrderEventsGateway` وإغلاق فجوة `account:verified`. المرجع: [docs/android/ROADMAP.md](docs/android/ROADMAP.md) → Sprint 8E. |
 | A2 | **Firebase** — إعداد النشر | ⛔ **يحتاج المستخدم** | 🔒 معلَّقة | المستخدم | يتطلب مشروع Firebase و`google-services.json` وتسجيل المختبرين. **لا يمكن للوكيل تنفيذه.** ⚠️ **Keystore ليس منها** — المفتاح موجود وموقِّع فعلياً؛ لا يُولَّد ([§12 · D6](PROJECT_STATUS.md#12-سجل-القرارات)). |
 | A3 | **Sprint 8F** — النشر | متوسطة | ⏔ جزئي | @feature-dev | **3 APKs release مبنية وموقَّعة فعلياً (v2) ✅** — المتبقّي هو **النشر فقط** (Firebase + توزيع). تبعية A2. |
 
