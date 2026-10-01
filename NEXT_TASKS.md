@@ -22,8 +22,8 @@
 |---|---|---|---|---|---|
 | A0 | **Sprint 8D** — معماري | منجَز | ✅ **مُدمج في `1055b5f`** | @feature-dev | **247 `@Test` ناجح (+24)** · `lint` 0 · APKs موقّعة · تم تنظيف الـ DI وحذف 1MB والـ DTO mapping. |
 | A1 | **Sprint 8E** — WebSocket Port | منجَز | ✅ **مُدمج في `b6acfaf`** | @code-architect | **261 `@Test` ناجح (+14)** · `lint` 0 · `assembleDebug` ناجح · تم فصل WebSocket عن `core` عبر `OrderEventsGateway` وإغلاق فجوة D23 (`account:verified`) واستهلاك `connectionState`. المرجع: [docs/android/ROADMAP.md](docs/android/ROADMAP.md). |
-| A2 | **Firebase** — إعداد النشر | ⛔ **يحتاج المستخدم** | 🔒 معلَّقة | المستخدم | يتطلب مشروع Firebase و`google-services.json` وتسجيل المختبرين. **لا يمكن للوكيل تنفيذه.** ⚠️ **Keystore ليس منها** — المفتاح موجود وموقِّع فعلياً؛ لا يُولَّد ([§12 · D6](PROJECT_STATUS.md#12-سجل-القرارات)). |
-| A3 | **Sprint 8F** — النشر | متوسطة | ⏔ جزئي | @feature-dev | **3 APKs release مبنية وموقَّعة فعلياً (v2) ✅** — المتبقّي هو **النشر فقط** (Firebase + توزيع). تبعية A2. |
+| A2 | **Firebase** — إعداد النشر | عالية | ✅ **مُنجَز** | المستخدم | تم إنشاء مشروع Firebase ووضع `google-services.json` الحقيقي وتوفير `Service Account`. |
+| A3 | **Sprint 8F** — إشعارات FCM والنشر | عالية | ✅ **مُنجَز في `090d261`** | @feature-dev | تم إنشاء `DeviceToken` في الـ DB ونقاط نهاية `POST/DELETE /api/v1/customer/me/device-token` وخدمة `FcmService` وإرسال إشعارات تغيير حالة الطلب. |
 
 ---
 
