@@ -6,6 +6,8 @@ import {
   type AvailableRunner,
   type CustomerAddressResponse,
   type CustomerProfile,
+  type DeviceTokenRequest,
+  type DeviceTokenResponse,
   type UpdateCustomerAddressRequest,
   type UpdateCustomerRequest,
 } from '@forerun/shared-types';
@@ -202,5 +204,39 @@ export class CustomersService {
       totalRatings: runner.totalRatings,
       status: runner.status,
     }));
+  }
+
+  async registerDeviceToken(
+    userId: string,
+    dto: DeviceTokenRequest,
+  ): Promise<DeviceTokenResponse> {
+    await this.prisma.deviceToken.upsert({
+      where: { token: dto.token },
+      create: {
+        userId,
+        token: dto.token,
+        platform: dto.platform,
+      },
+      update: {
+        userId,
+        platform: dto.platform,
+      },
+    });
+
+    return { success: true };
+  }
+
+  async unregisterDeviceToken(
+    userId: string,
+    dto: DeviceTokenRequest,
+  ): Promise<DeviceTokenResponse> {
+    await this.prisma.deviceToken.deleteMany({
+      where: {
+        userId,
+        token: dto.token,
+      },
+    });
+
+    return { success: true };
   }
 }

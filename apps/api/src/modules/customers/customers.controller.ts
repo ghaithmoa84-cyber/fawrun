@@ -1,9 +1,11 @@
-import { Body, Controller, Get, Put, UseGuards } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Put, UseGuards } from '@nestjs/common';
 import {
+  DeviceTokenSchema,
   UpdateCustomerAddressSchema,
   UpdateCustomerSchema,
 } from '@forerun/shared-types';
 import type {
+  DeviceTokenRequest,
   UpdateCustomerAddressRequest,
   UpdateCustomerRequest,
 } from '@forerun/shared-types';
@@ -55,5 +57,21 @@ export class CustomersController {
   @Get('customer/runners')
   async listAvailableRunners() {
     return this.customersService.listAvailableRunners();
+  }
+
+  @Post('customer/me/device-token')
+  async registerDeviceToken(
+    @CurrentUser() user: { userId: string; role: string; status: string },
+    @Body(new ZodValidationPipe(DeviceTokenSchema)) dto: DeviceTokenRequest,
+  ) {
+    return this.customersService.registerDeviceToken(user.userId, dto);
+  }
+
+  @Delete('customer/me/device-token')
+  async unregisterDeviceToken(
+    @CurrentUser() user: { userId: string; role: string; status: string },
+    @Body(new ZodValidationPipe(DeviceTokenSchema)) dto: DeviceTokenRequest,
+  ) {
+    return this.customersService.unregisterDeviceToken(user.userId, dto);
   }
 }

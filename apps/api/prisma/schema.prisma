@@ -83,6 +83,7 @@ model User {
   runner        Runner?
   admin         Admin?
   refreshTokens RefreshToken[]
+  deviceTokens  DeviceToken[]
   auditLogs     AuditLog[]
 
   // الطلبات التي ألغاها هذا المستخدم
@@ -434,3 +435,20 @@ model AuditLog {
   @@index([orderId, createdAt])
   @@index([event, createdAt])
 }
+
+// ─────────────────────────────────────────
+// DEVICE TOKENS (FCM Push Notifications)
+// ─────────────────────────────────────────
+
+model DeviceToken {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token     String   @unique
+  platform  String   @default("android")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
