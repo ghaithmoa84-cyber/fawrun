@@ -27,14 +27,14 @@
 - **Android**: **APK موقَّع** (3 ABI) — **غير منشور بعد** (Sprint 8F). لا يوجد رابط إنتاج. مفتاح التوقيع: `CN=FORERUN` · SHA-256 `725b4683…09879` — انظر [§12 · D6](#12-سجل-القرارات).
 - **GitHub**: `github.com/ghaithmoa84-cyber/forerun` (master)
 
-### 1.1 حالة الإنتاج وقاعدة البيانات — 2026-09-23
+### 1.1 حالة الإنتاج وقاعدة البيانات — 2026-10-01
 
 | الحقيقة | الحالة |
 |---|---|
 | منصة الإنتاج وقاعدة البيانات | **Railway** — وليس Supabase |
-| Schema Drift | **0**، آخر فحص: **2026-09-23** |
-| سجل `_prisma_migrations` | **6 migrations** مُسجَّلة |
-| Migration الحالية | `20260923154000_add_order_store_soft_delete` مُطبَّق |
+| Schema Drift | **0**، آخر فحص: **2026-10-01** |
+| سجل `_prisma_migrations` | **7 migrations** مُسجَّلة |
+| Migration الحالية | `20261001160600_add_device_token` مُطبَّق |
 | آلية نشر الـ migrations | `prisma migrate deploy` يُنفَّذ يدويًا من Railway Console؛ لا يوجد auto-migrate في Dockerfile |
 
 ### 1.2 إصدارات وإصلاحات مكتملة — 2026-09-23
