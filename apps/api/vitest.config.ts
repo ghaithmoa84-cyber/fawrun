@@ -17,7 +17,7 @@ export default defineConfig({
     alias: {
       '@prisma/client': resolve(__dirname, './node_modules/@prisma/client'),
     },
-    include: ['test/**/*.spec.ts'],
+    include: ['test/**/*.spec.ts', 'src/**/*.spec.ts'],
     exclude: ['test/integration/**/*.spec.ts'],
     globals: true,
     environment: 'node',
