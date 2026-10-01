@@ -9,10 +9,10 @@
 | | |
 |---|---|
 | **Branch** | `master` |
-| **HEAD** | `e5bfbc1` |
-| **Message** | `merge(android): sprint 8c - account clean architecture` |
-| **Content merge** | `6e25aed` — `refactor(android): sprint 8c - account clean architecture + navgraph decoupling` |
-| **Sprint 8B chain** | `3fc4119` (sprints 1-8b) → `ab9a119` (architecture review) → `480b812` (branch cleanup) |
+| **HEAD** | `b6acfaf` |
+| **Message** | `merge(android): Sprint 8E — WebSocket port to domain layer` |
+| **Content merge** | `ecd856d` — `refactor(android): Sprint 8E — WebSocket port to domain layer` |
+| **Sprint 8 chain** | `3fc4119` (1-8b) → `e5bfbc1` (8c) → `1055b5f` (8d) → `b6acfaf` (8e) |
 
 ---
 
@@ -52,7 +52,7 @@ Both variants build clean: R8 + ProGuard rules and LintVital pass. The release b
 | **Account** | ✅ | Loading + retry states (CRITICAL-03 fixed); **fully refactored in 8C** to UseCases + `CustomerProfile` domain model + `AccountMapper`; zero DTOs in `UiState` |
 | **Support** | ✅ | WhatsApp + dialer + working hours; FAQ text hardcoded |
 | **Deep Links** | ⚠️ | `forerun://orders/{id}` works. `https://forerun.app/orders/{id}` has **no manifest intent-filter** (DEEP-MEDIUM-07) |
-| **WebSocket** | ⚠️ | 7 of 8 events handled; `account:verified` is parsed and emitted with **no consumer** (D23) |
+| **WebSocket** | ✅ | All 8 events handled and mapped via clean domain `OrderEventsGateway`; `account:verified` forces immediate session re-check in `SplashViewModel` (D23 closed); `connectionState` mapped and consumed via Gateway |
 | **FCM Push** | ⛔ | Code complete, but `google-services.json` is a test file — no server push reaches real devices |
 | **Onboarding → App** | ✅ | 15 screens + flows, 100% of the v1 scope |
 | **Offline** | — | Out of scope for v1 (always-online); `checkSession` degrades gracefully to cached state |
@@ -63,7 +63,7 @@ Both variants build clean: R8 + ProGuard rules and LintVital pass. The release b
 
 | # | Issue | Severity | Target |
 |---|-------|----------|--------|
-| 1 | **A17** — `TokenRefreshManager` still lives in `data/remote/token/`, imported by `core.network.interceptor` and the DI graph. 3 dependency cycles remain, silently broken by `Provider` | Medium (deferred from 8C) | Sprint 8D |
+| 1 | ~~**A17**~~ **RESOLVED in 8D** — `TokenRefreshManager` in `core/auth`, `RefreshInterceptor` is `Authenticator` | Resolved | Sprint 8D |
 | 2 | **Deep link guard at login is intentionally ignored** — `SplashViewModel` consumes a pending order id **only** when the server-reported state is `VERIFIED` (DEEP-CRITICAL-04 fix). Consequence: a notification opened while logged out is dropped rather than queued for post-login. Accepted trade-off, not a regression | By design | Revisit in 8E/9 if reported |
 | 3 | **`OrdersEmptyState` shown under a filter with no results** — the explicit error state no longer masks the empty state (fixed in 8B), but a filter that legitimately returns nothing still renders the generic empty screen with no filter-specific copy | Cosmetic | Sprint 9 |
 | 4 | **81 نص hardcoded** — 73 table rows across ~14 files, incl. 19 duplicated order-status labels, 4× `"إخفاء"/"إظهار"`, 10 FAQ strings | Medium | Sprint 9 |
@@ -79,7 +79,7 @@ Both variants build clean: R8 + ProGuard rules and LintVital pass. The release b
 
 | Gate | Result |
 |------|--------|
-| **Unit tests** | **223 `@Test` — 223 passing, 0 failures** (33 test files) |
+| **Unit tests** | **261 `@Test` — 261 passing, 0 failures** (36 test files) |
 | **Lint** | **0 errors** |
 | **`assembleDebug`** | BUILD SUCCESSFUL (3 ABI splits) |
 | **`assembleRelease`** | BUILD SUCCESSFUL (R8 + LintVital clean, 3 ABI splits) |
