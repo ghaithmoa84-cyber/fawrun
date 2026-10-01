@@ -28,7 +28,7 @@
 
 Debug build (for reference, not distributable): arm64-v8a 36.13 MB · armeabi-v7a 33.31 MB · x86_64 36.40 MB
 
-Both variants build clean: R8 + ProGuard rules and LintVital pass. The release build is **not yet signed with a production keystore** — `keystore.properties` must be supplied by the owner (see Gap 5 below).
+Both variants build clean: R8 + ProGuard rules and LintVital pass. The release build **is signed** — `apksigner verify` returns `Verifies` (APK Signature Scheme **v2**, 1 signer), signer `CN=FORERUN` (cert SHA-256 `725b4683…09879`). Verified 2026-10-01; see `PROJECT_STATUS.md` §12 · D6.
 
 ---
 
@@ -67,7 +67,7 @@ Both variants build clean: R8 + ProGuard rules and LintVital pass. The release b
 | 2 | **Deep link guard at login is intentionally ignored** — `SplashViewModel` consumes a pending order id **only** when the server-reported state is `VERIFIED` (DEEP-CRITICAL-04 fix). Consequence: a notification opened while logged out is dropped rather than queued for post-login. Accepted trade-off, not a regression | By design | Revisit in 8E/9 if reported |
 | 3 | **`OrdersEmptyState` shown under a filter with no results** — the explicit error state no longer masks the empty state (fixed in 8B), but a filter that legitimately returns nothing still renders the generic empty screen with no filter-specific copy | Cosmetic | Sprint 9 |
 | 4 | **81 نص hardcoded** — 73 table rows across ~14 files, incl. 19 duplicated order-status labels, 4× `"إخفاء"/"إظهار"`, 10 FAQ strings | Medium | Sprint 9 |
-| 5 | **No production keystore** — `keystore.properties` and the real key are not provisioned; `assembleRelease` is unsigned for distribution | Blocker for release | Sprint 8F |
+| 5 | ~~**No production keystore**~~ **RESOLVED 2026-10-01** — `keystore.properties` and the key are provisioned, signing is wired (`app/build.gradle.kts:57`), and the 3 release APKs verify under v2. **Never regenerate the key** — it is not reproducible and would orphan installed copies. Remaining risk is only that no off-machine backup exists | Backups only | Immediately |
 | 6 | **No real Firebase project** — `google-services.json` is gitignored/test-only | Blocker for push | Sprint 8F |
 | 7 | **No automated E2E** — `scripts/e2e-test.ps1` is manual, no CI | Medium | Sprint 10 |
 | 8 | **DEEP-MEDIUM-02/03/06/07** open | Medium | 8E / 8F / 9 |

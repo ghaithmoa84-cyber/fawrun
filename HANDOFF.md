@@ -19,7 +19,7 @@ git log -1 --stat
 | Admin Dashboard | ✅ نشر | Vercel |
 | Runner PWA | ✅ نشر | Vercel |
 | Customer Web | ✅ نشر | Vercel |
-| Android App | 🔨 APK مبني (3 ABI) · ⛔ غير موقّع · ⛔ غير منشور | APK مباشر — لا رابط إنتاج حتى Sprint 8F. الحالة الكاملة في [docs/android/CURRENT_STATE.md](docs/android/CURRENT_STATE.md). |
+| Android App | ✅ APK موقَّع (v2 · 3 ABI) · ⛔ غير منشور | APK مباشر — لا رابط إنتاج حتى Sprint 8F. **مفتاح التوقيع موجود ويعمل — لا يُولَّد** ([§12 · D6](PROJECT_STATUS.md#12-سجل-القرارات)). |
 | قاعدة البيانات | ✅ نشطة | PostgreSQL على Railway — Schema Drift = 0 |
 
 **E2E:** نجح كاملًا على الإنتاج.

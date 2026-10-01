@@ -847,7 +847,7 @@ Terminal: `DELIVERED`, `CANCELLED`
 |--------|----------|-------------|
 | 8D | 2-3 hours | Medium architecture: `TokenRefreshManager` → `core/auth` (A17), `RefreshInterceptor` → `okhttp3.Authenticator` (removes cycles 1-2), Nominatim DI fix (A18/A19), `OrderDetailMapper` (A21), onboarding/geocode UseCases, Gradle hygiene (B3/B5/B6) |
 | 8E | 2 hours | WebSocket port: `OrderEventsGateway` in `domain`, clean `ObserveOrderEventsUseCase`, real `AccountVerified` handler (D23), socket events for Home + Orders |
-| 8F | 2-3 hours + user setup | Real FCM (no placeholder) and app distribution. **Blocked on the user:** Firebase project, `google-services.json`, tester registration, production keystore |
+| 8F | 2-3 hours + user setup | Real FCM (no placeholder) and app distribution. **Blocked on the user:** Firebase project, `google-services.json`, tester registration. ~~production keystore~~ — **already done** (release signing is configured and 3 signed APKs built; see `PROJECT_STATUS.md` §12 · D6. **Never regenerate it**) |
 | 9 | 3-4 hours | UI Polish: 81 hardcoded strings → `strings.xml`, unified order-status labels, `rememberSaveable`, remaining MEDIUM/SURFACE items |
 | 10 | 4-6 hours | QA + Launch: integration tests, automated E2E, security review, performance baseline, first signed release 1.0.0 |
 

@@ -17,14 +17,14 @@
 | Admin Panel | Next.js 14.2 | Vercel |
 | Runner PWA | Vite + vite-plugin-pwa | Vercel |
 | Customer Web | Vite | Vercel |
-| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** |
+| Android App | Kotlin 2.0.21 · Jetpack Compose · Hilt | **APK مباشر — غير منشور** · ✅ **موقَّع** |
 
 ### روابط الإنتاج
 - **API**: `https://fawrun-api-production.up.railway.app/api/v1`
 - **Admin**: `https://fawrun-admin.vercel.app`
 - **Runner**: `https://fawrun-runner-pwa-steel.vercel.app`
 - **Customer**: `https://fawrun-customer-web-three.vercel.app`
-- **Android**: APK غير موقّع — **لم يُنشر بعد** (Sprint 8F). لا يوجد رابط إنتاج.
+- **Android**: **APK موقَّع** (3 ABI) — **غير منشور بعد** (Sprint 8F). لا يوجد رابط إنتاج. مفتاح التوقيع: `CN=FORERUN` · SHA-256 `725b4683…09879` — انظر [§12 · D6](#12-سجل-القرارات).
 - **GitHub**: `github.com/ghaithmoa84-cyber/forerun` (master)
 
 ### 1.1 حالة الإنتاج وقاعدة البيانات — 2026-09-23
@@ -308,7 +308,7 @@ fawrun/
 | 2026-09-30 | `3fc4119` — `merge(android)`: سبرنتات 1–8B — اكتمال تطبيق Android للعميل |
 | 2026-09-30 | `480b812` — `docs(android)`: تقرير تنظيف الفروع |
 | 2026-09-30 | `6e25aed` — `refactor(android)`: سبرنت 8C — بنية Account نظيفة + فك ارتباط NavGraph |
-| 2026-09-30 | `e5bfbc1` — `merge(android)`: سبرنت 8C — **آخر دمج للأندرويد في `master`** (8 سبرنتات · 223 `@Test` · APK مبني لـ 3 ABI · غير موقّع) |
+| 2026-09-30 | `e5bfbc1` — `merge(android)`: سبرنت 8C — **آخر دمج للأندرويد في `master`** (8 سبرنتات · 223 `@Test` · 3 APKs release **موقَّعة** v2) |
 | 2026-09-30 | `9e6c212` — `docs(android)`: تحديث التوثيق الشامل (`PROGRESS.md` · `ROADMAP.md` · `CURRENT_STATE.md` · `MASTER-SPEC.md` §21) |
 
 ---
@@ -379,6 +379,26 @@ fawrun/
 3. **بند Sprint 3 «Presigned URL» مُعلَّم `[x]`** لأن الكود موجود — وهذا صحيح تقنياً لكنه **غير مُفعَّل تشغيلياً**. لا تقرأه كـ«الإيصالات تعمل في الإنتاج».
 
 **متى يُراجَع:** عند بدء **`docs/android/ROADMAP.md` Sprint 9** أو أي عمل على `SettlementItem` يعتمد على الإيصالات كضمان. المطلوب عندها: (1) قراءة `R2_*` من Railway، (2) ربط `fawrun-receipts`، (3) `/rollback-plan` إن امتدّ الأمر لعمليات مالية.
+
+| **D6** | **مفتاح توقيع Android موجود ويعمل — لا يُولَّد** | ✅ **متحقَّق 2026-10-01** | **2026-10-01** | أدناه |
+
+### D6 — مفتاح توقيع Android (تحقّق، لا قرار)
+
+**المتحقَّق منه آلياً:**
+- `apps/android/forerun-release.jks` موجود (2,253 بايت) · `keyAlias = forerun` · كلمة مرور 13 حرفاً
+- التوقيع **مربوط في البناء**: `apps/android/app/build.gradle.kts:28-57` (`signingConfig = signingConfigs.getByName("release")` عند `:57`)
+- **3 APKs release مبنية وموقَّعة فعلاً** — `apksigner verify` ⇒ `Verifies` بمخطّط **v2** · عدد المُوقِّعين 1
+- هوية المُوقِّع: `CN=FORERUN, OU=Development, O=FORERUN, L=Al-Qanjara, ST=Latakia, C=SY` · cert SHA-256 `725b46830d583dc72d3b80c530c94e5d21492d40cfecb0837764bb7bd9609879`
+
+**⚠️ القاعدة الحرجة — لا يُولَّد مفتاح جديد تحت أي ظرف:**
+مفتاح التوقيع **غير قابل لإعادة الإنتاج رياضياً**. توليد مفتاح جديد يجعل كل نسخة مثبّتة **عاجزة عن التحديث للأبد** (Android يشترط تطابق المفتاح). التوثيق السابق كان يصف التطبيق كـ«غير موقّع» ويحيل `production keystore` إلى المستخدم — **وكلاهما خطأ مُصحَّح**.
+
+**نظافة الأسرار سليمة:** `*.jks` و`keystore.properties` مُتجاهَلة في `apps/android/.gitignore:14-15` و**غير مدفوعة إلى git** · يوجد `keystore.properties.example` للقالب.
+
+**⚠️ الفجوة الوحيدة — لا نسخة احتياطية خارج هذا القرص:**
+الملفان (`forerun-release.jks` + `keystore.properties` الحاوي كلمة المرور) **غير موجودين في git عمداً**. فقدانهما = فقدان هوية التطبيق نهائياً. **يجب نسخهما احتياطياً إلى مكان آمن قبل أي تسليم المشروع** — وانقل كلمة المرور عبر قناة آمنة (مدير كلمات مرور / خزنة مشفّرة)، **ولا تُوضع في Git أو محادثة**.
+
+**تنبيه صيانة:** توجد نسختان متطابقتان من JKS (`apps/android/` و `apps/android/app/` — نفس SHA-256 `FAC8DBE7…3864`). البناء يفضّل نسخة `app/` (`build.gradle.kts:30,40`). هما متطابقتان اليوم، لكن تحديث إحداهما دون الأخرى يجعل البناء يوقّع بمفتاح مختلف — يُنصح بالإبقاء على **نسخة واحدة فقط**.
 
 ---
 

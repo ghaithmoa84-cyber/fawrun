@@ -187,7 +187,7 @@ All 223 pass. No test has ever been deleted to make a gate pass.
 | 5 | **DEEP-MEDIUM-02/03/06/07 still open** | Home and Orders do not observe socket events; order filtering is client-side and breaks under pagination; duplicate order-confirmation UI (dialog + screen); `https://forerun.app/orders/{id}` has no manifest intent-filter | Sprint 8E / 8F / 9 |
 | 6 | **D23 `WebSocketEvent.AccountVerified` unhandled** | The socket subscribes to `account:verified` with no consumer — a live feature gap, not a stub | Sprint 8E |
 | 7 | **B3/B5/B6 Gradle debt** | Unused `libs.material` (~1 MB APK weight), `isReturnDefaultValues` masks missing mocks, `security-crypto` pinned to `1.1.0-alpha06` | Sprint 8D |
-| 8 | **Production keystore not provisioned** | `keystore.properties` and the real key must come from the owner before `assembleRelease` is distributable | Sprint 8F |
+| 8 | ~~**Production keystore not provisioned**~~ **RESOLVED 2026-10-01** — key + `keystore.properties` exist on disk (gitignored), `assembleRelease` produces **v2-signed** APKs. Outstanding: no off-machine backup of the key. **Do not regenerate** | Sprint 8F |
 
 ---
 

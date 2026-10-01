@@ -5,6 +5,34 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Version](https://semver.org/spec/v2.0.0.html).
 
+### 2026-10-01 — D6: Android release keystore verified; "unsigned" was wrong in 5 places
+
+**المكتشف:** التطبيق **موقَّع فعلاً** — التوثيق كان يقول «غير موقّع» في 5 مواضع ويحيل `production keystore` إلى المستخدم كعائق. **كلاهما خطأ مُصحَّح.**
+
+**المتحقَّق منه آلياً (`apksigner` 36.0.0 + `keytool`):**
+- `apksigner verify` ⇒ `Verifies` · **APK Signature Scheme v2** · عدد المُوقِّعين 1
+- هوية المُوقِّع `CN=FORERUN, OU=Development, O=FORERUN, L=Al-Qanjara, ST=Latakia, C=SY` · cert SHA-256 `725b46830d583dc72d3b80c530c94e5d21492d40cfecb0837764bb7bd9609879`
+- 3 APKs release مبنية 2026-09-30 (15.8 / 12.8 / 16.1 MB) · التوقيع مربوط في `apps/android/app/build.gradle.kts:57`
+
+**الملفات المُصحَّحة (6):**
+- `PROJECT_STATUS.md` — **§12 · D6 جديد** (تحقّق لا قرار) · §1 روابط الإنتاج وصفَAndroid · §9 صف `e5bfbc1`
+- `HANDOFF.md` — صفّ Android: ✅ موقَّع v2
+- `NEXT_TASKS.md` — A2 لم تعد تطلب Keystore · A3 من «غير مُنجَز» → ⏔ جزئي (النشر فقط)
+- `docs/android/CURRENT_STATE.md` — فقرة البناء + Gap 5 (~~مشطوب~~ مع بقية الخطر)
+- `docs/android/PROGRESS.md` — البند 8 (~~مشطوب~~)
+- `docs/android/MASTER-SPEC.md` — صفّ 8F لم يعد يذكر `production keystore` كعائق
+- `AGENTS.md` — قسم «ابدأ من هنا» لترتيب القراءة (تسليم للوكيل جديد)
+
+**⚠️ القاعدة الحرجة المسجَّلة:** مفتاح التوقيع **غير قابل لإعادة الإنتاج رياضياً**. توليد مفتاح جديد يجعل كل نسخة مثبّتة عاجزة عن التحديث للأبد. **لا يُولَّد تحت أي ظرف.**
+
+**نظافة الأسرار سليمة:** `*.jks` و`keystore.properties` مُتجاهَلة في `apps/android/.gitignore:14-15` وغير مدفوعة إلى git · `keystore.properties.example` موجود للقالب.
+
+**⚠️ الفجوة الوحيدة المتبقّية:** لا نسخة احتياطية خارج هذا القرص. يجب نسخ `forerun-release.jks` + كلمة المرور إلى مكان آمن **قبل التسليم**. وكلمة المرور عبر قناة آمنة — لا Git ولا محادثة.
+
+**تنبيه صيانة مسجَّل:** نسختان متطابقتان من JKS (`apps/android/` و `apps/android/app/`، نفس SHA-256 `FAC8DBE7…3864`)؛ البناء يفضّل `app/`. يُنصح بالإبقاء على نسخة واحدة.
+
+**الأوامر والنتائج:** `apksigner verify` ×1 · `git ls-files`/`check-ignore` للتحقق من عدم دفع الأسرار · صفر روابط مكسورة.
+
 ### 2026-09-30 — D5: receipt upload (R2) deferred until after MVP
 
 **القرار (مستخدم، 2026-09-30):** تأجيل **ميزة رفع الإيصالات (Cloudflare R2)** بالكامل إلى ما بعد MVP. ساري.
