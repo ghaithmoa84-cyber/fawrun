@@ -18,6 +18,7 @@ import type {
 import { PrismaService } from '../../../database/prisma.service.js';
 import { AuditService } from '../../audit/audit.service.js';
 import { NotificationsService } from '../../notifications/notifications.service.js';
+import { TelegramService } from '../../notifications/telegram.service.js';
 import { PricingService } from '../../pricing/pricing.service.js';
 import { OrderStateMachine } from '../../../state-machine/order-state-machine.js';
 import { RunnerStateMachine } from '../../../state-machine/runner-state-machine.js';
@@ -29,6 +30,7 @@ export class CustomerOrdersService {
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
     private readonly notificationsService: NotificationsService,
+    private readonly telegramService: TelegramService,
     private readonly pricingService: PricingService,
     private readonly orderStateMachine: OrderStateMachine,
     private readonly runnerStateMachine: RunnerStateMachine,
@@ -209,6 +211,35 @@ export class CustomerOrdersService {
       }, 'new_order');
     } catch (error) {
       this.logger.warn('Notification emit failed', { error, orderId: result.order.id });
+    }
+
+    try {
+      const fullOrder = await this.prisma.order.findUnique({
+        where: { id: result.order.id },
+        include: {
+          orderStores: { where: { isDeleted: false } },
+          customer: { include: { user: true } },
+        },
+      });
+
+      const storeNames = fullOrder?.orderStores
+        ?.map((os) => os.storeName)
+        .filter(Boolean)
+        .join('، ') || 'غير محدد';
+
+      const storesLine = (fullOrder?.orderStores?.length ?? 0) > 1
+        ? `المتاجر (${fullOrder?.orderStores.length}): ${storeNames}`
+        : `المتجر: ${storeNames}`;
+
+      await this.telegramService.sendMessage(
+        `🛍️ <b>طلب جديد</b>\n` +
+        `رقم الطلب: <b>#${result.order.orderNumber}</b>\n` +
+        `العميل: ${fullOrder?.customer?.user?.name ?? customer.user?.name ?? 'غير محدد'}\n` +
+        `${storesLine}\n` +
+        `الإجمالي: ${result.order.totalFee} ل.س`
+      );
+    } catch (error) {
+      this.logger.warn('Telegram notification failed', { error, orderId: result.order.id });
     }
 
     return {

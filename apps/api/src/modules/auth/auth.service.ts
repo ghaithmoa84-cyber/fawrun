@@ -9,6 +9,7 @@ import { randomBytes } from 'crypto';
 import { PrismaService } from '../../database/prisma.service.js';
 import { AuditService } from '../audit/audit.service.js';
 import { NotificationsService } from '../notifications/notifications.service.js';
+import { TelegramService } from '../notifications/telegram.service.js';
 import { CONFIG, ACCOUNT_SUSPENDED_MESSAGE } from '@forerun/shared-constants';
 import type { RegisterRequest, LoginRequest, RefreshRequest } from '@forerun/shared-types';
 import type { LogoutDto } from './dto/logout.dto.js';
@@ -24,6 +25,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly auditService: AuditService,
     private readonly notificationsService: NotificationsService,
+    private readonly telegramService: TelegramService,
   ) {}
 
   async register(dto: RegisterRequest) {
@@ -89,6 +91,17 @@ export class AuthService {
       });
     } catch {
       // WebSocket emit is best-effort; log but don't fail registration
+    }
+
+    try {
+      await this.telegramService.sendMessage(
+        `👤 <b>مستخدم جديد — بانتظار الموافقة</b>\n` +
+        `الاسم: ${result.name ?? 'غير محدد'}\n` +
+        `الهاتف: ${result.whatsapp}\n` +
+        `التاريخ: ${new Date().toLocaleString('ar-SY', { timeZone: 'Asia/Damascus' })}`
+      );
+    } catch {
+      // Telegram notification is best-effort; don't fail registration
     }
 
     return {
