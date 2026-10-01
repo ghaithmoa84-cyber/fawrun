@@ -6,6 +6,7 @@ import com.forerun.customer.data.remote.api.OrderApi
 import com.forerun.customer.domain.model.ActiveOrder
 import com.forerun.customer.domain.model.CustomerProfile
 import com.forerun.customer.domain.model.HomeData
+import com.forerun.customer.domain.model.UserStatus
 import com.forerun.customer.domain.repository.HomeRepository
 import javax.inject.Inject
 import javax.inject.Singleton
@@ -27,7 +28,7 @@ class HomeRepositoryImpl @Inject constructor(
                     name = dto.name,
                     whatsapp = dto.whatsapp,
                     altPhone = dto.altPhone,
-                    status = dto.status,
+                    status = UserStatus.fromString(dto.status),
                     completedOrders = dto.completedOrders,
                     totalFeesPaid = dto.totalFeesPaid
                 )

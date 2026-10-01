@@ -1,9 +1,12 @@
 package com.forerun.customer.core.network.interceptor
 
+import com.forerun.customer.core.auth.TokenRefreshManager
 import com.forerun.customer.core.storage.TokenStorage
-import com.forerun.customer.data.remote.token.TokenRefreshManager
-import okhttp3.Interceptor
+import kotlinx.coroutines.runBlocking
+import okhttp3.Authenticator
+import okhttp3.Request
 import okhttp3.Response
+import okhttp3.Route
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -11,41 +14,61 @@ import javax.inject.Singleton
 class RefreshInterceptor @Inject constructor(
     private val tokenStorage: TokenStorage,
     private val tokenRefreshManager: TokenRefreshManager
-) : Interceptor {
+) : Authenticator {
 
-    override fun intercept(chain: Interceptor.Chain): Response {
-        val request = chain.request()
-        val response = chain.proceed(request)
+    override fun authenticate(route: Route?, response: Response): Request? {
+        val request = response.request
 
-        if (response.code == 401) {
-            val isRetry = request.header(HEADER_RETRY_AFTER_REFRESH) == "true"
-            val isAuthEndpoint = request.url.encodedPath.contains("/auth/")
-
-            if (!isRetry && !isAuthEndpoint) {
-                response.close()
-
-                val refreshed = kotlinx.coroutines.runBlocking {
-                    tokenRefreshManager.refreshTokenIfNeeded(force = true)
-                }
-
-                if (refreshed) {
-                    val newAccessToken = tokenStorage.getAccessToken()
-                    if (newAccessToken != null) {
-                        val retryRequest = request.newBuilder()
-                            .header("Authorization", "Bearer $newAccessToken")
-                            .header(HEADER_RETRY_AFTER_REFRESH, "true")
-                            .build()
-                        return chain.proceed(retryRequest)
-                    }
-                }
-                tokenRefreshManager.handleSessionExpired()
-            } else if (isRetry) {
-                tokenRefreshManager.handleSessionExpired()
-            }
-
+        // Do not attempt to refresh for authentication endpoints
+        if (request.url.encodedPath.contains("/auth/")) {
+            return null
         }
 
-        return response
+        // Avoid infinite loops if this request is already a retry or retried multiple times
+        if (request.header(HEADER_RETRY_AFTER_REFRESH) == "true" || responseCount(response) >= 2) {
+            tokenRefreshManager.handleSessionExpired()
+            return null
+        }
+
+        // If another concurrent request has already refreshed the token, retry with the updated token
+        val currentToken = tokenStorage.getAccessToken()
+        if (!currentToken.isNullOrBlank() && request.header("Authorization") != "Bearer $currentToken") {
+            return request.newBuilder()
+                .header("Authorization", "Bearer $currentToken")
+                .header(HEADER_RETRY_AFTER_REFRESH, "true")
+                .build()
+        }
+
+        val refreshed = try {
+            runBlocking {
+                tokenRefreshManager.refreshTokenIfNeeded(force = true)
+            }
+        } catch (_: Exception) {
+            false
+        }
+
+        if (refreshed) {
+            val newAccessToken = tokenStorage.getAccessToken()
+            if (!newAccessToken.isNullOrBlank()) {
+                return request.newBuilder()
+                    .header("Authorization", "Bearer $newAccessToken")
+                    .header(HEADER_RETRY_AFTER_REFRESH, "true")
+                    .build()
+            }
+        }
+
+        tokenRefreshManager.handleSessionExpired()
+        return null
+    }
+
+    private fun responseCount(response: Response): Int {
+        var count = 1
+        var prior = response.priorResponse
+        while (prior != null) {
+            count++
+            prior = prior.priorResponse
+        }
+        return count
     }
 
     companion object {

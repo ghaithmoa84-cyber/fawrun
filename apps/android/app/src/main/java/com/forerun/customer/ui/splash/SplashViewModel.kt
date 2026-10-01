@@ -25,7 +25,7 @@ sealed interface SplashDestination {
 @HiltViewModel
 class SplashViewModel @Inject constructor(
     private val checkSessionUseCase: CheckSessionUseCase,
-    private val deepLinkHolder: com.forerun.customer.core.notification.DeepLinkHolder? = null
+    private val deepLinkHolder: com.forerun.customer.core.notification.DeepLinkHolder
 ) : ViewModel() {
 
     private val _destination = MutableSharedFlow<SplashDestination>(replay = 1)
@@ -47,7 +47,7 @@ class SplashViewModel @Inject constructor(
                         is SessionState.Authenticated -> {
                             when (state.user.status) {
                                 UserStatus.VERIFIED -> {
-                                    val pendingOrderId = deepLinkHolder?.consumePendingOrderId()
+                                    val pendingOrderId = deepLinkHolder.consumePendingOrderId()
                                     if (!pendingOrderId.isNullOrBlank()) {
                                         _destination.emit(SplashDestination.OrderDetail(pendingOrderId))
                                     } else {

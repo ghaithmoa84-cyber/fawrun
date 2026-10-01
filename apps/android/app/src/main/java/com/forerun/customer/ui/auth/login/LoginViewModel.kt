@@ -35,7 +35,7 @@ sealed interface LoginNavigationEvent {
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val socketManager: com.forerun.customer.core.websocket.SocketManager? = null
+    private val socketManager: com.forerun.customer.core.websocket.SocketManager
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(LoginUiState())
@@ -93,7 +93,7 @@ class LoginViewModel @Inject constructor(
                 is ApiResponse.Success -> {
                     _uiState.update { it.copy(isLoading = false) }
                     try {
-                        socketManager?.connect()
+                        socketManager.connect()
                     } catch (_: Exception) {}
                     _navigationEvent.emit(LoginNavigationEvent.Success(response.data))
                 }

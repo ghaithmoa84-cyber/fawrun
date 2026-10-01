@@ -26,7 +26,8 @@ class SplashViewModelTest {
             sessionStateResult = SessionState.NeedsOnboarding
         }
         val useCase = CheckSessionUseCase(fakeRepo)
-        val viewModel = SplashViewModel(useCase)
+        val defaultDeepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder()
+        val viewModel = SplashViewModel(useCase, defaultDeepLinkHolder)
 
         viewModel.destination.test {
             advanceTimeBy(600)
@@ -41,7 +42,8 @@ class SplashViewModelTest {
             sessionStateResult = SessionState.Unauthenticated
         }
         val useCase = CheckSessionUseCase(fakeRepo)
-        val viewModel = SplashViewModel(useCase)
+        val defaultDeepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder()
+        val viewModel = SplashViewModel(useCase, defaultDeepLinkHolder)
 
         viewModel.destination.test {
             advanceTimeBy(600)
@@ -58,7 +60,8 @@ class SplashViewModelTest {
             )
         }
         val useCase = CheckSessionUseCase(fakeRepo)
-        val viewModel = SplashViewModel(useCase)
+        val defaultDeepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder()
+        val viewModel = SplashViewModel(useCase, defaultDeepLinkHolder)
 
         viewModel.destination.test {
             advanceTimeBy(600)
@@ -75,7 +78,8 @@ class SplashViewModelTest {
             )
         }
         val useCase = CheckSessionUseCase(fakeRepo)
-        val viewModel = SplashViewModel(useCase)
+        val defaultDeepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder()
+        val viewModel = SplashViewModel(useCase, defaultDeepLinkHolder)
 
         viewModel.destination.test {
             advanceTimeBy(600)
@@ -92,7 +96,8 @@ class SplashViewModelTest {
             )
         }
         val useCase = CheckSessionUseCase(fakeRepo)
-        val viewModel = SplashViewModel(useCase)
+        val defaultDeepLinkHolder = com.forerun.customer.core.notification.DeepLinkHolder()
+        val viewModel = SplashViewModel(useCase, defaultDeepLinkHolder)
 
         viewModel.destination.test {
             advanceTimeBy(600)

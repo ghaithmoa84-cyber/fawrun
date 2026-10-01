@@ -41,6 +41,14 @@ object NetworkModule {
         }
     }
 
+    /**
+     * Main OkHttpClient instance.
+     *
+     * Architecture note (Cycle 1 resolution):
+     * Token refresh is wired via [okhttp3.Authenticator] ([RefreshInterceptor]) instead of an application
+     * interceptor. OkHttp invokes Authenticator only upon receiving an HTTP 401 response, completely breaking
+     * the circular dependency where network interceptors previously depended eagerly on API clients during graph setup.
+     */
     @Provides
     @Singleton
     fun provideOkHttpClient(
@@ -55,11 +63,15 @@ object NetworkModule {
             .writeTimeout(30, TimeUnit.SECONDS)
             .addInterceptor(headerInterceptor)
             .addInterceptor(authInterceptor)
-            .addInterceptor(refreshInterceptor)
+            .authenticator(refreshInterceptor)
             .addInterceptor(loggingInterceptor)
             .build()
     }
 
+    /**
+     * Central Retrofit instance providing base URL, converter factory, and call adapter factory.
+     * Consumed by [ApiModule] to create API service interfaces.
+     */
     @Provides
     @Singleton
     fun provideRetrofit(
@@ -71,6 +83,20 @@ object NetworkModule {
             .client(okHttpClient)
             .addConverterFactory(MoshiConverterFactory.create(moshi).withNullSerialization())
             .addCallAdapterFactory(ApiCallAdapterFactory.create(moshi))
+            .build()
+    }
+
+    /**
+     * Dedicated OkHttpClient instance for external Nominatim OSM reverse geocoding.
+     * Configured with short timeouts (5s) without auth or token refresh interceptors.
+     */
+    @Provides
+    @Singleton
+    @GeocodingHttpClient
+    fun provideGeocodingOkHttpClient(): OkHttpClient {
+        return OkHttpClient.Builder()
+            .connectTimeout(5, TimeUnit.SECONDS)
+            .readTimeout(5, TimeUnit.SECONDS)
             .build()
     }
 }

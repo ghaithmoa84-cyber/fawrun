@@ -7,6 +7,7 @@ import com.forerun.customer.data.remote.dto.address.UpdateCustomerAddressRequest
 import com.forerun.customer.data.remote.dto.customer.ChangePasswordRequest
 import com.forerun.customer.data.remote.dto.customer.CustomerProfileDto
 import com.forerun.customer.data.remote.dto.customer.UpdateProfileRequest
+import com.forerun.customer.domain.model.UserStatus
 import com.squareup.moshi.Moshi
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -53,8 +54,6 @@ class AccountRepositoryImplTest {
 
         override suspend fun getAddress(): ApiResponse<CustomerAddressDto> = throw NotImplementedError()
         override suspend fun updateAddress(body: UpdateCustomerAddressRequest): ApiResponse<CustomerAddressDto> = throw NotImplementedError()
-        override suspend fun getAvailableRunners(): ApiResponse<List<com.forerun.customer.data.remote.dto.order.AvailableRunnerDto>> =
-            ApiResponse.Success(emptyList())
     }
 
     @Test
@@ -69,7 +68,7 @@ class AccountRepositoryImplTest {
         assertEquals("محمد علي", profile.name)
         assertEquals("0912345678", profile.whatsapp)
         assertEquals("0987654321", profile.altPhone)
-        assertEquals("VERIFIED", profile.status)
+        assertEquals(UserStatus.VERIFIED, profile.status)
         assertEquals(7, profile.completedOrders)
         assertEquals(35000, profile.totalFeesPaid)
         assertEquals(Instant.parse("2026-09-01T10:00:00Z"), profile.createdAt)

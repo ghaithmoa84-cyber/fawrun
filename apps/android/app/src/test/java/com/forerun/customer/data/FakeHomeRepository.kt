@@ -2,6 +2,7 @@ package com.forerun.customer.data
 
 import com.forerun.customer.domain.model.ActiveOrder
 import com.forerun.customer.domain.model.CustomerProfile
+import com.forerun.customer.domain.model.UserStatus
 import com.forerun.customer.domain.model.HomeData
 import com.forerun.customer.domain.repository.HomeRepository
 
@@ -14,7 +15,7 @@ class FakeHomeRepository : HomeRepository {
                 name = "عميل تجريبي",
                 whatsapp = "0988888888",
                 altPhone = null,
-                status = "VERIFIED",
+                status = UserStatus.VERIFIED,
                 completedOrders = 5,
                 totalFeesPaid = 25000
             ),

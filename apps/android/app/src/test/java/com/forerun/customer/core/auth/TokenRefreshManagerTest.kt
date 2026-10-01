@@ -1,4 +1,4 @@
-package com.forerun.customer.data.remote.token
+package com.forerun.customer.core.auth
 
 import app.cash.turbine.test
 import com.forerun.customer.core.network.ApiResponse

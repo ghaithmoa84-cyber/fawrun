@@ -1,6 +1,7 @@
 package com.forerun.customer.data.remote.api
 
 import com.forerun.customer.core.network.ApiResponse
+import com.forerun.customer.data.remote.dto.order.AvailableRunnerDto
 import com.forerun.customer.data.remote.dto.order.CancelOrderResponseDto
 import com.forerun.customer.data.remote.dto.order.CreateOrderRequestDto
 import com.forerun.customer.data.remote.dto.order.CreateOrderResponseDto
@@ -50,4 +51,7 @@ interface OrderApi {
         @Path("id") id: String,
         @Body request: CreateRatingRequestDto
     ): ApiResponse<RatingResponseDto>
+
+    @GET("customer/runners")
+    suspend fun getAvailableRunners(): ApiResponse<List<AvailableRunnerDto>>
 }

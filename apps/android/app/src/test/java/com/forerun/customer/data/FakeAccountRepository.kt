@@ -1,6 +1,7 @@
 package com.forerun.customer.data
 
 import com.forerun.customer.domain.model.CustomerProfile
+import com.forerun.customer.domain.model.UserStatus
 import com.forerun.customer.domain.repository.AccountRepository
 
 class FakeAccountRepository : AccountRepository {
@@ -9,7 +10,7 @@ class FakeAccountRepository : AccountRepository {
         name = "محمد علي",
         whatsapp = "0912345678",
         altPhone = "0987654321",
-        status = "VERIFIED",
+        status = UserStatus.VERIFIED,
         completedOrders = 7,
         totalFeesPaid = 35000
     )

@@ -4,11 +4,12 @@ import com.forerun.customer.core.network.ApiResponse
 import com.forerun.customer.core.storage.OnboardingPrefs
 import com.forerun.customer.core.storage.TokenStorage
 import com.forerun.customer.data.remote.api.AuthApi
+import com.forerun.customer.data.remote.api.CustomerApi
 import com.forerun.customer.data.remote.dto.auth.AddressDto
 import com.forerun.customer.data.remote.dto.auth.LoginRequest
 import com.forerun.customer.data.remote.dto.auth.LogoutRequest
 import com.forerun.customer.data.remote.dto.auth.RegisterRequest
-import com.forerun.customer.data.remote.token.TokenRefreshManager
+import com.forerun.customer.core.auth.TokenRefreshManager
 import com.forerun.customer.domain.model.SessionState
 import com.forerun.customer.domain.model.User
 import com.forerun.customer.domain.model.UserStatus
@@ -17,15 +18,24 @@ import kotlinx.coroutines.flow.first
 import javax.inject.Inject
 import javax.inject.Singleton
 
+/**
+ * Repository handling customer authentication, registration, session management, and credential persistence.
+ *
+ * Architecture note (Cycle 2 resolution):
+ * Previously, [customerApi] was injected as a nullable Provider (`Provider<CustomerApi>? = null`)
+ * to break a circular dependency between [AuthRepositoryImpl], [CustomerApi], and network interceptors.
+ * Following the migration of token refresh to [okhttp3.Authenticator] in Sprint 8D, [CustomerApi]
+ * is now safely and directly injected as a mandatory non-nullable dependency without any DI cycle.
+ */
 @Singleton
 class AuthRepositoryImpl @Inject constructor(
     private val authApi: AuthApi,
+    private val customerApi: CustomerApi,
     private val tokenStorage: TokenStorage,
     private val onboardingPrefs: OnboardingPrefs,
     private val tokenRefreshManager: TokenRefreshManager,
     private val fcmTokenManager: com.forerun.customer.core.notification.FcmTokenManager? = null,
-    private val socketManager: com.forerun.customer.core.websocket.SocketManager? = null,
-    private val customerApiProvider: javax.inject.Provider<com.forerun.customer.data.remote.api.CustomerApi>? = null
+    private val socketManager: com.forerun.customer.core.websocket.SocketManager? = null
 ) : AuthRepository {
 
     override suspend fun login(whatsapp: String, password: String): ApiResponse<User> {
@@ -152,25 +162,22 @@ class AuthRepositoryImpl @Inject constructor(
         if (hasValidToken) {
             // Refresh user status from server if possible (handles pending verification approval)
             try {
-                val customerApi = customerApiProvider?.get()
-                if (customerApi != null) {
-                    when (val profileRes = customerApi.me()) {
-                        is ApiResponse.Success -> {
-                            tokenStorage.setUserStatus(profileRes.data.status)
-                            tokenStorage.setUserName(profileRes.data.name)
-                        }
-                        is ApiResponse.Error -> {
-                            if (profileRes.statusCode == 401) {
-                                val refreshed = tokenRefreshManager.refreshTokenIfNeeded(force = true)
-                                if (refreshed) {
-                                    val retryRes = customerApi.me()
-                                    if (retryRes is ApiResponse.Success) {
-                                        tokenStorage.setUserStatus(retryRes.data.status)
-                                        tokenStorage.setUserName(retryRes.data.name)
-                                    }
-                                } else {
-                                    return SessionState.Unauthenticated
+                when (val profileRes = customerApi.me()) {
+                    is ApiResponse.Success -> {
+                        tokenStorage.setUserStatus(profileRes.data.status)
+                        tokenStorage.setUserName(profileRes.data.name)
+                    }
+                    is ApiResponse.Error -> {
+                        if (profileRes.statusCode == 401) {
+                            val refreshed = tokenRefreshManager.refreshTokenIfNeeded(force = true)
+                            if (refreshed) {
+                                val retryRes = customerApi.me()
+                                if (retryRes is ApiResponse.Success) {
+                                    tokenStorage.setUserStatus(retryRes.data.status)
+                                    tokenStorage.setUserName(retryRes.data.name)
                                 }
+                            } else {
+                                return SessionState.Unauthenticated
                             }
                         }
                     }

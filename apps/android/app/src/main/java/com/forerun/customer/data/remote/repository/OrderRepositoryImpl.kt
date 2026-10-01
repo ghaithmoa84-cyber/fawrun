@@ -1,7 +1,6 @@
 package com.forerun.customer.data.remote.repository
 
 import com.forerun.customer.core.network.ApiResponse
-import com.forerun.customer.data.remote.api.CustomerApi
 import com.forerun.customer.data.remote.api.OrderApi
 import com.forerun.customer.data.remote.dto.order.CreateOrderItemDto
 import com.forerun.customer.data.remote.dto.order.CreateOrderRequestDto
@@ -10,14 +9,15 @@ import com.forerun.customer.domain.model.CreatedOrder
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.model.OrderItem
 import com.forerun.customer.domain.model.RunnerInfo
+import com.forerun.customer.domain.model.CustomerOrderDetail
+import com.forerun.customer.data.remote.mapper.OrderDetailMapper.toDomain
 import com.forerun.customer.domain.repository.OrderRepository
 import javax.inject.Inject
 import javax.inject.Singleton
 
 @Singleton
 class OrderRepositoryImpl @Inject constructor(
-    private val orderApi: OrderApi,
-    private val customerApi: CustomerApi
+    private val orderApi: OrderApi
 ) : OrderRepository {
 
     override suspend fun createOrder(
@@ -66,7 +66,7 @@ class OrderRepositoryImpl @Inject constructor(
     }
 
     override suspend fun getAvailableRunners(): Result<List<RunnerInfo>> {
-        return when (val response = customerApi.getAvailableRunners()) {
+        return when (val response = orderApi.getAvailableRunners()) {
             is ApiResponse.Success -> {
                 val runners = response.data.map { dto ->
                     RunnerInfo(
@@ -121,94 +121,10 @@ class OrderRepositoryImpl @Inject constructor(
         }
     }
 
-    override suspend fun getOrderDetail(orderId: String): Result<com.forerun.customer.domain.model.CustomerOrderDetail> {
+    override suspend fun getOrderDetail(orderId: String): Result<CustomerOrderDetail> {
         return when (val response = orderApi.getOrderDetail(orderId)) {
-            is ApiResponse.Success -> {
-                val dto = response.data
-                val rawStores = if (dto.stores.isNotEmpty()) dto.stores else dto.orderStores ?: emptyList()
-                val mappedStores = rawStores.map { s ->
-                    com.forerun.customer.domain.model.OrderStoreDetail(
-                        id = s.id,
-                        storeName = s.storeName,
-                        status = s.status,
-                        isExtra = s.isExtra,
-                        items = s.items.map { item ->
-                            com.forerun.customer.domain.model.StoreItemDetail(
-                                id = item.id,
-                                itemName = item.itemName,
-                                quantity = item.quantity
-                            )
-                        },
-                        receipts = s.receipts.map { r ->
-                            com.forerun.customer.domain.model.StoreReceiptDetail(
-                                id = r.id,
-                                imageUrl = r.imageUrl
-                            )
-                        }
-                    )
-                }
-
-                val detail = com.forerun.customer.domain.model.CustomerOrderDetail(
-                    id = dto.id,
-                    orderNumber = dto.orderNumber,
-                    status = dto.status,
-                    isPeripheral = dto.isPeripheral,
-                    baseFee = dto.baseFee,
-                    peripheralFee = dto.peripheralFee,
-                    extraStoresFee = dto.extraStoresFee,
-                    totalFee = dto.totalFee,
-                    deliveryLat = dto.deliveryLat,
-                    deliveryLng = dto.deliveryLng,
-                    deliveryDesc = dto.deliveryDesc,
-                    notes = dto.notes,
-                    preferredRunnerId = dto.preferredRunnerId,
-                    waitForPreferred = dto.waitForPreferred,
-                    createdAt = dto.createdAt,
-                    updatedAt = dto.updatedAt,
-                    deliveredAt = dto.deliveredAt,
-                    cancelledAt = dto.cancelledAt,
-                    cancelReason = dto.cancelReason,
-                    items = dto.items.map { item ->
-                        com.forerun.customer.domain.model.DetailOrderItem(
-                            id = item.id,
-                            itemName = item.itemName,
-                            quantity = item.quantity,
-                            customStoreName = item.customStoreName,
-                            anyStore = item.anyStore
-                        )
-                    },
-                    stores = mappedStores,
-                    rating = dto.rating?.let { r ->
-                        com.forerun.customer.domain.model.OrderRatingInfo(
-                            stars = r.stars,
-                            note = r.note
-                        )
-                    },
-                    timeline = com.forerun.customer.domain.model.OrderTimeline(
-                        createdAt = dto.timeline?.createdAt ?: dto.createdAt,
-                        reviewedAt = dto.timeline?.reviewedAt,
-                        assignedAt = dto.timeline?.assignedAt,
-                        startedAt = dto.timeline?.startedAt,
-                        deliveredAt = dto.timeline?.deliveredAt ?: dto.deliveredAt,
-                        cancelledAt = dto.timeline?.cancelledAt ?: dto.cancelledAt
-                    ),
-                    runner = dto.runner?.let { r ->
-                        com.forerun.customer.domain.model.OrderRunnerDetail(
-                            id = r.id,
-                            name = r.name,
-                            avgRating = r.avgRating,
-                            totalRatings = r.totalRatings,
-                            status = r.status,
-                            whatsapp = r.whatsapp,
-                            phone = r.phone
-                        )
-                    }
-                )
-                Result.success(detail)
-            }
-            is ApiResponse.Error -> {
-                Result.failure(Exception(response.message))
-            }
+            is ApiResponse.Success -> Result.success(response.data.toDomain())
+            is ApiResponse.Error -> Result.failure(Exception(response.message))
         }
     }
 

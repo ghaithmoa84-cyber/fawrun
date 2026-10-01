@@ -1,6 +1,7 @@
 package com.forerun.customer.data.remote.geocoding
 
 import android.util.Log
+import com.forerun.customer.core.di.GeocodingHttpClient
 import com.forerun.customer.domain.service.GeocodingService
 import com.squareup.moshi.Json
 import com.squareup.moshi.JsonClass
@@ -9,7 +10,6 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import okhttp3.OkHttpClient
 import okhttp3.Request
-import java.util.concurrent.TimeUnit
 import javax.inject.Inject
 import javax.inject.Singleton
 
@@ -33,13 +33,9 @@ data class NominatimAddress(
 @Singleton
 class NominatimGeocodingService @Inject constructor(
     private val moshi: Moshi,
-    private val cache: AddressReverseGeocodeCache = AddressReverseGeocodeCache()
+    private val cache: AddressReverseGeocodeCache,
+    @GeocodingHttpClient private val httpClient: OkHttpClient
 ) : GeocodingService {
-
-    private val httpClient = OkHttpClient.Builder()
-        .connectTimeout(5, TimeUnit.SECONDS)
-        .readTimeout(5, TimeUnit.SECONDS)
-        .build()
 
     private val adapter by lazy {
         moshi.adapter(NominatimResponse::class.java)

@@ -1,4 +1,4 @@
-package com.forerun.customer.data.remote.token
+package com.forerun.customer.core.auth
 
 import com.forerun.customer.core.network.ApiResponse
 import com.forerun.customer.core.storage.TokenStorage
@@ -74,4 +74,3 @@ class TokenRefreshManager @Inject constructor(
         _sessionExpiredEvent.tryEmit(Unit)
     }
 }
-

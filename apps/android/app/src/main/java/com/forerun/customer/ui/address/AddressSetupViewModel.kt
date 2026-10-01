@@ -6,7 +6,7 @@ import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.repository.AddressResult
 import com.forerun.customer.domain.usecase.GetCustomerAddressUseCase
 import com.forerun.customer.domain.usecase.UpdateCustomerAddressUseCase
-import com.forerun.customer.domain.service.GeocodingService
+import com.forerun.customer.domain.usecase.ReverseGeocodeUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.delay
@@ -51,7 +51,7 @@ sealed interface AddressSetupEvent {
 class AddressSetupViewModel @Inject constructor(
     private val getCustomerAddressUseCase: GetCustomerAddressUseCase,
     private val updateCustomerAddressUseCase: UpdateCustomerAddressUseCase,
-    private val geocodingService: GeocodingService
+    private val reverseGeocodeUseCase: ReverseGeocodeUseCase
 ) : ViewModel() {
 
     private val _uiState = MutableStateFlow(AddressSetupUiState())
@@ -82,7 +82,7 @@ class AddressSetupViewModel @Inject constructor(
                 reverseGeocodeJob = viewModelScope.launch {
                     try {
                         delay(500)
-                        val placeName = geocodingService.reverseGeocode(intent.lat, intent.lng)
+                        val placeName = reverseGeocodeUseCase(intent.lat, intent.lng)
                         if (!placeName.isNullOrBlank()) {
                             _uiState.update {
                                 it.copy(
