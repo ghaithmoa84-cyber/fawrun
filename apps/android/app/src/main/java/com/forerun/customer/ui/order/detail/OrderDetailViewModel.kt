@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.forerun.customer.domain.model.WebSocketEvent
+import com.forerun.customer.domain.model.CancelOrderError
 import com.forerun.customer.domain.model.CustomerOrderDetail
 import com.forerun.customer.domain.usecase.order.CancelOrderUseCase
 import com.forerun.customer.domain.usecase.order.GetOrderDetailUseCase
@@ -23,7 +24,7 @@ data class OrderDetailUiState(
     val order: CustomerOrderDetail? = null,
     val errorMessage: String? = null,
     val cancelSuccess: Boolean = false,
-    val cancelError: String? = null,
+    val cancelError: CancelOrderError? = null,
     val showCancelDialog: Boolean = false,
     val feeUpdatedNotice: Boolean = false
 ) {
@@ -32,7 +33,6 @@ data class OrderDetailUiState(
             val status = order?.status ?: return false
             return status in setOf(
                 "PENDING_REVIEW",
-                "UNDER_REVIEW",
                 "AWAITING_RUNNER",
                 "AWAITING_PREFERRED_RUNNER",
                 "ASSIGNED"
@@ -166,7 +166,7 @@ class OrderDetailViewModel @Inject constructor(
                 _uiState.update {
                     it.copy(
                         isCancelling = false,
-                        cancelError = err.message,
+                        cancelError = CancelOrderError.from(err),
                         showCancelDialog = false
                     )
                 }

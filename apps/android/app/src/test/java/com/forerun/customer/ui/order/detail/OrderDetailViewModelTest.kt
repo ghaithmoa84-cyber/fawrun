@@ -6,6 +6,8 @@ import com.forerun.customer.core.websocket.SocketManager
 import com.forerun.customer.data.gateway.SocketOrderEventsGateway
 import com.forerun.customer.domain.model.WebSocketEvent
 import com.forerun.customer.data.FakeOrderRepository
+import com.forerun.customer.domain.model.ApiException
+import com.forerun.customer.domain.model.CancelOrderError
 import com.forerun.customer.domain.model.CustomerOrderDetail
 import com.forerun.customer.domain.model.DetailOrderItem
 import com.forerun.customer.domain.model.OrderRunnerDetail
@@ -161,6 +163,39 @@ class OrderDetailViewModelTest {
     }
 
     @Test
+    fun canCancel_true_while_awaiting_preferred_runner() = runTest(testDispatcher) {
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "AWAITING_PREFERRED_RUNNER")
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canCancel)
+    }
+
+    @Test
+    fun canCancel_true_while_awaiting_runner() = runTest(testDispatcher) {
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "AWAITING_RUNNER")
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.canCancel)
+    }
+
+    @Test
+    fun canCancel_false_while_under_review() = runTest(testDispatcher) {
+        fakeRepository.getOrderDetailResult = Result.success(
+            sampleOrder.copy(status = "UNDER_REVIEW")
+        )
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        assertFalse(viewModel.uiState.value.canCancel)
+    }
+
+    @Test
     fun handles_websocket_fee_updated_event() = runTest(testDispatcher) {
         val viewModel = createViewModel()
         advanceUntilIdle()
@@ -287,7 +322,9 @@ class OrderDetailViewModelTest {
         val viewModel = createViewModel()
         advanceUntilIdle()
 
-        fakeRepository.cancelOrderResult = Result.failure(Exception("لا يمكن إلغاء الطلب في هذه المرحلة"))
+        fakeRepository.cancelOrderResult = Result.failure(
+            ApiException(statusCode = 422, errorCode = "BUSINESS_RULE_VIOLATION")
+        )
 
         viewModel.onIntent(OrderDetailIntent.ConfirmCancel)
         advanceUntilIdle()
@@ -295,7 +332,37 @@ class OrderDetailViewModelTest {
         val state = viewModel.uiState.value
         assertFalse(state.cancelSuccess)
         assertFalse(state.isCancelling)
-        assertEquals("لا يمكن إلغاء الطلب في هذه المرحلة", state.cancelError)
+        assertEquals(CancelOrderError.NotAllowed, state.cancelError)
+    }
+
+    @Test
+    fun handles_cancel_order_conflict_error() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        fakeRepository.cancelOrderResult = Result.failure(
+            ApiException(statusCode = 409, errorCode = "CONFLICT")
+        )
+
+        viewModel.onIntent(OrderDetailIntent.ConfirmCancel)
+        advanceUntilIdle()
+
+        assertEquals(CancelOrderError.StateChanged, viewModel.uiState.value.cancelError)
+    }
+
+    @Test
+    fun handles_cancel_order_network_error() = runTest(testDispatcher) {
+        val viewModel = createViewModel()
+        advanceUntilIdle()
+
+        fakeRepository.cancelOrderResult = Result.failure(
+            ApiException(statusCode = -1, errorCode = "NETWORK_ERROR")
+        )
+
+        viewModel.onIntent(OrderDetailIntent.ConfirmCancel)
+        advanceUntilIdle()
+
+        assertEquals(CancelOrderError.Network, viewModel.uiState.value.cancelError)
     }
 
     @Test

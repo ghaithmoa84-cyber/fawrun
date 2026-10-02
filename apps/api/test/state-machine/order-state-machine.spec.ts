@@ -17,9 +17,11 @@ describe('OrderStateMachine', () => {
       ['UNDER_REVIEW', 'CANCELLED', 'ADMIN'],
       ['AWAITING_RUNNER', 'AWAITING_PREFERRED_RUNNER', 'SYSTEM'],
       ['AWAITING_RUNNER', 'ASSIGNED', 'RUNNER'],
+      ['AWAITING_RUNNER', 'CANCELLED', 'CUSTOMER'],
       ['AWAITING_PREFERRED_RUNNER', 'ASSIGNED', 'RUNNER'],
       ['AWAITING_PREFERRED_RUNNER', 'ASSIGNED', 'ADMIN'],
       ['AWAITING_PREFERRED_RUNNER', 'AWAITING_RUNNER', 'SYSTEM'],
+      ['AWAITING_PREFERRED_RUNNER', 'CANCELLED', 'CUSTOMER'],
       ['ASSIGNED', 'IN_PROGRESS', 'RUNNER'],
       ['ASSIGNED', 'CANCELLED', 'CUSTOMER'],
       ['IN_PROGRESS', 'OUT_FOR_DELIVERY', 'RUNNER'],
@@ -47,12 +49,11 @@ describe('OrderStateMachine', () => {
   // ── Negative: every forbidden transition must be rejected ────────────
   describe('canTransition — forbidden transitions', () => {
     const forbidden: Array<[string, string, string, string]> = [
-      // Customer cannot cancel from non-PENDING_REVIEW / non-ASSIGNED
+      // Customer cannot cancel once shopping started, and cannot bypass admin review
       ['IN_PROGRESS', 'CANCELLED', 'CUSTOMER', 'customer cancellation from IN_PROGRESS'],
       ['OUT_FOR_DELIVERY', 'CANCELLED', 'CUSTOMER', 'customer cancellation from OUT_FOR_DELIVERY'],
       ['DELIVERED', 'CANCELLED', 'CUSTOMER', 'customer cancellation from DELIVERED'],
-      ['AWAITING_RUNNER', 'CANCELLED', 'CUSTOMER', 'customer cancellation from AWAITING_RUNNER'],
-      ['UNDER_REVIEW', 'CANCELLED', 'CUSTOMER', 'customer cancellation from UNDER_REVIEW'],
+      ['UNDER_REVIEW', 'CANCELLED', 'CUSTOMER', 'only ADMIN can cancel during review'],
       // DELIVERED is terminal — no outgoing transitions
       ['DELIVERED', 'CANCELLED', 'ADMIN', 'DELIVERED is terminal'],
       ['DELIVERED', 'IN_PROGRESS', 'RUNNER', 'DELIVERED is terminal'],
@@ -75,6 +76,10 @@ describe('OrderStateMachine', () => {
       ['ASSIGNED', 'DELIVERED', 'RUNNER', 'cannot skip to DELIVERED'],
       // Unknown actor
       ['PENDING_REVIEW', 'CANCELLED', 'UNKNOWN', 'unknown actor'],
+      // Only CUSTOMER may cancel while the order waits for a runner
+      ['AWAITING_RUNNER', 'CANCELLED', 'SYSTEM', 'SYSTEM cannot cancel on customer behalf'],
+      ['AWAITING_PREFERRED_RUNNER', 'CANCELLED', 'SYSTEM', 'SYSTEM cannot cancel on customer behalf'],
+      ['AWAITING_PREFERRED_RUNNER', 'CANCELLED', 'RUNNER', 'only CUSTOMER or ADMIN can cancel'],
     ];
 
     it.each(forbidden)(
@@ -139,8 +144,8 @@ describe('OrderStateMachine', () => {
 
   // ── Transition count ─────────────────────────────────────────────────
   describe('transition table integrity', () => {
-    it('defines exactly 26 allowed order transitions', () => {
-      expect(ORDER_TRANSITIONS).toHaveLength(26);
+    it('defines exactly 28 allowed order transitions', () => {
+      expect(ORDER_TRANSITIONS).toHaveLength(28);
     });
 
     it('covers all 10 OrderStatus enum values', () => {

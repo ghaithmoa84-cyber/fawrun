@@ -554,7 +554,7 @@ export class CustomerOrdersService {
           'order:assignment_cancelled',
           {
             orderId: result.order.id,
-            reason: 'Order cancelled by customer',
+            reason: 'تم إلغاء الطلب من قبل الزبون',
           },
           'status_update',
         );
@@ -565,7 +565,7 @@ export class CustomerOrdersService {
         'order:cancelled',
         {
           orderId: result.order.id,
-          reason: 'Order cancelled by customer',
+          reason: 'تم إلغاء الطلب من قبل الزبون',
           cancelledBy: userId,
         },
         'status_update',
