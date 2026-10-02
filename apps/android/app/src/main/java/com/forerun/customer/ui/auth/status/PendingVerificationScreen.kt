@@ -53,11 +53,19 @@ import com.forerun.customer.ui.theme.WhatsAppGreen
 @Composable
 fun PendingVerificationScreen(
     onNavigateToLogin: () -> Unit,
+    onNavigateToHome: () -> Unit = {},
     modifier: Modifier = Modifier,
     viewModel: PendingVerificationViewModel = hiltViewModel()
 ) {
     val isLoggingOut by viewModel.isLoggingOut.collectAsStateWithLifecycle()
+    val navigateToHome by viewModel.navigateToHome.collectAsStateWithLifecycle()
     val context = LocalContext.current
+
+    LaunchedEffect(navigateToHome) {
+        if (navigateToHome) {
+            onNavigateToHome()
+        }
+    }
 
     LaunchedEffect(viewModel) {
         viewModel.navigateToLogin.collect {

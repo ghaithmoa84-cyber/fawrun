@@ -198,6 +198,11 @@ fun ForerunNavGraph(
                     navController.navigate(Routes.LOGIN) {
                         popUpTo(0) { inclusive = true }
                     }
+                },
+                onNavigateToHome = {
+                    navController.navigate(Routes.HOME) {
+                        popUpTo(Routes.PENDING_VERIFICATION) { inclusive = true }
+                    }
                 }
             )
         }
