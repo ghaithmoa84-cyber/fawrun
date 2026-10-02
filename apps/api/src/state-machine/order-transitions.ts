@@ -39,6 +39,9 @@ export const ORDER_TRANSITIONS: readonly OrderTransition[] = [
   // AWAITING_RUNNER → AWAITING_PREFERRED_RUNNER  (system routes to preferred)
   { from: 'AWAITING_RUNNER', to: 'AWAITING_PREFERRED_RUNNER', actor: 'SYSTEM', description: 'System routes order to preferred runner queue' },
 
+  // AWAITING_RUNNER → CANCELLED  (customer cancels before any runner takes it)
+  { from: 'AWAITING_RUNNER', to: 'CANCELLED', actor: 'CUSTOMER', description: 'Customer cancels order while awaiting runner assignment' },
+
   // AWAITING_RUNNER → ASSIGNED  (runner accepts from pool)
   { from: 'AWAITING_RUNNER', to: 'ASSIGNED', actor: 'RUNNER', description: 'Runner accepts order from pool' },
 
@@ -55,6 +58,9 @@ export const ORDER_TRANSITIONS: readonly OrderTransition[] = [
 
   // AWAITING_PREFERRED_RUNNER → AWAITING_RUNNER  (preferred runner declines, fallback)
   { from: 'AWAITING_PREFERRED_RUNNER', to: 'AWAITING_RUNNER', actor: 'SYSTEM', description: 'Preferred runner unavailable, order returns to general pool' },
+
+  // AWAITING_PREFERRED_RUNNER → CANCELLED  (customer cancels while waiting for preferred runner)
+  { from: 'AWAITING_PREFERRED_RUNNER', to: 'CANCELLED', actor: 'CUSTOMER', description: 'Customer cancels order while waiting for the preferred runner' },
 
   // ASSIGNED → IN_PROGRESS  (runner begins shopping)
   { from: 'ASSIGNED', to: 'IN_PROGRESS', actor: 'RUNNER', description: 'Runner starts shopping for order items' },

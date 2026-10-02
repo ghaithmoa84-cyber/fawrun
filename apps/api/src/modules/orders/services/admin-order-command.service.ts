@@ -753,7 +753,7 @@ export class AdminOrderCommandService {
           'order:assignment_cancelled',
           {
             orderId: result.order.id,
-            reason: cancelReason ?? 'Order cancelled by admin',
+            reason: cancelReason ?? 'تم إلغاء الطلب من قبل الإدارة',
           },
           'status_update',
         );
@@ -764,7 +764,7 @@ export class AdminOrderCommandService {
         'order:cancelled',
         {
           orderId: result.order.id,
-          reason: cancelReason ?? 'Order cancelled by admin',
+          reason: cancelReason ?? 'تم إلغاء الطلب من قبل الإدارة',
           cancelledBy: adminId,
         },
         'status_update',

@@ -5,6 +5,7 @@ import com.forerun.customer.data.remote.api.OrderApi
 import com.forerun.customer.data.remote.dto.order.CreateOrderItemDto
 import com.forerun.customer.data.remote.dto.order.CreateOrderRequestDto
 import com.forerun.customer.data.remote.dto.order.DeliveryAddressDto
+import com.forerun.customer.domain.model.ApiException
 import com.forerun.customer.domain.model.CreatedOrder
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.model.OrderItem
@@ -131,7 +132,9 @@ class OrderRepositoryImpl @Inject constructor(
     override suspend fun cancelOrder(orderId: String): Result<Unit> {
         return when (val response = orderApi.cancelOrder(orderId)) {
             is ApiResponse.Success -> Result.success(Unit)
-            is ApiResponse.Error -> Result.failure(Exception(response.message))
+            is ApiResponse.Error -> Result.failure(
+                ApiException(statusCode = response.statusCode, errorCode = response.error)
+            )
         }
     }
 

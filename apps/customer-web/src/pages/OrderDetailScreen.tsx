@@ -28,6 +28,21 @@ const ORDER_4_STAGES: ProgressStage[] = [
   { id: 4, label: 'التوصيل والتسليم' },
 ];
 
+// Never surface the server `message` — it may contain internal identifiers
+// (state machine names, SQL fragments). Map the stable error code instead.
+const CANCEL_ERROR_BY_STATUS: Record<number, string> = {
+  404: 'الطلب غير موجود.',
+  409: 'تغيّرت حالة الطلب أثناء المحاولة. يرجى تحديث الطلب والمحاولة مجدداً.',
+  422: 'لا يمكن إلغاء الطلب في هذه المرحلة.',
+};
+
+const CANCEL_ERROR_FALLBACK = 'تعذر إلغاء الطلب. يرجى المحاولة لاحقاً.';
+
+function getCancelErrorMessage(err: unknown): string {
+  const status = (err as { response?: { status?: number } } | undefined)?.response?.status;
+  return (status !== undefined && CANCEL_ERROR_BY_STATUS[status]) || CANCEL_ERROR_FALLBACK;
+}
+
 function getStageIndex(status: OrderStatus): number {
   if (
     status === ORDER_STATUS.DRAFT ||
@@ -192,8 +207,8 @@ export function OrderDetailScreen() {
       await api.delete(`/customer/orders/${id}`);
       setShowCancelModal(false);
       void fetchOrderDetails();
-    } catch {
-      setCancelError('تعذر إلغاء الطلب. قد تكون حالة الطلب قد تغيرت.');
+    } catch (err: unknown) {
+      setCancelError(getCancelErrorMessage(err));
     } finally {
       setCancelling(false);
     }
@@ -227,9 +242,12 @@ export function OrderDetailScreen() {
 
   const currentStatus = order.status as OrderStatus;
 
-  // Strict State Machine Check: Cancel is strictly permitted ONLY during PENDING_REVIEW or ASSIGNED
+  // Strict State Machine Check: mirrors ORDER_TRANSITIONS for the CUSTOMER actor
   const canCancelOrder =
-    currentStatus === ORDER_STATUS.PENDING_REVIEW || currentStatus === ORDER_STATUS.ASSIGNED;
+    currentStatus === ORDER_STATUS.PENDING_REVIEW ||
+    currentStatus === ORDER_STATUS.AWAITING_RUNNER ||
+    currentStatus === ORDER_STATUS.AWAITING_PREFERRED_RUNNER ||
+    currentStatus === ORDER_STATUS.ASSIGNED;
 
   // Rating CTA: Only when DELIVERED and no rating exists
   const canRateOrder =

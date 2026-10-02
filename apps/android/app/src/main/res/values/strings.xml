@@ -261,6 +261,10 @@
     <string name="order_detail_cancel_dialog_dismiss">تراجع</string>
     <string name="order_detail_cancel_success">تم إلغاء الطلب بنجاح</string>
     <string name="order_detail_cancel_error">فشل إلغاء الطلب، يرجى المحاولة لاحقاً</string>
+    <string name="order_detail_cancel_error_not_allowed">لا يمكن إلغاء الطلب في هذه المرحلة</string>
+    <string name="order_detail_cancel_error_state_changed">تغيّرت حالة الطلب، يرجى تحديث الطلب ثم المحاولة مجدداً</string>
+    <string name="order_detail_cancel_error_not_found">الطلب غير موجود</string>
+    <string name="order_detail_cancel_error_network">تعذر الاتصال بالخادم، يرجى التحقق من اتصالك بالإنترنت</string>
     <string name="order_detail_rate_runner_btn">تقييم الكابتن</string>
     <string name="order_detail_edit_rating_btn">تعديل التقييم</string>
     <string name="order_detail_rated_label">تقييمك: %1$d نجوم</string>

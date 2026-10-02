@@ -66,6 +66,7 @@ import androidx.compose.ui.unit.sp
 import androidx.hilt.navigation.compose.hiltViewModel
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.forerun.customer.R
+import com.forerun.customer.domain.model.CancelOrderError
 import com.forerun.customer.domain.model.CustomerOrderDetail
 import com.forerun.customer.domain.model.OrderRunnerDetail
 import com.forerun.customer.domain.model.OrderStoreDetail
@@ -102,6 +103,15 @@ fun OrderDetailScreen(
     val cancelSuccessMsg = stringResource(R.string.order_detail_cancel_success)
     val feeUpdatedMsg = stringResource(R.string.order_detail_fee_updated_notice)
 
+    val cancelErrorMsg = when (uiState.cancelError) {
+        is CancelOrderError.NotAllowed -> stringResource(R.string.order_detail_cancel_error_not_allowed)
+        is CancelOrderError.StateChanged -> stringResource(R.string.order_detail_cancel_error_state_changed)
+        is CancelOrderError.NotFound -> stringResource(R.string.order_detail_cancel_error_not_found)
+        is CancelOrderError.Network -> stringResource(R.string.order_detail_cancel_error_network)
+        is CancelOrderError.Unknown -> stringResource(R.string.order_detail_cancel_error)
+        null -> null
+    }
+
     LaunchedEffect(uiState.errorMessage) {
         uiState.errorMessage?.let { msg ->
             snackbarHostState.showSnackbar(msg)
@@ -110,7 +120,7 @@ fun OrderDetailScreen(
     }
 
     LaunchedEffect(uiState.cancelError) {
-        uiState.cancelError?.let { msg ->
+        cancelErrorMsg?.let { msg ->
             snackbarHostState.showSnackbar(msg)
             viewModel.onIntent(OrderDetailIntent.ClearError)
         }
