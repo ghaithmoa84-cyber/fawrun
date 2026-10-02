@@ -17,12 +17,13 @@ import { ZodValidationPipe } from '../../common/pipes/zod-validation.pipe.js';
 import { CustomersService } from './customers.service.js';
 
 @Controller()
-@UseGuards(VerifiedUserGuard, RolesGuard)
+@UseGuards(RolesGuard)
 @Roles('CUSTOMER')
 export class CustomersController {
   constructor(private readonly customersService: CustomersService) {}
 
   @Get('customer/me')
+  @UseGuards(VerifiedUserGuard)
   async getProfile(
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
@@ -30,6 +31,7 @@ export class CustomersController {
   }
 
   @Put('customer/me')
+  @UseGuards(VerifiedUserGuard)
   async updateProfile(
     @Body(new ZodValidationPipe(UpdateCustomerSchema))
     dto: UpdateCustomerRequest,
@@ -39,6 +41,7 @@ export class CustomersController {
   }
 
   @Get('customer/me/address')
+  @UseGuards(VerifiedUserGuard)
   async getAddress(
     @CurrentUser() user: { userId: string; role: string; status: string },
   ) {
@@ -46,6 +49,7 @@ export class CustomersController {
   }
 
   @Put('customer/me/address')
+  @UseGuards(VerifiedUserGuard)
   async updateAddress(
     @Body(new ZodValidationPipe(UpdateCustomerAddressSchema))
     dto: UpdateCustomerAddressRequest,
@@ -55,6 +59,7 @@ export class CustomersController {
   }
 
   @Get('customer/runners')
+  @UseGuards(VerifiedUserGuard)
   async listAvailableRunners() {
     return this.customersService.listAvailableRunners();
   }
