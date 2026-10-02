@@ -57,13 +57,20 @@ export class FcmService implements OnModuleInit {
         }
       }
 
-      if (serviceAccount && serviceAccount.projectId && serviceAccount.privateKey) {
+      const rawAccount = serviceAccount as (ServiceAccount & {
+        project_id?: string;
+        private_key?: string;
+      }) | null;
+      const projectId = rawAccount?.projectId ?? rawAccount?.project_id;
+      const privateKey = rawAccount?.privateKey ?? rawAccount?.private_key;
+
+      if (rawAccount && projectId && privateKey) {
         initializeApp({
-          credential: cert(serviceAccount),
+          credential: cert(rawAccount),
         });
         this.enabled = true;
         this.logger.log(
-          `Firebase Admin initialized successfully for project: ${serviceAccount.projectId}`,
+          `Firebase Admin initialized successfully for project: ${projectId}`,
         );
       } else {
         this.logger.warn(
