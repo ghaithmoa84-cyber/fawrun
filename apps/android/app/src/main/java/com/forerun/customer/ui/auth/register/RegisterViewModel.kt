@@ -4,6 +4,10 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.forerun.customer.R
 import com.forerun.customer.core.network.ApiResponse
+import com.forerun.customer.domain.model.SessionState
+import com.forerun.customer.domain.model.User
+import com.forerun.customer.domain.repository.AuthRepository
+import com.forerun.customer.domain.usecase.LoginUseCase
 import com.forerun.customer.domain.usecase.RegisterUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableSharedFlow
@@ -40,8 +44,25 @@ sealed interface RegisterNavigationEvent {
 
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
-    private val registerUseCase: RegisterUseCase
+    private val registerUseCase: RegisterUseCase,
+    private val loginUseCase: LoginUseCase
 ) : ViewModel() {
+
+    // Overload for testing or callers that don't supply loginUseCase
+    constructor(
+        registerUseCase: RegisterUseCase
+    ) : this(
+        registerUseCase = registerUseCase,
+        loginUseCase = LoginUseCase(object : AuthRepository {
+            override suspend fun login(whatsapp: String, password: String): ApiResponse<User> =
+                ApiResponse.Error(400, "NOT_IMPLEMENTED", "Not implemented")
+            override suspend fun register(name: String, whatsapp: String, altPhone: String?, password: String, lat: Double, lng: Double, description: String): ApiResponse<String> =
+                ApiResponse.Error(400, "NOT_IMPLEMENTED", "Not implemented")
+            override suspend fun logout(): ApiResponse<Unit> = ApiResponse.Success(Unit)
+            override suspend fun checkSession(): SessionState = SessionState.Unauthenticated
+            override fun getCurrentUser(): User? = null
+        })
+    )
 
     private val _uiState = MutableStateFlow(RegisterUiState())
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
@@ -123,6 +144,12 @@ class RegisterViewModel @Inject constructor(
 
             when (response) {
                 is ApiResponse.Success -> {
+                    // Auto-login to obtain and save JWT tokens for WebSocket & FCM
+                    try {
+                        loginUseCase(whatsapp = state.whatsapp, password = state.password)
+                    } catch (_: Exception) {
+                        // Best-effort auto-login
+                    }
                     _uiState.update { it.copy(isLoading = false) }
                     _navigationEvent.emit(RegisterNavigationEvent.Success)
                 }

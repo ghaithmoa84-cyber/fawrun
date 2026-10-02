@@ -55,6 +55,8 @@
     <string name="pending_title">الحساب قيد المراجعة</string>
     <string name="pending_desc">شكراً لتسجيلك في فَوْراً! حسابك الآن قيد التحقق من قِبل إدارة فَوْراً. لتسريع عملية التفعيل يرجى التواصل معنا مباشرة عبر واتساب.</string>
     <string name="contact_whatsapp">تواصل عبر واتساب</string>
+    <string name="check_verification_status">التحقق من حالة الحساب الآن</string>
+    <string name="checking_verification_status">جاري التحقق من التفعيل…</string>
 
     <!-- Suspended -->
     <string name="suspended_title">الحساب معطّل</string>

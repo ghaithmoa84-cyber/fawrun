@@ -64,4 +64,33 @@ class PendingVerificationViewModelTest {
             cancelAndIgnoreRemainingEvents()
         }
     }
+
+    @Test
+    fun `when checkStatusManually called and user is verified navigateToHome becomes true`() = runTest {
+        val fakeAuthRepository = FakeAuthRepository().apply {
+            sessionStateResult = com.forerun.customer.domain.model.SessionState.Authenticated(
+                com.forerun.customer.domain.model.User("user_1", "Test", "CUSTOMER", com.forerun.customer.domain.model.UserStatus.VERIFIED)
+            )
+        }
+        val logoutUseCase = LogoutUseCase(fakeAuthRepository)
+        val checkSessionUseCase = com.forerun.customer.domain.usecase.CheckSessionUseCase(fakeAuthRepository)
+        val fakeGateway = FakeOrderEventsGateway()
+        val observeOrderEventsUseCase = ObserveOrderEventsUseCase(fakeGateway)
+        val fakeStorage = com.forerun.customer.core.storage.FakeTokenStorage(token = "valid_token")
+        val fakeSocket = object : com.forerun.customer.core.websocket.SocketManager(fakeStorage) {}
+
+        val viewModel = PendingVerificationViewModel(
+            logoutUseCase = logoutUseCase,
+            observeOrderEventsUseCase = observeOrderEventsUseCase,
+            checkSessionUseCase = checkSessionUseCase,
+            socketManager = fakeSocket
+        )
+
+        viewModel.navigateToHome.test {
+            assertFalse(awaitItem())
+            viewModel.checkStatusManually()
+            assertTrue(awaitItem())
+            cancelAndIgnoreRemainingEvents()
+        }
+    }
 }
