@@ -58,12 +58,20 @@ fun PendingVerificationScreen(
     viewModel: PendingVerificationViewModel = hiltViewModel()
 ) {
     val isLoggingOut by viewModel.isLoggingOut.collectAsStateWithLifecycle()
+    val isCheckingStatus by viewModel.isCheckingStatus.collectAsStateWithLifecycle()
     val navigateToHome by viewModel.navigateToHome.collectAsStateWithLifecycle()
     val context = LocalContext.current
 
     LaunchedEffect(navigateToHome) {
         if (navigateToHome) {
             onNavigateToHome()
+        }
+    }
+
+    androidx.compose.runtime.DisposableEffect(viewModel) {
+        viewModel.startPollingStatus()
+        onDispose {
+            viewModel.stopPollingStatus()
         }
     }
 
@@ -150,6 +158,36 @@ fun PendingVerificationScreen(
                 fontSize = 16.sp,
                 fontWeight = FontWeight.Bold
             )
+        }
+
+        Spacer(modifier = Modifier.height(Dimens.Space12))
+
+        // Check Status Manually Button
+        Button(
+            onClick = viewModel::checkStatusManually,
+            enabled = !isCheckingStatus && !isLoggingOut,
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(Dimens.ButtonHeight),
+            shape = RoundedCornerShape(Dimens.RadiusMedium),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = com.forerun.customer.ui.theme.ForerunGreen,
+                contentColor = ForerunTextOnPrimary
+            )
+        ) {
+            if (isCheckingStatus) {
+                CircularProgressIndicator(
+                    modifier = Modifier.size(20.dp),
+                    color = ForerunTextOnPrimary,
+                    strokeWidth = 2.dp
+                )
+            } else {
+                Text(
+                    text = stringResource(R.string.check_verification_status),
+                    fontSize = 15.sp,
+                    fontWeight = FontWeight.Bold
+                )
+            }
         }
 
         Spacer(modifier = Modifier.height(Dimens.Space12))
