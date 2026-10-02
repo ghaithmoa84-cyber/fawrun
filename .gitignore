@@ -35,4 +35,5 @@ test-output.txt
 .idea/
 .gradle/
 google-services.json
+.kilo/worktrees/
 

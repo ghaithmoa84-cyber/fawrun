@@ -1,4 +1,15 @@
 {
     "prisma.pinToPrisma6": true,
-    "java.configuration.updateBuildConfiguration": "interactive"
+    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.import.exclusions": [
+        "**/node_modules/**",
+        "**/.metadata/**",
+        "**/archetype/**",
+        "**/META-INF/maven/**",
+        "/**/test/**",
+        "**/.kilo/**"
+    ],
+    "files.watcherExclude": {
+        "**/.kilo/**": true
+    }
 }
