@@ -60,7 +60,7 @@ export class OrdersGateway
         select: { status: true, isDeleted: true, role: true },
       });
 
-      if (!user || user.isDeleted || user.status !== 'VERIFIED') {
+      if (!user || user.isDeleted) {
         client.disconnect(true);
         return;
       }
