@@ -1,15 +1,20 @@
 {
     "prisma.pinToPrisma6": true,
-    "java.configuration.updateBuildConfiguration": "interactive",
+    "java.configuration.updateBuildConfiguration": "disabled",
+    "java.import.gradle.enabled": false,
     "java.import.exclusions": [
         "**/node_modules/**",
         "**/.metadata/**",
         "**/archetype/**",
         "**/META-INF/maven/**",
         "/**/test/**",
-        "**/.kilo/**"
+        "**/.kilo/**",
+        "**/apps/android/**"
     ],
     "files.watcherExclude": {
-        "**/.kilo/**": true
+        "**/.kilo/**": true,
+        "**/apps/android/.gradle/**": true,
+        "**/apps/android/build/**": true,
+        "**/apps/android/app/build/**": true
     }
 }
