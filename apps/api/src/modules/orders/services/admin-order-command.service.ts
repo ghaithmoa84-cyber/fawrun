@@ -1,10 +1,12 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   ConflictException,
   UnprocessableEntityException,
 } from '@nestjs/common';
 import type { OrderStatus } from '@forerun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
 import {
   ApproveOrderRequest,
   RejectOrderRequest,
@@ -23,6 +25,8 @@ import { RunnerStateMachine } from '../../../state-machine/runner-state-machine.
 
 @Injectable()
 export class AdminOrderCommandService {
+  private readonly logger = new Logger(AdminOrderCommandService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
@@ -208,7 +212,7 @@ export class AdminOrderCommandService {
           oldStatus: order.status,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -251,8 +255,11 @@ export class AdminOrderCommandService {
           'status_update',
         );
       }
-    } catch {
-      void 0;
+    } catch (err) {
+      this.logger.warn('[approveOrder] notifications failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        orderId: result.order.id,
+      });
     }
 
     return {
@@ -328,7 +335,7 @@ export class AdminOrderCommandService {
           customerUserId: order.customer.userId,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -348,8 +355,11 @@ export class AdminOrderCommandService {
         orderNumber: result.order.orderNumber,
         newStatus: result.order.status,
       }, 'status_update');
-    } catch {
-      void 0;
+    } catch (err) {
+      this.logger.warn('[rejectOrder] notifications failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        orderId: result.order.id,
+      });
     }
 
     return {
@@ -417,7 +427,7 @@ export class AdminOrderCommandService {
 
         return { order: updatedOrder, customerId: order.customerId, customerUserId: order.customer.userId, oldStatus: order.status };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -438,8 +448,11 @@ export class AdminOrderCommandService {
         orderNumber: result.order.orderNumber,
         newStatus: result.order.status,
       }, 'status_update');
-    } catch {
-      void 0;
+    } catch (err) {
+      this.logger.warn('[startOrderReview] notifications failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        orderId: result.order.id,
+      });
     }
 
     return {
@@ -588,7 +601,7 @@ export class AdminOrderCommandService {
           runnerName: runner.user.name,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -647,8 +660,11 @@ export class AdminOrderCommandService {
         orderNumber: result.order.orderNumber,
         newStatus: result.order.status,
       }, 'status_update');
-    } catch {
-      void 0;
+    } catch (err) {
+      this.logger.warn('[assignRunner] notifications failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        orderId: result.order.id,
+      });
     }
 
     return {
@@ -743,7 +759,7 @@ export class AdminOrderCommandService {
           customerUserId: order.customer.userId,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -775,8 +791,11 @@ export class AdminOrderCommandService {
         orderNumber: result.order.orderNumber,
         newStatus: result.order.status,
       }, 'status_update');
-    } catch {
-      void 0;
+    } catch (err) {
+      this.logger.warn('[cancelOrderAdmin] notifications failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        orderId: result.order.id,
+      });
     }
 
     return {

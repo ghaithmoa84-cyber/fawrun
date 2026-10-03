@@ -1,7 +1,9 @@
 package com.forerun.customer.ui.home
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.forerun.customer.R
 import com.forerun.customer.domain.model.ActiveOrder
 import com.forerun.customer.domain.model.CustomerProfile
 import com.forerun.customer.domain.usecase.GetHomeDataUseCase
@@ -34,8 +36,9 @@ sealed interface HomeIntent {
 @HiltViewModel
 class HomeViewModel @Inject constructor(
     private val getHomeDataUseCase: GetHomeDataUseCase,
-    private val logoutUseCase: LogoutUseCase
-) : ViewModel() {
+    private val logoutUseCase: LogoutUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow<HomeUiState>(HomeUiState.Loading)
     val uiState: StateFlow<HomeUiState> = _uiState.asStateFlow()
@@ -71,7 +74,8 @@ class HomeViewModel @Inject constructor(
                 }
                 .onFailure { throwable ->
                     _uiState.value = HomeUiState.Error(
-                        message = throwable.message ?: "تعذر تحميل البيانات"
+                        message = throwable.message
+                            ?: getApplication<Application>().getString(R.string.error_home_data_load_failed)
                     )
                 }
         }
@@ -96,7 +100,8 @@ class HomeViewModel @Inject constructor(
                         _uiState.value = currentState.copy(isRefreshing = false)
                     } else {
                         _uiState.value = HomeUiState.Error(
-                            message = throwable.message ?: "تعذر تحميل البيانات"
+                            message = throwable.message
+                                ?: getApplication<Application>().getString(R.string.error_home_data_load_failed)
                         )
                     }
                 }

@@ -1,6 +1,7 @@
 package com.forerun.customer.ui.auth.login
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.forerun.customer.R
 import com.forerun.customer.core.network.ApiResponse
@@ -35,8 +36,9 @@ sealed interface LoginNavigationEvent {
 @HiltViewModel
 class LoginViewModel @Inject constructor(
     private val loginUseCase: LoginUseCase,
-    private val socketManager: com.forerun.customer.core.websocket.SocketManager
-) : ViewModel() {
+    private val socketManager: com.forerun.customer.core.websocket.SocketManager,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(LoginUiState())
     val uiState: StateFlow<LoginUiState> = _uiState.asStateFlow()
@@ -101,7 +103,7 @@ class LoginViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            generalError = response.message.ifBlank { "حدث خطأ أثناء تسجيل الدخول" }
+                            generalError = response.message.ifBlank { getApplication<Application>().getString(R.string.error_login_generic) }
                         )
                     }
                 }

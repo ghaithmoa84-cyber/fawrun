@@ -1,8 +1,10 @@
 package com.forerun.customer.ui.rating
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.forerun.customer.R
 import com.forerun.customer.domain.usecase.order.GetOrderDetailUseCase
 import com.forerun.customer.domain.usecase.order.SubmitRatingUseCase
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -38,8 +40,9 @@ sealed interface RatingIntent {
 class RatingViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getOrderDetailUseCase: GetOrderDetailUseCase,
-    private val submitRatingUseCase: SubmitRatingUseCase
-) : ViewModel() {
+    private val submitRatingUseCase: SubmitRatingUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     val orderId: String = savedStateHandle.get<String>("orderId").orEmpty()
 
@@ -50,7 +53,7 @@ class RatingViewModel @Inject constructor(
         if (orderId.isNotBlank()) {
             loadOrderInfo()
         } else {
-            _uiState.update { it.copy(isLoading = false, errorMessage = "معرف الطلب غير صحيح") }
+            _uiState.update { it.copy(isLoading = false, errorMessage = getApplication<Application>().getString(R.string.error_invalid_order_id)) }
         }
     }
 
@@ -74,7 +77,8 @@ class RatingViewModel @Inject constructor(
             _uiState.update { it.copy(isLoading = true, errorMessage = null) }
             val result = getOrderDetailUseCase(orderId)
             result.onSuccess { order ->
-                val runnerName = order.runner?.name ?: "الكابتن"
+                val runnerName = order.runner?.name
+                    ?: getApplication<Application>().getString(R.string.label_runner_default)
                 val existingStars = order.rating?.stars ?: 0
                 val existingNote = order.rating?.note ?: ""
                 val isExisting = order.rating != null
@@ -124,7 +128,7 @@ class RatingViewModel @Inject constructor(
         if (state.isExpired) {
             isSubmittingGuard.set(false)
             _uiState.update {
-                it.copy(validationError = "انتهت مهلة التقييم (يمكن التقييم خلال 24 ساعة فقط بعد تسليم الطلب)")
+                it.copy(validationError = getApplication<Application>().getString(R.string.rating_expired_warning))
             }
             return
         }
@@ -132,7 +136,7 @@ class RatingViewModel @Inject constructor(
         if (state.stars < 1 || state.stars > 5) {
             isSubmittingGuard.set(false)
             _uiState.update {
-                it.copy(validationError = "يرجى اختيار عدد النجوم (من 1 إلى 5)")
+                it.copy(validationError = getApplication<Application>().getString(R.string.rating_validation_stars_required))
             }
             return
         }

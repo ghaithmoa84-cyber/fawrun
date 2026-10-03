@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   NotFoundException,
   UnprocessableEntityException,
 } from '@nestjs/common';
@@ -9,6 +10,8 @@ import { NotificationsService } from '../notifications/notifications.service.js'
 
 @Injectable()
 export class UsersService {
+  private readonly logger = new Logger(UsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly auditService: AuditService,
@@ -137,8 +140,12 @@ export class UsersService {
       await this.notificationsService.emitToCustomer(id, 'account:verified', {
         message: 'تم تفعيل حسابك',
       });
-    } catch {
+    } catch (err) {
       // WebSocket emit is best-effort
+      this.logger.warn('[verify] customer notification failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: id,
+      });
     }
 
     return {
@@ -269,8 +276,12 @@ export class UsersService {
       await this.notificationsService.emitToCustomer(id, 'account:verified', {
         message: 'تم إعادة تفعيل حسابك بنجاح',
       });
-    } catch {
+    } catch (err) {
       // WebSocket emit is best-effort
+      this.logger.warn('[unsuspend] customer notification failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: id,
+      });
     }
 
     return {

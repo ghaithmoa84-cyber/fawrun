@@ -22,9 +22,13 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class AddressSetupViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -59,7 +63,7 @@ class AddressSetupViewModelTest {
         fakeAddressRepository.getAddressResult = AddressResult.Success(
             CustomerAddress(lat = 35.55, lng = 35.80, description = "اللاذقية - القنجرة")
         )
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -73,7 +77,7 @@ class AddressSetupViewModelTest {
     @Test
     fun loadAddress_setsEditModeFalse_whenAddressNotFound() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
@@ -85,7 +89,7 @@ class AddressSetupViewModelTest {
     @Test
     fun updateCoordinates_updatesLatAndLng() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.60, 35.85))
@@ -98,7 +102,7 @@ class AddressSetupViewModelTest {
     @Test
     fun updateCoordinates_triggersDebouncedGeocoding_andUpdatesDescription() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.5534, 35.8000))
@@ -117,7 +121,7 @@ class AddressSetupViewModelTest {
             CustomerAddress(lat = 35.55, lng = 35.80, description = "العنوان الأصلي")
         )
         fakeGeocodingService.result = null // timeout / 403 / network error
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.60, 35.85))
@@ -130,7 +134,7 @@ class AddressSetupViewModelTest {
     @Test
     fun updateDescription_updatesDescription() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateDescription("شارع الكورنيش"))
@@ -142,7 +146,7 @@ class AddressSetupViewModelTest {
     @Test
     fun saveAddress_failsValidation_whenDescriptionIsBlank() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateDescription("   "))
@@ -160,7 +164,7 @@ class AddressSetupViewModelTest {
         fakeAddressRepository.updateAddressResult = Result.success(
             CustomerAddress(lat = 35.55, lng = 35.80, description = "العنوان المحفوظ")
         )
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateDescription("العنوان المحفوظ"))
@@ -177,7 +181,7 @@ class AddressSetupViewModelTest {
     fun saveAddress_setsErrorMessage_whenRepositoryFails() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
         fakeAddressRepository.updateAddressResult = Result.failure(Exception("خطأ في الخادم"))
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateDescription("العنوان"))
@@ -192,7 +196,7 @@ class AddressSetupViewModelTest {
     @Test
     fun updateCoordinates_setsGeocodingLoadingTrue_andResetsToFalseOnSuccess() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.5534, 35.8000))
@@ -213,7 +217,7 @@ class AddressSetupViewModelTest {
     fun updateCoordinates_setsGeocodingLoadingFalse_andSetsGeocodingErrorOnFailure() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
         fakeGeocodingService.result = null // Nominatim network failure
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateCoordinates(35.60, 35.85))
@@ -228,7 +232,7 @@ class AddressSetupViewModelTest {
     @Test
     fun updateCoordinates_rapidUpdates_cancelsPreviousRequest_andDebounces() = runTest(testDispatcher) {
         fakeAddressRepository.getAddressResult = AddressResult.NotFound
-        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(getCustomerAddressUseCase, updateCustomerAddressUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         // 1st coordinate update
@@ -265,7 +269,7 @@ class AddressSetupViewModelTest {
         }
         val customGetUseCase = GetCustomerAddressUseCase(countingRepo)
         val customUpdateUseCase = UpdateCustomerAddressUseCase(countingRepo)
-        val viewModel = AddressSetupViewModel(customGetUseCase, customUpdateUseCase, reverseGeocodeUseCase)
+        val viewModel = AddressSetupViewModel(customGetUseCase, customUpdateUseCase, reverseGeocodeUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         viewModel.onIntent(AddressSetupIntent.UpdateDescription("شارع الكورنيش"))

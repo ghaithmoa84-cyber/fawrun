@@ -1034,7 +1034,7 @@ private fun DeliveryInfoCard(order: CustomerOrderDetail) {
             )
             Spacer(modifier = Modifier.height(Dimens.Space4))
             Text(
-                text = order.deliveryDesc ?: "القنجرة",
+                text = order.deliveryDesc ?: stringResource(R.string.order_detail_default_area),
                 fontSize = 13.sp,
                 color = ForerunTextMuted
             )
@@ -1094,18 +1094,19 @@ private fun CancelOrderSection(
     }
 }
 
+@Composable
 private fun getStatusBadgeLabel(status: String): String {
     return when (status) {
-        "DRAFT" -> "مسودة"
-        "PENDING_REVIEW" -> "قيد المراجعة"
-        "UNDER_REVIEW" -> "تحت المراجعة"
-        "AWAITING_RUNNER" -> "بانتظار كابتن"
-        "AWAITING_PREFERRED_RUNNER" -> "بانتظار كابتن"
-        "ASSIGNED" -> "تم تعيين كابتن"
-        "IN_PROGRESS" -> "قيد الشراء"
-        "OUT_FOR_DELIVERY" -> "في الطريق"
-        "DELIVERED" -> "تم التسليم"
-        "CANCELLED" -> "ملغي"
+        "DRAFT" -> stringResource(R.string.orders_status_draft)
+        "PENDING_REVIEW" -> stringResource(R.string.orders_status_pending_review)
+        "UNDER_REVIEW" -> stringResource(R.string.orders_status_under_review)
+        "AWAITING_RUNNER" -> stringResource(R.string.orders_status_awaiting_runner)
+        "AWAITING_PREFERRED_RUNNER" -> stringResource(R.string.orders_status_awaiting_runner)
+        "ASSIGNED" -> stringResource(R.string.orders_status_assigned)
+        "IN_PROGRESS" -> stringResource(R.string.orders_status_in_progress)
+        "OUT_FOR_DELIVERY" -> stringResource(R.string.status_out_for_delivery)
+        "DELIVERED" -> stringResource(R.string.status_delivered)
+        "CANCELLED" -> stringResource(R.string.orders_status_cancelled)
         else -> status
     }
 }

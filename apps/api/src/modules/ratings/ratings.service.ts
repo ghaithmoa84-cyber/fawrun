@@ -87,9 +87,7 @@ export class RatingsService {
         );
       }
 
-      const expiresAt = new Date(
-        Date.now() + CONFIG.RATING_EDIT_WINDOW_HOURS * 60 * 60 * 1000,
-      );
+      const expiresAt = new Date(Date.now() + CONFIG.RATING_EDIT_WINDOW_MS);
 
       const rating = await tx.rating.create({
         data: {

@@ -6,6 +6,7 @@ import {
   UnprocessableEntityException,
 } from '@nestjs/common';
 import type { OrderStatus, OrderStoreStatus } from '@forerun/shared-constants';
+import { CONFIG } from '@forerun/shared-constants';
 import { MarkStoreSkippedRequest, DeliverOrderRequest } from '@forerun/shared-types';
 import type {
   CreateRunnerOrderItemRequest,
@@ -164,7 +165,7 @@ export class RunnerOrdersService {
 
         return { order: updatedOrder, customerUserId: order.customer.userId };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -290,7 +291,7 @@ export class RunnerOrdersService {
           customerUserId: order.customer.userId,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     let customerNotified = false;
@@ -396,7 +397,7 @@ export class RunnerOrdersService {
 
         return { order, orderStore };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     return {
@@ -477,7 +478,7 @@ export class RunnerOrdersService {
 
         return { order, orderStore: updatedStore };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     return {
@@ -540,7 +541,7 @@ export class RunnerOrdersService {
 
         return { order, orderItem };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     return {
@@ -622,7 +623,7 @@ export class RunnerOrdersService {
 
         return { order, orderStore: updatedStore, customerUserId: order.customer.userId };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -713,7 +714,7 @@ export class RunnerOrdersService {
 
         return { order: updatedOrder, customerUserId: order.customer.userId };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -972,7 +973,7 @@ export class RunnerOrdersService {
           customerUserId: order.customer.userId,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     if (!result.idempotent) {

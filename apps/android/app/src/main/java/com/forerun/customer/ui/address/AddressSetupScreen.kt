@@ -155,6 +155,8 @@ fun AddressSetupScreen(
     // Permission launcher for GPS location
     val coroutineScope = androidx.compose.runtime.rememberCoroutineScope()
     val fusedLocationClient = remember { LocationServices.getFusedLocationProviderClient(context) }
+    val gpsRequiredMessage = stringResource(R.string.address_gps_required)
+    val locationPrecisionMessage = stringResource(R.string.address_location_precision)
 
     fun fetchLocation() {
         val locationManager = context.getSystemService(Context.LOCATION_SERVICE) as? android.location.LocationManager
@@ -163,7 +165,7 @@ fun AddressSetupScreen(
 
         if (!isGpsEnabled) {
             coroutineScope.launch {
-                snackbarHostState.showSnackbar("يرجى تفعيل خدمة تحديد الموقع (GPS)")
+                snackbarHostState.showSnackbar(gpsRequiredMessage)
             }
         }
 
@@ -190,7 +192,7 @@ fun AddressSetupScreen(
                                 )
                             } else {
                                 coroutineScope.launch {
-                                    snackbarHostState.showSnackbar("تعذر تحديد موقعك الحالي بدقة، يمكنك سحب الخريطة لتحديده")
+                                    snackbarHostState.showSnackbar(locationPrecisionMessage)
                                 }
                             }
                         }
@@ -242,7 +244,7 @@ fun AddressSetupScreen(
                         ) {
                             Icon(
                                 imageVector = Icons.Default.Close,
-                                contentDescription = "إغلاق",
+                                contentDescription = stringResource(R.string.label_close),
                                 tint = ForerunTextPrimary,
                                 modifier = Modifier.size(20.dp)
                             )
@@ -348,7 +350,7 @@ fun AddressSetupScreen(
                                 )
                                 Icon(
                                     imageVector = Icons.Default.LocationOn,
-                                    contentDescription = "موقع التوصيل المحدد",
+                                    contentDescription = stringResource(R.string.label_selected_delivery_location),
                                     tint = ForerunGreenDark,
                                     modifier = Modifier.size(46.dp)
                                 )
@@ -486,14 +488,14 @@ fun AddressSetupScreen(
                                     }
                                     uiState.isGeocodingLoading -> {
                                         Text(
-                                            text = "جاري تحديد العنوان تلقائياً…",
+                                            text = stringResource(R.string.address_locating),
                                             color = ForerunGreen,
                                             fontSize = 12.sp
                                         )
                                     }
                                     uiState.geocodingError != null -> {
                                         Text(
-                                            text = "تعذر تحديد العنوان تلقائياً، يمكنك إدخاله يدوياً",
+                                            text = stringResource(R.string.address_locate_failed_manual),
                                             color = ForerunTextMuted,
                                             fontSize = 12.sp
                                         )

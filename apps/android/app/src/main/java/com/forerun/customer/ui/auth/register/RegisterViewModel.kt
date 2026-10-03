@@ -1,6 +1,7 @@
 package com.forerun.customer.ui.auth.register
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import com.forerun.customer.R
 import com.forerun.customer.core.network.ApiResponse
@@ -25,7 +26,7 @@ data class RegisterUiState(
     val whatsapp: String = "",
     val altPhone: String = "",
     val password: String = "",
-    val addressDescription: String = "القنجرة - الشارع الرئيسي",
+    val addressDescription: String = "",
     val lat: Double = 35.5234,
     val lng: Double = 35.9876,
     val isLoading: Boolean = false,
@@ -45,12 +46,14 @@ sealed interface RegisterNavigationEvent {
 @HiltViewModel
 class RegisterViewModel @Inject constructor(
     private val registerUseCase: RegisterUseCase,
-    private val loginUseCase: LoginUseCase
-) : ViewModel() {
+    private val loginUseCase: LoginUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     // Overload for testing or callers that don't supply loginUseCase
     constructor(
-        registerUseCase: RegisterUseCase
+        registerUseCase: RegisterUseCase,
+        application: Application
     ) : this(
         registerUseCase = registerUseCase,
         loginUseCase = LoginUseCase(object : AuthRepository {
@@ -61,10 +64,15 @@ class RegisterViewModel @Inject constructor(
             override suspend fun logout(): ApiResponse<Unit> = ApiResponse.Success(Unit)
             override suspend fun checkSession(): SessionState = SessionState.Unauthenticated
             override fun getCurrentUser(): User? = null
-        })
+        }),
+        application = application
     )
 
-    private val _uiState = MutableStateFlow(RegisterUiState())
+    private val _uiState = MutableStateFlow(
+        RegisterUiState(
+            addressDescription = getApplication<Application>().getString(R.string.register_default_address)
+        )
+    )
     val uiState: StateFlow<RegisterUiState> = _uiState.asStateFlow()
 
     private val _navigationEvent = MutableSharedFlow<RegisterNavigationEvent>()
@@ -157,7 +165,7 @@ class RegisterViewModel @Inject constructor(
                     _uiState.update {
                         it.copy(
                             isLoading = false,
-                            generalError = response.message.ifBlank { "حدث خطأ أثناء إنشاء الحساب" }
+                            generalError = response.message.ifBlank { getApplication<Application>().getString(R.string.error_register_generic) }
                         )
                     }
                 }

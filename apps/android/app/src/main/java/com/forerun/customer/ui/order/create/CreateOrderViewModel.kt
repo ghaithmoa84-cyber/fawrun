@@ -1,7 +1,9 @@
 package com.forerun.customer.ui.order.create
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.forerun.customer.R
 import com.forerun.customer.domain.model.CreatedOrder
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.model.OrderItem
@@ -70,8 +72,9 @@ sealed interface CreateOrderEvent {
 class CreateOrderViewModel @Inject constructor(
     private val createOrderUseCase: CreateOrderUseCase,
     private val getCustomerAddressUseCase: GetCustomerAddressUseCase,
-    private val getAvailableRunnersUseCase: GetAvailableRunnersUseCase
-) : ViewModel() {
+    private val getAvailableRunnersUseCase: GetAvailableRunnersUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(CreateOrderUiState())
     val uiState: StateFlow<CreateOrderUiState> = _uiState.asStateFlow()
@@ -220,7 +223,7 @@ class CreateOrderViewModel @Inject constructor(
         // Validation
         if (state.deliveryAddress == null) {
             isSubmittingGuard.set(false)
-            _uiState.update { it.copy(validationError = "يرجى تحديد عنوان التوصيل أولاً قبل إرسال الطلب") }
+            _uiState.update { it.copy(validationError = getApplication<Application>().getString(R.string.create_order_validation_address_missing)) }
             return
         }
 
@@ -232,7 +235,7 @@ class CreateOrderViewModel @Inject constructor(
 
                 if (lines.isEmpty()) {
                     isSubmittingGuard.set(false)
-                    _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
+                    _uiState.update { it.copy(validationError = getApplication<Application>().getString(R.string.create_order_validation_empty_items)) }
                     return
                 }
 
@@ -248,24 +251,24 @@ class CreateOrderViewModel @Inject constructor(
             OrderInputMode.STRUCTURED -> {
                 if (state.items.isEmpty()) {
                     isSubmittingGuard.set(false)
-                    _uiState.update { it.copy(validationError = "يرجى إضافة مادة واحدة على الأقل") }
+                    _uiState.update { it.copy(validationError = getApplication<Application>().getString(R.string.create_order_validation_empty_items)) }
                     return
                 }
 
                 for (item in state.items) {
                     if (item.itemName.trim().isEmpty()) {
                         isSubmittingGuard.set(false)
-                        _uiState.update { it.copy(validationError = "يرجى كتابة اسم المادة") }
+                        _uiState.update { it.copy(validationError = getApplication<Application>().getString(R.string.create_order_validation_item_name)) }
                         return
                     }
                     if (item.quantity.trim().isEmpty()) {
                         isSubmittingGuard.set(false)
-                        _uiState.update { it.copy(validationError = "يرجى تحديد الكمية للمادة: ${item.itemName}") }
+                        _uiState.update { it.copy(validationError = getApplication<Application>().getString(R.string.create_order_validation_item_quantity_named, item.itemName)) }
                         return
                     }
                     if (!item.anyStore && (item.customStoreName == null || item.customStoreName.trim().isEmpty())) {
                         isSubmittingGuard.set(false)
-                        _uiState.update { it.copy(validationError = "يرجى تحديد اسم المتجر للمادة: ${item.itemName} أو تفعيل خيار أي متجر") }
+                        _uiState.update { it.copy(validationError = getApplication<Application>().getString(R.string.create_order_validation_custom_store_named, item.itemName)) }
                         return
                     }
                 }
@@ -304,7 +307,8 @@ class CreateOrderViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isSubmitting = false,
-                                errorMessage = error.localizedMessage ?: "فشل إنشاء الطلب"
+                                errorMessage = error.localizedMessage
+                                    ?: getApplication<Application>().getString(R.string.error_create_order_failed)
                             )
                         }
                     }

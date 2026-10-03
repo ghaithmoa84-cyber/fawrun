@@ -1,7 +1,9 @@
 package com.forerun.customer.ui.account
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.forerun.customer.R
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.model.CustomerProfile
 import com.forerun.customer.domain.repository.AddressResult
@@ -42,8 +44,9 @@ class AccountViewModel @Inject constructor(
     private val updateAccountProfile: UpdateAccountProfileUseCase,
     private val changeAccountPassword: ChangeAccountPasswordUseCase,
     private val getCustomerAddress: GetCustomerAddressUseCase,
-    private val logoutUseCase: LogoutUseCase
-) : ViewModel() {
+    private val logoutUseCase: LogoutUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AccountUiState())
     val uiState: StateFlow<AccountUiState> = _uiState.asStateFlow()
@@ -67,7 +70,7 @@ class AccountViewModel @Inject constructor(
 
             profileResult.fold(
                 onSuccess = { profile = it },
-                onFailure = { error = it.message ?: "فشل في تحميل بيانات الحساب" }
+                onFailure = { error = it.message ?: getApplication<Application>().getString(R.string.error_account_load_failed) }
             )
 
             var address: CustomerAddress? = null
@@ -92,13 +95,13 @@ class AccountViewModel @Inject constructor(
     fun updateProfile(name: String, altPhone: String?) {
         val trimmedName = name.trim()
         if (trimmedName.length < 2) {
-            _uiState.value = _uiState.value.copy(errorMessage = "الاسم يجب أن يكون حرفين على الأقل")
+            _uiState.value = _uiState.value.copy(errorMessage = getApplication<Application>().getString(R.string.error_name_short))
             return
         }
 
         val trimmedAltPhone = altPhone?.trim()?.ifEmpty { null }
         if (trimmedAltPhone != null && !trimmedAltPhone.matches(Regex("^09\\d{8}$"))) {
-            _uiState.value = _uiState.value.copy(errorMessage = "الرقم البديل يجب أن يبدأ بـ 09 ويتكون من 10 أرقام")
+            _uiState.value = _uiState.value.copy(errorMessage = getApplication<Application>().getString(R.string.error_alt_phone_invalid))
             return
         }
 
@@ -114,13 +117,13 @@ class AccountViewModel @Inject constructor(
                     _uiState.value = _uiState.value.copy(
                         isSavingProfile = false,
                         profile = updatedProfile,
-                        profileSuccessMessage = "تم حفظ معلومات الحساب بنجاح"
+                        profileSuccessMessage = getApplication<Application>().getString(R.string.account_profile_saved)
                     )
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
                         isSavingProfile = false,
-                        errorMessage = e.message ?: "فشل حفظ معلومات الحساب"
+                        errorMessage = e.message ?: getApplication<Application>().getString(R.string.error_account_save_failed)
                     )
                 }
             )
@@ -129,15 +132,15 @@ class AccountViewModel @Inject constructor(
 
     fun changePassword(newPassword: String, confirmPassword: String) {
         if (newPassword.length < 8) {
-            _uiState.value = _uiState.value.copy(errorMessage = "كلمة المرور يجب أن تكون 8 أحرف على الأقل")
+            _uiState.value = _uiState.value.copy(errorMessage = getApplication<Application>().getString(R.string.error_password_short))
             return
         }
         if (newPassword.toByteArray(Charsets.UTF_8).size > 72) {
-            _uiState.value = _uiState.value.copy(errorMessage = "كلمة المرور لا يجب أن تتجاوز 72 بايت")
+            _uiState.value = _uiState.value.copy(errorMessage = getApplication<Application>().getString(R.string.error_password_too_long))
             return
         }
         if (newPassword != confirmPassword) {
-            _uiState.value = _uiState.value.copy(errorMessage = "كلمتا المرور غير متطابقتين")
+            _uiState.value = _uiState.value.copy(errorMessage = getApplication<Application>().getString(R.string.account_error_passwords_dont_match))
             return
         }
 
@@ -152,13 +155,13 @@ class AccountViewModel @Inject constructor(
                 onSuccess = {
                     _uiState.value = _uiState.value.copy(
                         isChangingPassword = false,
-                        passwordSuccessMessage = "تم تغيير كلمة المرور بنجاح"
+                        passwordSuccessMessage = getApplication<Application>().getString(R.string.account_password_changed)
                     )
                 },
                 onFailure = { e ->
                     _uiState.value = _uiState.value.copy(
                         isChangingPassword = false,
-                        errorMessage = e.message ?: "فشل تغيير كلمة المرور"
+                        errorMessage = e.message ?: getApplication<Application>().getString(R.string.error_password_change_failed)
                     )
                 }
             )

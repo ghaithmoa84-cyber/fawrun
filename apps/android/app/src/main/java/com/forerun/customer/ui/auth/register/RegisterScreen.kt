@@ -307,7 +307,7 @@ fun RegisterScreen(
             trailingIcon = {
                 IconButton(onClick = { passwordVisible = !passwordVisible }) {
                     Text(
-                        text = if (passwordVisible) "إخفاء" else "إظهار",
+                        text = if (passwordVisible) stringResource(R.string.label_hide) else stringResource(R.string.label_show),
                         fontSize = 12.sp,
                         color = ForerunTextMuted
                     )

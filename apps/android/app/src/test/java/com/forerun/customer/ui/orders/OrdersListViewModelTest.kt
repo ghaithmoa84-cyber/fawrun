@@ -18,9 +18,13 @@ import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class OrdersListViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -41,7 +45,7 @@ class OrdersListViewModelTest {
 
     @Test
     fun initialLoad_loadsOrdersSuccessfully() = runTest(testDispatcher) {
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         val state = vm.uiState.value
@@ -91,7 +95,7 @@ class OrdersListViewModelTest {
             )
         )
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         // 1. ALL Filter
@@ -116,7 +120,7 @@ class OrdersListViewModelTest {
 
     @Test
     fun refresh_reloadsOrdersList() = runTest(testDispatcher) {
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         fakeRepository.getCustomerOrdersResult = Result.success(
@@ -168,7 +172,7 @@ class OrdersListViewModelTest {
             )
         )
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         assertTrue(vm.uiState.value.hasMore)
@@ -207,7 +211,7 @@ class OrdersListViewModelTest {
     fun initialLoad_failure_setsErrorMessage() = runTest(testDispatcher) {
         fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         val state = vm.uiState.value
@@ -221,7 +225,7 @@ class OrdersListViewModelTest {
     fun initialLoad_failure_withEmptyList_triggersErrorStateNotEmptyState() = runTest(testDispatcher) {
         fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         val state = vm.uiState.value
@@ -234,7 +238,7 @@ class OrdersListViewModelTest {
     fun retry_afterFailure_clearsErrorAndPopulatesOrders() = runTest(testDispatcher) {
         fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
         assertNotNull(vm.uiState.value.errorMessage)
         assertTrue(vm.uiState.value.displayedOrders.isEmpty())
@@ -288,7 +292,7 @@ class OrdersListViewModelTest {
             )
         )
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
@@ -323,7 +327,7 @@ class OrdersListViewModelTest {
             )
         )
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
         val callsBeforeFailure = fakeRepository.getCustomerOrdersCallCount
 
@@ -365,7 +369,7 @@ class OrdersListViewModelTest {
             )
         )
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         fakeRepository.getCustomerOrdersResult = Result.failure(Exception("Network Timeout"))
@@ -420,7 +424,7 @@ class OrdersListViewModelTest {
             )
         )
 
-        val vm = OrdersListViewModel(getOrdersUseCase)
+        val vm = OrdersListViewModel(getOrdersUseCase, ApplicationProvider.getApplicationContext())
         advanceUntilIdle()
 
         vm.onIntent(OrdersListIntent.SetFilter(OrderFilter.ACTIVE))

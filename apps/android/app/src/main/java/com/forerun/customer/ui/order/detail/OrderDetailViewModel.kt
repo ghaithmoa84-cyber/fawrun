@@ -1,8 +1,10 @@
 package com.forerun.customer.ui.order.detail
 
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.SavedStateHandle
-import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.forerun.customer.R
 import com.forerun.customer.domain.model.WebSocketEvent
 import com.forerun.customer.domain.model.CancelOrderError
 import com.forerun.customer.domain.model.CustomerOrderDetail
@@ -82,8 +84,9 @@ class OrderDetailViewModel @Inject constructor(
     private val savedStateHandle: SavedStateHandle,
     private val getOrderDetailUseCase: GetOrderDetailUseCase,
     private val cancelOrderUseCase: CancelOrderUseCase,
-    private val observeOrderEventsUseCase: ObserveOrderEventsUseCase
-) : ViewModel() {
+    private val observeOrderEventsUseCase: ObserveOrderEventsUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     val orderId: String = savedStateHandle.get<String>("orderId").orEmpty()
 
@@ -95,7 +98,7 @@ class OrderDetailViewModel @Inject constructor(
             loadDetail(showLoading = true)
             observeWebSocketEvents()
         } else {
-            _uiState.update { it.copy(isLoading = false, errorMessage = "معرف الطلب غير صحيح") }
+            _uiState.update { it.copy(isLoading = false, errorMessage = getApplication<Application>().getString(R.string.error_invalid_order_id)) }
         }
     }
 

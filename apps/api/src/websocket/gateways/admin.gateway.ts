@@ -4,6 +4,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
+import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -23,6 +24,8 @@ export class AdminGateway
 {
   @WebSocketServer()
   io: Server;
+
+  private readonly logger = new Logger(AdminGateway.name);
 
   constructor(
     private readonly jwtService: JwtService,
@@ -53,7 +56,10 @@ export class AdminGateway
         algorithms: ['RS256'],
       });
       userId = payload.sub;
-    } catch {
+    } catch (err) {
+      this.logger.warn('[handleConnection] JWT verification failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       client.disconnect(true);
       return;
     }
@@ -61,7 +67,11 @@ export class AdminGateway
     let user: { id: string; role: string; status: string; isDeleted: boolean } | null;
     try {
       user = await this.usersService.findLeanById(userId);
-    } catch {
+    } catch (err) {
+      this.logger.warn('[handleConnection] user lookup failed', {
+        error: err instanceof Error ? err.message : String(err),
+        userId,
+      });
       client.disconnect(true);
       return;
     }

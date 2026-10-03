@@ -111,11 +111,12 @@ fun SuspendedScreen(
         Spacer(modifier = Modifier.height(Dimens.Space32))
 
         // Support Contact Button
+        val suspendedInquiryMessage = stringResource(R.string.whatsapp_suspended_inquiry)
         Button(
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse(com.forerun.customer.core.config.AppConfig.buildWhatsAppUrl("مرحباً إدارة فَوْراً، أود الاستفسار عن سبب تعليق حسابي"))
+                    Uri.parse(com.forerun.customer.core.config.AppConfig.buildWhatsAppUrl(suspendedInquiryMessage))
                 )
                 try {
                     context.startActivity(intent)

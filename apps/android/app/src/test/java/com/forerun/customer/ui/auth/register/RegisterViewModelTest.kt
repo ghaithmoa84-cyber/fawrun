@@ -13,8 +13,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class RegisterViewModelTest {
 
     @get:Rule
@@ -28,7 +32,7 @@ class RegisterViewModelTest {
     fun setup() {
         fakeAuthRepository = FakeAuthRepository()
         registerUseCase = RegisterUseCase(fakeAuthRepository)
-        viewModel = RegisterViewModel(registerUseCase)
+        viewModel = RegisterViewModel(registerUseCase, ApplicationProvider.getApplicationContext())
     }
 
     @Test

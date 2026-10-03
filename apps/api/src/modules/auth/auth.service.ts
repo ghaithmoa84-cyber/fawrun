@@ -1,6 +1,7 @@
 import {
   ConflictException,
   Injectable,
+  Logger,
   UnauthorizedException,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -20,6 +21,8 @@ function generateSelector(): string {
 
 @Injectable()
 export class AuthService {
+  private readonly logger = new Logger(AuthService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly jwtService: JwtService,
@@ -89,8 +92,12 @@ export class AuthService {
         userName: result.name,
         whatsapp: result.whatsapp,
       });
-    } catch {
+    } catch (err) {
       // WebSocket emit is best-effort; log but don't fail registration
+      this.logger.warn('[register] admin notification failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: result.id,
+      });
     }
 
     try {
@@ -100,8 +107,12 @@ export class AuthService {
         `الهاتف: ${result.whatsapp}\n` +
         `التاريخ: ${new Date().toLocaleString('ar-SY', { timeZone: 'Asia/Damascus' })}`
       );
-    } catch {
+    } catch (err) {
       // Telegram notification is best-effort; don't fail registration
+      this.logger.warn('[register] telegram notification failed silently', {
+        error: err instanceof Error ? err.message : String(err),
+        userId: result.id,
+      });
     }
 
     return {

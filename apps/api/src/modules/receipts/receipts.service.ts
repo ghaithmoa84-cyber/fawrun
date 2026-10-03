@@ -158,7 +158,7 @@ export class ReceiptsService {
 
         return { receipt: updated, orderStore, fileDeletedFromR2 };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     return {
