@@ -4,6 +4,7 @@ import {
   OnGatewayConnection,
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
+import { Logger } from '@nestjs/common';
 import { Server, Socket } from 'socket.io';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
@@ -23,6 +24,8 @@ export class OrdersGateway
 {
   @WebSocketServer()
   io: Server;
+
+  private readonly logger = new Logger(OrdersGateway.name);
 
   constructor(
     private readonly jwtService: JwtService,
@@ -72,7 +75,10 @@ export class OrdersGateway
       } else if (user.role === 'ADMIN') {
         client.join(`admin:all`);
       }
-    } catch {
+    } catch (err) {
+      this.logger.warn('[handleConnection] connection setup failed', {
+        error: err instanceof Error ? err.message : String(err),
+      });
       client.disconnect(true);
     }
   }

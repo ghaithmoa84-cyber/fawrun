@@ -1,7 +1,9 @@
 package com.forerun.customer.ui.address
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.forerun.customer.R
 import com.forerun.customer.domain.model.CustomerAddress
 import com.forerun.customer.domain.repository.AddressResult
 import com.forerun.customer.domain.usecase.GetCustomerAddressUseCase
@@ -51,8 +53,9 @@ sealed interface AddressSetupEvent {
 class AddressSetupViewModel @Inject constructor(
     private val getCustomerAddressUseCase: GetCustomerAddressUseCase,
     private val updateCustomerAddressUseCase: UpdateCustomerAddressUseCase,
-    private val reverseGeocodeUseCase: ReverseGeocodeUseCase
-) : ViewModel() {
+    private val reverseGeocodeUseCase: ReverseGeocodeUseCase,
+    application: Application
+) : AndroidViewModel(application) {
 
     private val _uiState = MutableStateFlow(AddressSetupUiState())
     val uiState: StateFlow<AddressSetupUiState> = _uiState.asStateFlow()
@@ -96,7 +99,7 @@ class AddressSetupViewModel @Inject constructor(
                             _uiState.update {
                                 it.copy(
                                     isGeocodingLoading = false,
-                                    geocodingError = "تعذر تحديد العنوان تلقائياً"
+                                    geocodingError = getApplication<Application>().getString(R.string.error_geocoding_failed)
                                 )
                             }
                         }
@@ -106,7 +109,7 @@ class AddressSetupViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isGeocodingLoading = false,
-                                geocodingError = "تعذر تحديد العنوان تلقائياً"
+                                geocodingError = getApplication<Application>().getString(R.string.error_geocoding_failed)
                             )
                         }
                     }
@@ -177,7 +180,7 @@ class AddressSetupViewModel @Inject constructor(
 
         if (trimmedDesc.isEmpty()) {
             isSavingGuard.set(false)
-            _uiState.update { it.copy(descriptionError = "يرجى إدخال وصف للعنوان") }
+            _uiState.update { it.copy(descriptionError = getApplication<Application>().getString(R.string.error_address_description_required)) }
             return
         }
 
@@ -205,7 +208,8 @@ class AddressSetupViewModel @Inject constructor(
                         _uiState.update {
                             it.copy(
                                 isSaving = false,
-                                errorMessage = error.localizedMessage ?: "فشل حفظ العنوان"
+                                errorMessage = error.localizedMessage
+                                    ?: getApplication<Application>().getString(R.string.error_address_save_failed_generic)
                             )
                         }
                     }

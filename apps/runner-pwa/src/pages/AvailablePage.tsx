@@ -138,7 +138,6 @@ export function AvailablePage() {
     const unsubAssigned = on<OrderAssignedPayload>(
       'order:assigned',
       (payload) => {
-        console.log('[AUDIO] Playing new order chime via Web Audio API');
         playSound(payload.sound ?? 'new_order');
         navigate('/active-order');
       },

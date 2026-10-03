@@ -21,10 +21,14 @@ import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
 import java.time.Instant
+import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class RatingViewModelTest {
 
     private val testDispatcher = StandardTestDispatcher()
@@ -78,7 +82,8 @@ class RatingViewModelTest {
         return RatingViewModel(
             savedStateHandle = savedStateHandle,
             getOrderDetailUseCase = getOrderDetailUseCase,
-            submitRatingUseCase = submitRatingUseCase
+            submitRatingUseCase = submitRatingUseCase,
+            application = ApplicationProvider.getApplicationContext()
         )
     }
 

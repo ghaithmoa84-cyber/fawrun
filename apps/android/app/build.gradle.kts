@@ -82,6 +82,8 @@ android {
         // B5: isReturnDefaultValues was previously true (masking missing mocks).
         // Removed to ensure test fidelity; Android framework Log is mocked in src/test/java/android/util/Log.java.
         unitTests.isReturnDefaultValues = false
+        // Robolectric-backed ViewModel tests resolve real string resources.
+        unitTests.isIncludeAndroidResources = true
     }
 }
 
@@ -145,5 +147,10 @@ dependencies {
     testImplementation(libs.okhttp.mockwebserver)
     testImplementation(libs.turbine)
     testImplementation("org.json:json:20240303")
+
+    // Robolectric: resolves real string resources for AndroidViewModel-backed unit tests
+    testImplementation(libs.robolectric)
+    testImplementation(libs.androidx.test.core)
+    testImplementation(libs.androidx.test.ext.junit)
 }
 

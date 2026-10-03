@@ -246,7 +246,7 @@ private fun OrdersHeader(activeCount: Int) {
                 color = ForerunTextPrimary
             )
             Text(
-                text = "سجل ومتابعة طلباتك في فَوْراً",
+                text = stringResource(R.string.orders_subtitle),
                 fontSize = 12.sp,
                 color = ForerunTextMuted
             )
@@ -268,7 +268,7 @@ private fun OrdersHeader(activeCount: Int) {
                     )
                     Spacer(modifier = Modifier.width(Dimens.Space4))
                     Text(
-                        text = "$activeCount جارية",
+                        text = stringResource(R.string.orders_active_count, activeCount),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Bold,
                         color = ForerunGreen
@@ -456,7 +456,7 @@ private fun OrderCard(
                 // Total Fee
                 Column(horizontalAlignment = Alignment.End) {
                     Text(
-                        text = "رسوم التوصيل",
+                        text = stringResource(R.string.orders_delivery_fee),
                         fontSize = 11.sp,
                         color = ForerunTextMuted
                     )
@@ -488,7 +488,7 @@ private fun OrderCard(
                     )
                     Spacer(modifier = Modifier.width(Dimens.Space4))
                     Text(
-                        text = "الكابتن: ${order.runnerName}",
+                        text = stringResource(R.string.orders_runner_name, order.runnerName),
                         fontSize = 12.sp,
                         fontWeight = FontWeight.Medium,
                         color = ForerunTextPrimary

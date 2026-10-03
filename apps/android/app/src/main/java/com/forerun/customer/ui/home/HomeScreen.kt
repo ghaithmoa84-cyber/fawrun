@@ -258,7 +258,7 @@ private fun HomeContent(
                     contentAlignment = Alignment.Center
                 ) {
                     Text(
-                        text = profile.name.trim().take(1).ifEmpty { "ف" },
+                        text = profile.name.trim().take(1).ifEmpty { stringResource(R.string.label_avatar_fallback_letter) },
                         fontSize = 18.sp,
                         fontWeight = FontWeight.Bold,
                         color = ForerunGreenDark
@@ -267,7 +267,7 @@ private fun HomeContent(
 
                 Column {
                     Text(
-                        text = "صباح الخير، ${profile.name.substringBefore(" ")}",
+                        text = stringResource(R.string.home_greeting_morning, profile.name.substringBefore(" ")),
                         fontSize = 16.sp,
                         fontWeight = FontWeight.Bold,
                         color = ForerunTextPrimary
@@ -281,7 +281,7 @@ private fun HomeContent(
                         )
                         Spacer(modifier = Modifier.width(2.dp))
                         Text(
-                            text = "القنجرة ومحيطها",
+                            text = stringResource(R.string.label_delivery_area),
                             fontSize = 11.sp,
                             color = ForerunTextMuted
                         )
@@ -309,7 +309,7 @@ private fun HomeContent(
                 ) {
                     Icon(
                         imageVector = Icons.Default.Notifications,
-                        contentDescription = "الإشعارات",
+                            contentDescription = stringResource(R.string.label_notifications),
                         tint = ForerunTextMuted,
                         modifier = Modifier.size(20.dp)
                     )
@@ -345,7 +345,7 @@ private fun HomeContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = "اطلب في ثواني",
+                            text = stringResource(R.string.home_cta_badge),
                             fontSize = 12.sp,
                             color = Color.White.copy(alpha = 0.9f),
                             fontWeight = FontWeight.Medium
@@ -357,7 +357,7 @@ private fun HomeContent(
                                 .padding(horizontal = Dimens.Space8, vertical = Dimens.Space2)
                         ) {
                             Text(
-                                text = "⚡ توصيل فوري",
+                                text = stringResource(R.string.home_cta_delivery_badge),
                                 fontSize = 11.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = Color.White
@@ -368,7 +368,7 @@ private fun HomeContent(
                     Spacer(modifier = Modifier.height(Dimens.Space6))
 
                     Text(
-                        text = "شو محتاج اليوم؟",
+                        text = stringResource(R.string.home_cta_title),
                         fontSize = 24.sp,
                         fontWeight = FontWeight.Bold,
                         color = Color.White
@@ -377,7 +377,7 @@ private fun HomeContent(
                     Spacer(modifier = Modifier.height(Dimens.Space4))
 
                     Text(
-                        text = "حاجيات، طرود، أو مشوار — إحنا جاهزين",
+                        text = stringResource(R.string.home_cta_subtitle),
                         fontSize = 13.sp,
                         color = Color.White.copy(alpha = 0.92f)
                     )
@@ -404,7 +404,7 @@ private fun HomeContent(
                         )
                         Spacer(modifier = Modifier.width(Dimens.Space8))
                         Text(
-                            text = "اطلب الآن",
+                            text = stringResource(R.string.home_cta_button),
                             fontSize = 16.sp,
                             fontWeight = FontWeight.Bold,
                             color = ForerunGreenDark
@@ -771,13 +771,13 @@ private fun ActiveOrderCard(
 
                         Column {
                             Text(
-                                text = "الكابتن ${order.runnerName}",
+                                text = stringResource(R.string.home_active_runner_name, order.runnerName),
                                 fontSize = 13.sp,
                                 fontWeight = FontWeight.Bold,
                                 color = ForerunTextPrimary
                             )
                             Text(
-                                text = "مندوب معتمد ✓",
+                                text = stringResource(R.string.home_verified_runner),
                                 fontSize = 11.sp,
                                 color = ForerunTextMuted
                             )
@@ -799,7 +799,7 @@ private fun ActiveOrderCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Chat,
-                                    contentDescription = "واتساب الكابتن",
+                                    contentDescription = stringResource(R.string.label_runner_whatsapp),
                                     tint = Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -820,7 +820,7 @@ private fun ActiveOrderCard(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Call,
-                                    contentDescription = "اتصال بالكابتن",
+                                    contentDescription = stringResource(R.string.label_runner_call),
                                     tint = Color.White,
                                     modifier = Modifier.size(16.dp)
                                 )
@@ -838,7 +838,7 @@ private fun ActiveOrderCard(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = "${order.itemCount} مواد • ${order.totalFee} ${stringResource(R.string.home_currency)}",
+                    text = stringResource(R.string.home_items_fee_summary, order.itemCount, order.totalFee, stringResource(R.string.home_currency)),
                     fontSize = 12.sp,
                     color = ForerunTextMuted
                 )
@@ -863,7 +863,12 @@ private fun OrderStepper(status: String) {
         else -> 1
     }
 
-    val steps = listOf("تم الاستلام", "جاري الشراء", "في الطريق", "تم التسليم")
+    val steps = listOf(
+        stringResource(R.string.home_step_picked_up),
+        stringResource(R.string.home_step_purchasing),
+        stringResource(R.string.home_step_on_the_way),
+        stringResource(R.string.home_step_delivered)
+    )
 
     Row(
         modifier = Modifier.fillMaxWidth(),
@@ -923,16 +928,17 @@ private fun OrderStepper(status: String) {
     }
 }
 
+@Composable
 private fun mapStatusToArabic(status: String): String = when (status) {
-    "DRAFT" -> "مسودة"
-    "PENDING_REVIEW" -> "قيد المراجعة"
-    "UNDER_REVIEW" -> "تحت المراجعة"
-    "AWAITING_RUNNER", "AWAITING_PREFERRED_RUNNER" -> "بانتظار كابتن"
-    "ASSIGNED" -> "تم تعيين كابتن"
-    "IN_PROGRESS" -> "جاري الشراء من المتجر"
-    "OUT_FOR_DELIVERY" -> "في طريق التوصيل إليك"
-    "DELIVERED" -> "تم التسليم بنجاح"
-    "CANCELLED" -> "ملغي"
+    "DRAFT" -> stringResource(R.string.orders_status_draft)
+    "PENDING_REVIEW" -> stringResource(R.string.orders_status_pending_review)
+    "UNDER_REVIEW" -> stringResource(R.string.orders_status_under_review)
+    "AWAITING_RUNNER", "AWAITING_PREFERRED_RUNNER" -> stringResource(R.string.orders_status_awaiting_runner)
+    "ASSIGNED" -> stringResource(R.string.orders_status_assigned)
+    "IN_PROGRESS" -> stringResource(R.string.status_in_progress_shopping)
+    "OUT_FOR_DELIVERY" -> stringResource(R.string.status_out_for_delivery_to_you)
+    "DELIVERED" -> stringResource(R.string.orders_status_delivered)
+    "CANCELLED" -> stringResource(R.string.orders_status_cancelled)
     else -> status
 }
 

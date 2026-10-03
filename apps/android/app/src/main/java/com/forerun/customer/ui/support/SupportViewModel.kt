@@ -1,6 +1,8 @@
 package com.forerun.customer.ui.support
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import com.forerun.customer.R
 import com.forerun.customer.core.config.AppConfig
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -21,9 +23,11 @@ data class SupportUiState(
 )
 
 @HiltViewModel
-class SupportViewModel @Inject constructor() : ViewModel() {
+class SupportViewModel @Inject constructor(
+    application: Application
+) : AndroidViewModel(application) {
 
-    private val _uiState = MutableStateFlow(SupportUiState(faqs = defaultFaqs))
+    private val _uiState = MutableStateFlow(SupportUiState(faqs = defaultFaqs()))
     val uiState: StateFlow<SupportUiState> = _uiState.asStateFlow()
 
     fun toggleFaq(id: Int) {
@@ -35,36 +39,38 @@ class SupportViewModel @Inject constructor() : ViewModel() {
     }
 
     fun getWhatsAppUrl(customMessage: String? = null): String {
-        val message = customMessage ?: "مرحباً إدارة فَوْراً، أحتاج إلى مساعدة واستفسار بخصوص التطبيق."
+        val message = customMessage
+            ?: getApplication<Application>().getString(R.string.support_default_message)
         return AppConfig.buildWhatsAppUrl(message)
     }
 
-    companion object {
-        val defaultFaqs = listOf(
+    private fun defaultFaqs(): List<FaqItem> {
+        val context = getApplication<Application>()
+        return listOf(
             FaqItem(
                 id = 1,
-                question = "كيف يعمل تطبيق فَوْراً في القنجرة؟",
-                answer = "تطبيق فَوْراً هو منصتك المحلية للطلب السريع في القنجرة. تطلب ما تحتاجه من بقالة أو أغراض، ويتولى الكابتن شراءها من المحلات المتاحة وتوصيلها حتى باب منزلك مع تتبع مباشر لحالة الطلب."
+                question = context.getString(R.string.support_faq_1_question),
+                answer = context.getString(R.string.support_faq_1_answer)
             ),
             FaqItem(
                 id = 2,
-                question = "كيف يتم احتساب رسوم التوصيل؟",
-                answer = "رسوم التوصيل ثابتة وشفافة تبدأ من الرسم الأساسي (5,000 ل.س). في حال الشراء من متاجر متعددة يضاف رسم لكل متجر إضافي، كما يضاف رسم للمناطق الطرفية البعيدة، وتظهر لك الرسوم المحتسبة في تفاصيل الطلب."
+                question = context.getString(R.string.support_faq_2_question),
+                answer = context.getString(R.string.support_faq_2_answer)
             ),
             FaqItem(
                 id = 3,
-                question = "كيف أتواصل مع الكابتن المسؤول عن طلبي؟",
-                answer = "بمجرد قبول وتعيين كابتن لطلبك، ستظهر لك بطاقة الكابتن في شاشة تفاصيل الطلب، وبإمكانك التواصل معه مباشرة عبر الواتساب أو الاتصال الهاتفي بضغطة زر واحدة."
+                question = context.getString(R.string.support_faq_3_question),
+                answer = context.getString(R.string.support_faq_3_answer)
             ),
             FaqItem(
                 id = 4,
-                question = "هل يمكنني تعديل أو إلغاء الطلب بعد إرساله؟",
-                answer = "يمكنك إلغاء الطلب مباشرة عبر زر إلغاء الطلب ما دام الطلب في مرحلة 'المراجعة والتدقيق'. بعد بدء الكابتن بعملية الشراء لا يمكن الإلغاء آلياً ولكن يمكنك التواصل مباشرة مع الإدارة."
+                question = context.getString(R.string.support_faq_4_question),
+                answer = context.getString(R.string.support_faq_4_answer)
             ),
             FaqItem(
                 id = 5,
-                question = "ما هي أوقات وساعات العمل المتاحة؟",
-                answer = "خدمة فَوْراً والكباتن متاحون يومياً من الساعة 8:00 صباحاً وحتى 12:00 منتصف الليل لتلبية كافة طلباتكم."
+                question = context.getString(R.string.support_faq_5_question),
+                answer = context.getString(R.string.support_faq_5_answer)
             )
         )
     }

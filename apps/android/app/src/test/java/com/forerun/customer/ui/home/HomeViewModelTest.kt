@@ -16,9 +16,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class HomeViewModelTest {
 
     @get:Rule
@@ -55,7 +59,7 @@ class HomeViewModelTest {
             )
         )
 
-        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase, ApplicationProvider.getApplicationContext())
 
         val state = viewModel.uiState.value
         assertTrue("State should be Success", state is HomeUiState.Success)
@@ -93,7 +97,7 @@ class HomeViewModelTest {
             )
         )
 
-        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase, ApplicationProvider.getApplicationContext())
 
         val state = viewModel.uiState.value
         assertTrue("State should be Success", state is HomeUiState.Success)
@@ -110,7 +114,7 @@ class HomeViewModelTest {
             Exception("تعذر الاتصال بالخادم")
         )
 
-        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase, ApplicationProvider.getApplicationContext())
 
         val state = viewModel.uiState.value
         assertTrue("State should be Error", state is HomeUiState.Error)
@@ -133,7 +137,7 @@ class HomeViewModelTest {
             HomeData(profile = initialProfile, activeOrder = null)
         )
 
-        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase, ApplicationProvider.getApplicationContext())
         assertEquals(0, (viewModel.uiState.value as HomeUiState.Success).profile.completedOrders)
 
         val updatedProfile = initialProfile.copy(completedOrders = 1)
@@ -179,7 +183,7 @@ class HomeViewModelTest {
             )
         )
 
-        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase, ApplicationProvider.getApplicationContext())
 
         val state = viewModel.uiState.value
         assertTrue(state is HomeUiState.Success)
@@ -219,7 +223,7 @@ class HomeViewModelTest {
             )
         )
 
-        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase)
+        viewModel = HomeViewModel(getHomeDataUseCase, logoutUseCase, ApplicationProvider.getApplicationContext())
 
         val state = viewModel.uiState.value
         assertTrue(state is HomeUiState.Success)

@@ -91,7 +91,7 @@ fun SupportScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "رجوع",
+                            contentDescription = stringResource(R.string.label_back),
                             tint = ForerunTextPrimary
                         )
                     }

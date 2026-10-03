@@ -13,17 +13,15 @@ import com.forerun.customer.R
 object NotificationHelper {
 
     const val CHANNEL_ID_ORDERS = "forerun_orders_channel"
-    const val CHANNEL_NAME_ORDERS = "FORERUN — تحديثات الطلبات"
-    const val CHANNEL_DESC_ORDERS = "إشعارات تحديث حالة الطلبات والتوصيل"
 
     fun createNotificationChannels(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID_ORDERS,
-                CHANNEL_NAME_ORDERS,
+                context.getString(R.string.channel_name_orders),
                 NotificationManager.IMPORTANCE_HIGH
             ).apply {
-                description = CHANNEL_DESC_ORDERS
+                description = context.getString(R.string.channel_desc_orders)
                 enableVibration(true)
                 setShowBadge(true)
             }

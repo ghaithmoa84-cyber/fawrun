@@ -550,7 +550,7 @@ fun AccountScreen(
                             trailingIcon = {
                                 IconButton(onClick = { showPassword = !showPassword }) {
                                     Text(
-                                        text = if (showPassword) "إخفاء" else "إظهار",
+                                        text = if (showPassword) stringResource(R.string.label_hide) else stringResource(R.string.label_show),
                                         fontSize = 12.sp,
                                         color = ForerunTextMuted
                                     )

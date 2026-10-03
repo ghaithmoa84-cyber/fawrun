@@ -21,9 +21,13 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
+import org.junit.runner.RunWith
 
 @OptIn(ExperimentalCoroutinesApi::class)
+@RunWith(AndroidJUnit4::class)
 class AccountViewModelTest {
 
     @get:Rule
@@ -51,7 +55,8 @@ class AccountViewModelTest {
         updateAccountProfile = UpdateAccountProfileUseCase(fakeAccountRepository),
         changeAccountPassword = ChangeAccountPasswordUseCase(fakeAccountRepository),
         getCustomerAddress = GetCustomerAddressUseCase(fakeAddressRepository),
-        logoutUseCase = LogoutUseCase(fakeAuthRepository)
+        logoutUseCase = LogoutUseCase(fakeAuthRepository),
+        application = ApplicationProvider.getApplicationContext()
     )
 
     @Test

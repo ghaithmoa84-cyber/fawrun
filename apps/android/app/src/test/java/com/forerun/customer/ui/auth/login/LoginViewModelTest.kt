@@ -16,8 +16,12 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
+import androidx.test.core.app.ApplicationProvider
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Test
+import org.junit.runner.RunWith
 
+@RunWith(AndroidJUnit4::class)
 class LoginViewModelTest {
 
     @get:Rule
@@ -33,7 +37,7 @@ class LoginViewModelTest {
         loginUseCase = LoginUseCase(fakeAuthRepository)
         val fakeStorage = com.forerun.customer.core.storage.FakeTokenStorage(token = "token")
         val fakeSocket = object : com.forerun.customer.core.websocket.SocketManager(fakeStorage) {}
-        viewModel = LoginViewModel(loginUseCase, fakeSocket)
+        viewModel = LoginViewModel(loginUseCase, fakeSocket, ApplicationProvider.getApplicationContext())
     }
 
     @Test
@@ -117,7 +121,7 @@ class LoginViewModelTest {
                 connectCalled = true
             }
         }
-        val vm = LoginViewModel(loginUseCase, fakeSocket)
+        val vm = LoginViewModel(loginUseCase, fakeSocket, ApplicationProvider.getApplicationContext())
         vm.onWhatsappChanged("0912345678")
         vm.onPasswordChanged("password123")
         vm.login()

@@ -103,17 +103,20 @@ export class SettlementsService {
         closedByAdminId: string | null;
         createdAt: Date;
       }> = [];
-      for (const [runnerId, runnerOrders] of runnerOrderMap) {
-        const existing = await tx.settlement.findUnique({
-          where: {
-            runnerId_operationalDate: {
-              runnerId,
+      const existingRunnerIds = new Set(
+        (
+          await tx.settlement.findMany({
+            where: {
               operationalDate,
+              runnerId: { in: [...runnerOrderMap.keys()] },
             },
-          },
-        });
+            select: { runnerId: true },
+          })
+        ).map((s) => s.runnerId),
+      );
 
-        if (existing) continue;
+      for (const [runnerId, runnerOrders] of runnerOrderMap) {
+        if (existingRunnerIds.has(runnerId)) continue;
 
         let runnerShare = 0;
         let platformShare = 0;
@@ -152,17 +155,15 @@ export class SettlementsService {
           },
         });
 
-        for (const item of items) {
-          await tx.settlementItem.create({
-            data: {
-              settlementId: settlement.id,
-              orderId: item.orderId,
-              orderFee: item.orderFee,
-              runnerShare: item.runnerShare,
-              platformShare: item.platformShare,
-            },
-          });
-        }
+        await tx.settlementItem.createMany({
+          data: items.map((item) => ({
+            settlementId: settlement.id,
+            orderId: item.orderId,
+            orderFee: item.orderFee,
+            runnerShare: item.runnerShare,
+            platformShare: item.platformShare,
+          })),
+        });
 
         settlements.push(settlement);
       }

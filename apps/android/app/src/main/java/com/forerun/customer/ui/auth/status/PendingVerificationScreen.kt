@@ -130,11 +130,12 @@ fun PendingVerificationScreen(
         Spacer(modifier = Modifier.height(Dimens.Space32))
 
         // WhatsApp Action Button
+        val whatsappRequestMessage = stringResource(R.string.whatsapp_verify_request)
         Button(
             onClick = {
                 val intent = Intent(
                     Intent.ACTION_VIEW,
-                    Uri.parse(com.forerun.customer.core.config.AppConfig.buildWhatsAppUrl("مرحباً، أود تفعيل حسابي في تطبيق فَوْراً"))
+                    Uri.parse(com.forerun.customer.core.config.AppConfig.buildWhatsAppUrl(whatsappRequestMessage))
                 ).apply {
                     addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
                 }

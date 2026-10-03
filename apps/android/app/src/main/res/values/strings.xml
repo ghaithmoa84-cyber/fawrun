@@ -323,4 +323,104 @@
 
     <!-- Address Setup Polish -->
     <string name="address_permanent_note">سيُعتمد هذا الموقع كعنوان رئيسي ودائم لتسليم طلباتك في القنجرة.</string>
+
+    <!-- Order status labels (shared) -->
+    <string name="status_out_for_delivery">في الطريق</string>
+    <string name="status_delivered">تم التسليم</string>
+    <string name="status_in_progress_shopping">جاري الشراء من المتجر</string>
+    <string name="status_out_for_delivery_to_you">في طريق التوصيل إليك</string>
+    <string name="error_invalid_order_id">معرف الطلب غير صحيح</string>
+    <string name="label_runner_default">الكابتن</string>
+
+    <!-- Home Screen (redesign texts) -->
+    <string name="label_avatar_fallback_letter">ف</string>
+    <string name="home_greeting_morning">صباح الخير، %1$s</string>
+    <string name="label_delivery_area">القنجرة ومحيطها</string>
+    <string name="label_notifications">الإشعارات</string>
+    <string name="home_cta_badge">اطلب في ثواني</string>
+    <string name="home_cta_delivery_badge">⚡ توصيل فوري</string>
+    <string name="home_cta_title">شو محتاج اليوم؟</string>
+    <string name="home_cta_subtitle">حاجيات، طرود، أو مشوار — إحنا جاهزين</string>
+    <string name="home_cta_button">اطلب الآن</string>
+    <string name="home_active_runner_name">الكابتن %1$s</string>
+    <string name="home_verified_runner">مندوب معتمد ✓</string>
+    <string name="label_runner_whatsapp">واتساب الكابتن</string>
+    <string name="label_runner_call">اتصال بالكابتن</string>
+    <string name="home_step_picked_up">تم الاستلام</string>
+    <string name="home_step_purchasing">جاري الشراء</string>
+    <string name="home_step_on_the_way">في الطريق</string>
+    <string name="home_step_delivered">تم التسليم</string>
+    <string name="home_items_fee_summary">%1$d مواد • %2$d %3$s</string>
+    <string name="error_home_data_load_failed">تعذر تحميل البيانات</string>
+
+    <!-- Support (FAQ + default WhatsApp message) -->
+    <string name="support_default_message">مرحباً إدارة فَوْراً، أحتاج إلى مساعدة واستفسار بخصوص التطبيق.</string>
+    <string name="support_faq_1_question">كيف يعمل تطبيق فَوْراً في القنجرة؟</string>
+    <string name="support_faq_1_answer">تطبيق فَوْراً هو منصتك المحلية للطلب السريع في القنجرة. تطلب ما تحتاجه من بقالة أو أغراض، ويتولى الكابتن شراءها من المحلات المتاحة وتوصيلها حتى باب منزلك مع تتبع مباشر لحالة الطلب.</string>
+    <string name="support_faq_2_question">كيف يتم احتساب رسوم التوصيل؟</string>
+    <string name="support_faq_2_answer">رسوم التوصيل ثابتة وشفافة تبدأ من الرسم الأساسي (5,000 ل.س). في حال الشراء من متاجر متعددة يضاف رسم لكل متجر إضافي، كما يضاف رسم للمناطق الطرفية البعيدة، وتظهر لك الرسوم المحتسبة في تفاصيل الطلب.</string>
+    <string name="support_faq_3_question">كيف أتواصل مع الكابتن المسؤول عن طلبي؟</string>
+    <string name="support_faq_3_answer">بمجرد قبول وتعيين كابتن لطلبك، ستظهر لك بطاقة الكابتن في شاشة تفاصيل الطلب، وبإمكانك التواصل معه مباشرة عبر الواتساب أو الاتصال الهاتفي بضغطة زر واحدة.</string>
+    <string name="support_faq_4_question">هل يمكنني تعديل أو إلغاء الطلب بعد إرساله؟</string>
+    <string name="support_faq_4_answer">يمكنك إلغاء الطلب مباشرة عبر زر إلغاء الطلب ما دام الطلب في مرحلة \'المراجعة والتدقيق\'. بعد بدء الكابتن بعملية الشراء لا يمكن الإلغاء آلياً ولكن يمكنك التواصل مباشرة مع الإدارة.</string>
+    <string name="support_faq_5_question">ما هي أوقات وساعات العمل المتاحة؟</string>
+    <string name="support_faq_5_answer">خدمة فَوْراً والكباتن متاحون يومياً من الساعة 8:00 صباحاً وحتى 12:00 منتصف الليل لتلبية كافة طلباتكم.</string>
+
+    <!-- Create Order validation -->
+    <string name="create_order_validation_item_quantity_named">يرجى تحديد الكمية للمادة: %1$s</string>
+    <string name="create_order_validation_custom_store_named">يرجى تحديد اسم المتجر للمادة: %1$s أو تفعيل خيار أي متجر</string>
+    <string name="error_create_order_failed">فشل إنشاء الطلب</string>
+
+    <!-- Account -->
+    <string name="error_alt_phone_invalid">الرقم البديل يجب أن يبدأ بـ 09 ويتكون من 10 أرقام</string>
+    <string name="error_account_load_failed">فشل في تحميل بيانات الحساب</string>
+    <string name="error_account_save_failed">فشل حفظ معلومات الحساب</string>
+    <string name="error_password_too_long">كلمة المرور لا يجب أن تتجاوز 72 بايت</string>
+    <string name="error_password_change_failed">فشل تغيير كلمة المرور</string>
+
+    <!-- Auth generic errors -->
+    <string name="error_login_generic">حدث خطأ أثناء تسجيل الدخول</string>
+    <string name="error_register_generic">حدث خطأ أثناء إنشاء الحساب</string>
+    <string name="register_default_address">القنجرة - الشارع الرئيسي</string>
+
+    <!-- Orders list -->
+    <string name="error_orders_load_failed">حدث خطأ أثناء تحميل الطلبات</string>
+
+    <!-- Address setup -->
+    <string name="error_geocoding_failed">تعذر تحديد العنوان تلقائياً</string>
+    <string name="error_address_description_required">يرجى إدخال وصف العنوان</string>
+    <string name="error_address_save_failed_generic">فشل حفظ العنوان</string>
+
+    <!-- Shared UI labels -->
+    <string name="label_hide">إخفاء</string>
+    <string name="label_show">إظهار</string>
+    <string name="label_back">رجوع</string>
+    <string name="label_go_back">الرجوع</string>
+    <string name="label_close">إغلاق</string>
+    <string name="label_selected_delivery_location">موقع التوصيل المحدد</string>
+    <string name="order_detail_default_area">القنجرة</string>
+
+    <!-- Address setup screen -->
+    <string name="address_gps_required">يرجى تفعيل خدمة تحديد الموقع (GPS)</string>
+    <string name="address_location_precision">تعذر تحديد موقعك الحالي بدقة، يمكنك سحب الخريطة لتحديده</string>
+    <string name="address_locating">جاري تحديد العنوان تلقائياً…</string>
+    <string name="address_locate_failed_manual">تعذر تحديد العنوان تلقائياً، يمكنك إدخاله يدوياً</string>
+
+    <!-- Orders screen -->
+    <string name="orders_subtitle">سجل ومتابعة طلباتك في فَوْراً</string>
+    <string name="orders_active_count">%1$d جارية</string>
+    <string name="orders_delivery_fee">رسوم التوصيل</string>
+    <string name="orders_runner_name">الكابتن: %1$s</string>
+
+    <!-- Create order screen -->
+    <string name="create_order_address_ready">العنوان جاهز ✓</string>
+    <string name="create_order_address_unset">العنوان غير محدد ⚠️</string>
+
+    <!-- WhatsApp deep-link default messages -->
+    <string name="whatsapp_suspended_inquiry">مرحباً إدارة فَوْراً، أود الاستفسار عن سبب تعليق حسابي</string>
+    <string name="whatsapp_verify_request">مرحباً، أود تفعيل حسابي في تطبيق فَوْراً</string>
+
+    <!-- Notification channels -->
+    <string name="channel_name_orders">FORERUN — تحديثات الطلبات</string>
+    <string name="channel_desc_orders">إشعارات تحديث حالة الطلبات والتوصيل</string>
 </resources>

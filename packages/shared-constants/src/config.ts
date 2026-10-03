@@ -6,6 +6,8 @@ export const CONFIG = {
   ACCEPTED_IMAGE_TYPES: ['image/jpeg', 'image/png'],
   PRESIGNED_URL_EXPIRY_SECONDS: 300,
   RATING_EDIT_WINDOW_HOURS: 24,
+  RATING_EDIT_WINDOW_MS: 24 * 60 * 60 * 1000,
+  TRANSACTION_TIMEOUT_MS: 15000,
   RATE_LIMIT_LOGIN: { max: 10, windowMinutes: 15 },
   RATE_LIMIT_REGISTER: { max: 3, windowMinutes: 60 },
   RATE_LIMIT_GENERAL: { max: 100, windowMinutes: 1 },

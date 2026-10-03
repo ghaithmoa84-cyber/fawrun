@@ -233,7 +233,7 @@ fun CreateOrderScreen(
                     IconButton(onClick = onNavigateBack) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "الرجوع",
+                            contentDescription = stringResource(R.string.label_go_back),
                             tint = ForerunTextPrimary
                         )
                     }
@@ -272,7 +272,7 @@ fun CreateOrderScreen(
                             color = ForerunTextPrimary
                         )
                         Text(
-                            text = if (uiState.deliveryAddress != null) "العنوان جاهز ✓" else "العنوان غير محدد ⚠️",
+                            text = if (uiState.deliveryAddress != null) stringResource(R.string.create_order_address_ready) else stringResource(R.string.create_order_address_unset),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Medium,
                             color = if (uiState.deliveryAddress != null) ForerunGreenDark else ForerunWarning
@@ -745,7 +745,7 @@ private fun QuickOrderEditor(
                             .padding(horizontal = Dimens.Space10, vertical = Dimens.Space4)
                     ) {
                         Text(
-                            text = "$lineCount مواد",
+                            text = stringResource(R.string.home_items_count, lineCount),
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = ForerunGreenDark

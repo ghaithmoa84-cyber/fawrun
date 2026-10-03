@@ -146,6 +146,15 @@ export class CustomerOrdersService {
           where: { id: order.id },
         });
 
+        const allItems: Array<{
+          orderId: string;
+          orderStoreId: string;
+          itemName: string;
+          quantity: string;
+          customStoreName: string | null;
+          anyStore: boolean;
+        }> = [];
+
         for (const store of orderStoresData) {
           const orderStore = await tx.orderStore.create({
             data: {
@@ -158,18 +167,18 @@ export class CustomerOrdersService {
           });
 
           for (const item of store.items) {
-            await tx.orderItem.create({
-              data: {
-                orderId: updatedOrder.id,
-                orderStoreId: orderStore.id,
-                itemName: item.itemName,
-                quantity: item.quantity,
-                customStoreName: item.customStoreName,
-                anyStore: item.anyStore,
-              },
+            allItems.push({
+              orderId: updatedOrder.id,
+              orderStoreId: orderStore.id,
+              itemName: item.itemName,
+              quantity: item.quantity,
+              customStoreName: item.customStoreName,
+              anyStore: item.anyStore,
             });
           }
         }
+
+        await tx.orderItem.createMany({ data: allItems });
 
         await this.auditService.log(
           {
@@ -199,7 +208,7 @@ export class CustomerOrdersService {
 
         return { order: updatedOrder, fee };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
@@ -317,7 +326,7 @@ export class CustomerOrdersService {
           order.status === 'DELIVERED' &&
           order.ratings.length === 0 &&
           order.deliveredAt != null &&
-          new Date(order.deliveredAt.getTime() + 24 * 60 * 60 * 1000) >
+          new Date(order.deliveredAt.getTime() + CONFIG.RATING_EDIT_WINDOW_MS) >
             new Date(),
         runner: order.runner
           ? {
@@ -544,7 +553,7 @@ export class CustomerOrdersService {
           customerUserId: order.customer.userId,
         };
       },
-      { timeout: 15000 },
+      { timeout: CONFIG.TRANSACTION_TIMEOUT_MS },
     );
 
     try {
